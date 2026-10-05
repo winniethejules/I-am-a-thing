@@ -250,6 +250,7 @@ Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollb
   - `qa/fas2/efter/` (blunda, listan, sökfasen som filmremsa, slutet, mätaren på tre platser; mätningar i `qa/fas2-scener.ts`);
   - `qa/fas2/jamforelse/` (skafferiet före och efter, en runda);
   - `qa/fas2/fotopunkter/` och `qa/fas2/galleri/`.
+- **`vp check`:** allt grönt, även sessionen med seed 8919 som föll i fas 1. Telefonvarningarna (rollkortet över klockan, blunda-texten under knapparna) är rättade och fotade i `qa/fas2/telefon/`.
 - **Hittat och rättat på bilderna:** blunda-skärmen låg kvar över hela sökfasen och poängtavlan (CSS), och listan krockade med blunda-texten.
 
 ### Detaljpass på sakerna (ditt önskemål, görs längre fram)

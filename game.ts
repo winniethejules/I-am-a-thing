@@ -679,7 +679,9 @@ const CSS = `
 .ia .card .bar i.low { background: #ff5a36; }
 .ia .card .line { margin-top: 6px; font-size: 14px; }
 .ia .key { display: inline-block; color: #1d2340; min-width: 18px; padding: 0 4px; border: 2px solid #1d2340; border-radius: 5px; background: #fff; font: 800 12px Nunito, sans-serif; text-align: center; }
-html.vp-touching .ia .card { bottom: calc(var(--vp-touch-h) + 12px); }
+html.vp-touching .ia .card { top: 74px; bottom: auto; padding: 6px 10px; max-width: 220px; }
+html.vp-touching .ia .card .hint, html:not(.vp-touching) .ia .tc, html.vp-touching .ia .kb { display: none; }
+html.vp-touching .ia .blind small { max-width: 320px; }
 .ia .feed { position: absolute; right: 18px; top: 90px; text-align: right; font-size: 14px; line-height: 1.6; }
 .ia .mid { position: absolute; left: 0; right: 0; top: 62%; text-align: center; font-size: 22px; }
 .ia .mid small { font-size: 15px; opacity: .85; }
@@ -775,10 +777,10 @@ class Hud {
       this.last = key;
       this.el.card.innerHTML = s.kusin
         ? `<div class="role k">KUSIN</div><div class="line">Tålamod</div><div class="bar"><i class="${s.hp < 30 ? 'low' : ''}" style="width:${Math.max(0, s.hp)}%"></i></div>`
-          + `<div class="line">Hitta vättarna. Fel gissning kostar!</div><div class="line"><span class="key">Tab</span> mormors lista</div>`
+          + `<div class="line hint">Hitta vättarna. Fel gissning kostar!</div><div class="line hint"><span class="key">Tab</span> mormors lista</div>`
         : `<div class="role v">VÄTTE</div><div class="line">${s.form >= 0 ? `Du är en <b>${FORMS[s.form].name}</b>${s.locked ? ' (låst)' : ''}` : 'Göm dig som en sak!'}</div>`
           + (s.blend && s.form >= 0 ? `<div class="meter">Smälter in ${[0, 1, 2].map((l) => `<i class="${l <= s.blend!.level ? `on l${s.blend!.level}` : ''}"></i>`).join('')}</div><div class="line"><small>${s.blend.why}</small></div>` : '')
-          + `<div class="line"><span class="key">E</span> bli sak · <span class="key">R</span> ${s.locked ? 'lås upp' : 'lås'} · <span class="key">Q</span> taunt</div>`;
+          + `<div class="line hint"><span class="key">E</span> bli sak · <span class="key">R</span> ${s.locked ? 'lås upp' : 'lås'} · <span class="key">Q</span> taunt</div>`;
     }
     const aim = !s.kusin && s.playing && s.aimed >= 0 && s.aimed !== s.form ? `<span class="key">E</span> bli ${FORMS[s.aimed].name}` : '';
     if (aim !== this.lastAim) this.el.aim.innerHTML = this.lastAim = aim;
@@ -793,7 +795,7 @@ class Hud {
     // Reading the list with eyes shut: just the count, under it.
     this.el.blind.classList.toggle('listing', s.list);
     if (s.blind) {
-      const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig i köket och skafferiet. Håll in <span class="key">Tab</span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
+      const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig i köket och skafferiet. Håll in <span class="kb"><span class="key">Tab</span></span><span class="tc"><span class="key">LISTA</span></span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
       if (html !== this.lastBlind) this.el.blind.innerHTML = this.lastBlind = html;
     }
     this.el.list.classList.toggle('off', !s.list);
