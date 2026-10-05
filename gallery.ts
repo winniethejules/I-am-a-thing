@@ -1,25 +1,55 @@
 /**
  * Every model this game makes, for `bunx vp gallery`: numbered pages you can read at a glance, and
  * checks for broken models, look-alikes and more (`bunx vp docs gallery`). It isn't part of the
- * game's package. When you add a model to the game, add it here with the same code, and after
- * making or changing any art run `bunx vp gallery` and read every page.
+ * game's package. Each builder calls the game's own model code.
  */
-import { Mesh } from 'three';
-import { Avatar, B, blockGeometry } from '@voxelparty/sdk';
+import { Group, Mesh } from 'three';
+import { Avatar, meshVolume, useGameAssets } from '@voxelparty/sdk';
 import type { Gallery } from '@voxelparty/sdk/test';
+import { GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL, dart, kusin, kusinLook, suctionGun, suctionGunFp, vatte, vatteLook } from './characters';
+import { MODELS, buildModels, type ModelKey } from './models';
+import { BLOCKS, TEXTURES } from './textures';
+
+const FURNITURE: ModelKey[] = ['table', 'chair', 'sofa', 'stove', 'counter', 'fridge', 'vitrine'];
+const THINGS: ModelKey[] = ['cup', 'biscuits', 'coffeePot', 'breadBasket', 'logBasket', 'geranium', 'crossword', 'cloth', 'ragRug'];
+const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'potholder', 'clock', 'sampler', 'note', 'bloomers', 'towel'];
 
 export default (g: Gallery) => {
+  const ids = useGameAssets(TEXTURES, BLOCKS);
+  const models = buildModels(ids);
   const mat = g.engine.mats.actor;
+  const mesh = (key: ModelKey) => () => {
+    const m = models[key];
+    return new Mesh(meshVolume(m.vol, { voxel: m.voxel, origin: m.origin }).opaque!, mat);
+  };
+  // Every key in MODELS is in one group below.
+  const listed = new Set<ModelKey>([...FURNITURE, ...THINGS, ...WALL, 'lampGlow']);   // the glow is the lamp's 'tänd' variant
+  for (const key of Object.keys(MODELS) as ModelKey[]) if (!listed.has(key)) throw new Error(`gallery.ts: ${key} isn't in a group`);
 
-  // Held and flying things: no ground under them.
-  g.group('Gun and shots', { ground: false });
-  g.add('Gun on a player', () => new Mesh(blockGeometry(B.METAL_DARK, [0.1, 0.12, 0.45]), mat), { tiny: 14 });
-  g.add('Muzzle flash', () => new Mesh(blockGeometry(B.LANTERN, 0.1), mat), { tiny: 8 });
-  g.add('Tracer', () => new Mesh(blockGeometry(B.GOLD, [0.05, 0.05, 1]), mat), { tiny: 20 });
+  g.group('Möbler i köket', { scale: 'shared', ghost: false });
+  for (const key of FURNITURE) g.add(key, mesh(key));
 
-  // One camera for the group (true relative size). They're Avatars at 0.9 in game.ts.
-  g.group('Players', { scale: 'shared', ghost: false });
-  for (let char = 0; char < 4; char++) {
-    g.add(`Player ${char + 1}`, () => new Avatar(mat, { shirt: B.CLOTH_RED, overalls: B.WHITE, char }, { scale: 0.9 }).root);
+  g.group('Saker en vätte kan bli', { scale: 'shared', ghost: false });
+  for (const key of THINGS) g.add(key, mesh(key));
+
+  g.group('På väggar och i taket', { ground: false });
+  const signs: Partial<Record<ModelKey, number>> = { sampler: 3000, note: 2600 };   // letters cost voxels
+  for (const key of WALL) {
+    if (key === 'lamp') {
+      g.add(key, mesh(key), { variants: { tänd: () => new Group().add(mesh('lamp')(), mesh('lampGlow')()) } });
+      continue;
+    }
+    g.add(key, mesh(key), signs[key] ? { budget: signs[key] } : {});
   }
+
+  g.group('Kusiner och vättar', { scale: 'shared', ghost: false });
+  for (let n = 0; n < 4; n++) g.add(`Kusin ${n + 1}`, () => new Avatar(mat, kusin(ids, kusinLook(n * 5 + (n & 1) * 8)), { voxel: KUSIN_VOXEL }).root);
+  for (const [i, n] of [0, 5, 10, 31].entries()) g.add(`Vätte ${i + 1}`, () => new Avatar(mat, vatte(ids, vatteLook(n)), { voxel: VATTE_VOXEL }).root);
+
+  g.group('Sugkoppspistolen', { ground: false });
+  g.add('I handen (andra ser)', () => new Mesh(meshVolume(suctionGun(ids), { voxel: GUN_VOXEL, origin: [1.5, 0, 6] }).opaque!, mat));
+  g.add('I första person', () => new Mesh(meshVolume(suctionGunFp(ids), { voxel: 1 / 48, origin: [3.5, 6, 12] }).opaque!, mat));
+  g.add('Sugkoppspil', () => new Mesh(meshVolume(dart(ids), { voxel: 1 / 32, origin: [1.5, 1.5, 4] }).opaque!, mat), { tiny: 10 });
+
+  g.textures('Texturer', TEXTURES);
 };

@@ -13,11 +13,11 @@
  *   carries on. A spawn names the spot; whoever runs that body moves it there.
  */
 import {
-  FPS_ARENA, HostSync, PlayerSync, Seats, botRng, fpsStep, launch, mulberry32, newFpsBody, onPad, rayBox, spreadDir, turn,
+  FPS_ARENA, HostSync, PlayerSync, Seats, botRng, fpsStep, mulberry32, newFpsBody, rayBox, spreadDir, turn,
   type GameFrame, type LinkPlayer, type MinigameLink, type Rng,
 } from '@voxelparty/sdk/core';
 import { Bot, IDLE, type Intent } from './bot';
-import { Arena, DEATH_Y, PAD } from './map';
+import { Arena, DEATH_Y } from './map';
 import { DAMAGE, FALL, FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Snap } from './rules';
 
 /** What each player streams about their body: feet, look, and which life they're on. */
@@ -201,10 +201,6 @@ export class Core implements World {
     if (r.landed > 6) {
       p.landed = r.landed;
       this.cues.push({ k: 'land', pid: p.pid, speed: r.landed });
-    }
-    if (onPad(b, PAD)) {
-      launch(b, PAD.to, PAD.arc);
-      this.cues.push({ k: 'pad', pid: p.pid });
     }
     if (b.y < DEATH_Y) {
       // Fell off: out of play at once here, and the host counts the death.

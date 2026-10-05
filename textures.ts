@@ -10,7 +10,7 @@ const near = (c: string, j = 0.04) => (p: Px, r: Rng) => p.noise([hex(c)], r, j)
 
 /** Rutigt linoleum: 25 cm rutor, grädde och salvia, slitet i kanterna. */
 function lino(p: Px, r: Rng) {
-  const a = hex('#ece4d2'), b = hex('#9fb8a6');
+  const a = hex('#ece4d2'), b = hex('#a9c3a2');
   p.each((x, y) => {
     const c = ((x >> 2) + (y >> 2)) & 1 ? b : a;
     p.set(x, y, shade(c, 0.96 + r() * 0.07));
@@ -20,7 +20,7 @@ function lino(p: Px, r: Rng) {
 /** Mint tapet med små vita och rosa blomkvistar i ett förskjutet rutnät. */
 function mintPaper(p: Px, r: Rng) {
   p.noise(pal('#a3d6b3', '#9fd3b0', '#a8d9b8'), r, 0.03);
-  const petal = hex('#f6f1e4'), heart = hex('#e8a0a8'), leaf = hex('#7fb894');
+  const petal = hex('#d9f0df'), heart = hex('#e3a3ab'), leaf = hex('#8cc39f');
   for (const [cx, cy] of [[3, 3], [11, 11]] as const) {
     p.set(cx, cy, heart);
     p.set(cx - 1, cy, petal); p.set(cx + 1, cy, petal); p.set(cx, cy - 1, petal); p.set(cx, cy + 1, petal);
@@ -93,6 +93,11 @@ function roof(p: Px, r: Rng) {
   p.each((x, y) => p.set(x, y, shade(hex(y % 4 === 3 ? '#2c2f33' : '#40454b'), 0.93 + r() * 0.1)));
 }
 
+/** Pärlspont i taket: white-painted boards with a faint groove. */
+function ceiling(p: Px, r: Rng) {
+  p.each((x, y) => p.set(x, y, shade(hex(y % 4 === 3 ? '#ddd6c6' : '#f1ebdd'), 0.98 + r() * 0.04)));
+}
+
 /** Gräsmatta sedd ovanifrån. */
 function lawn(p: Px, r: Rng) {
   p.noise(pal('#6fae4c', '#64a244', '#79b856', '#5e9a40'), r, 0.06);
@@ -109,6 +114,7 @@ export const TEXTURES: TexDef[] = [
   { name: 'ia_birch', paint: birch },
   { name: 'ia_roof', paint: roof },
   { name: 'ia_lawn', paint: lawn },
+  { name: 'ia_ceiling', paint: ceiling },
   // Near-flat colours for props and trim.
   { name: 'ia_white', paint: near('#f2ebdc', 0.03) },
   { name: 'ia_cream', paint: near('#e8dcc2', 0.03) },
@@ -161,7 +167,7 @@ export const TEXTURES: TexDef[] = [
 
 export const BLOCKS = {
   LINO: 'ia_lino', MINT: 'ia_mint', ROSE: 'ia_rose', PINE: 'ia_pine', TILE: 'ia_tile', FALU: 'ia_falu',
-  GINGHAM: 'ia_gingham', BIRCH: 'ia_birch', ROOF: 'ia_roof', LAWN: ['ia_lawn', 'ia_lawn'],
+  GINGHAM: 'ia_gingham', BIRCH: 'ia_birch', ROOF: 'ia_roof', LAWN: ['ia_lawn', 'ia_lawn'], CEILING: 'ia_ceiling',
   WHITE: 'ia_white', CREAM: 'ia_cream', WOOD: 'ia_wood', WOOD_DARK: 'ia_wood_dark', WOOD_DEEP: 'ia_wood_deep',
   IRON: 'ia_iron', STEEL: 'ia_steel', BRASS: 'ia_brass', PORC: 'ia_porc', PORC_BLUE: 'ia_porc_blue',
   ROSEPINK: 'ia_rosepink', RED: 'ia_red', FALU_FLAT: 'ia_falu_flat', GREEN: 'ia_green', LEAF: 'ia_leaf', POT: 'ia_pot',

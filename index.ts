@@ -8,12 +8,13 @@ import { MUSIC } from './sounds';
 export default defineGame({
   id: 'i-am-a-thing',
   name: 'I Am a Thing',
-  blurb: `Blast your friends on a floating island! Don't fall off. First to ${WIN} frags wins the round.`,
+  // Phase 0 (PLAN.md): the kitchen's look test. Everyone is a kusin for now; the vättar come in phase 1.
+  blurb: `Mormors kök, ett första smakprov. Skjut sugkoppspilar på varandra: först till ${WIN} träffar vinner rundan.`,
   controls: [
-    ['WASD', 'Move'],
-    [KEYS.mouse, 'Look'],
-    [KEYS.click, 'Fire'],
-    ['SPACE', 'Jump (hold to hop)'],
+    ['WASD', 'Gå'],
+    [KEYS.mouse, 'Titta'],
+    [KEYS.click, 'Skjut'],
+    ['SPACE', 'Hoppa'],
   ],
   music: MUSIC,
   // Lock the mouse on "Click to play" and on clicks while playing (mouse look).

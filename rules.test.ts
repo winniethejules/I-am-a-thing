@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { mulberry32 } from '@voxelparty/sdk/core';
+import { gridText, mulberry32 } from '@voxelparty/sdk/core';
 import { FakeFlow, FakeRoom, type FakeLink } from '@voxelparty/sdk/test';
 import { Bot, IDLE, type Intent } from './bot';
 import { Core } from './core';
@@ -7,6 +7,12 @@ import { Arena } from './map';
 
 describe('the arena', () => {
   const a = new Arena();
+  test('the kitchen floor plan, as text', () => {
+    // At knee height: walls, furniture, the door to the hall. Read it when a bot gets stuck.
+    const plan = gridText(a, { view: a.cy(0.4) });
+    console.log(plan);
+    expect(plan.length).toBeGreaterThan(0);
+  });
   test('every spawn stands on the floor, clear of walls, and the CPUs can get from each to every other', () => {
     for (const s of a.spawns) {
       expect(a.groundBelow(s.x, s.y + 0.2, s.z)).toBe(s.y);

@@ -137,7 +137,8 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 |---|---|---|
 | K1 | Dörröppningen från hallen, ståhöjd | hela köket: bordet i mitten, fönstret och spisen |
 | K2 | Hörnet vid spisen | fönstret: trädgården, ladan, tvättlinan och himlen |
-| K3 | Vättehöjd (0,4 m), vid bordskanten | koppar och kakfat i förgrunden, kusinen i dörren |
+| K3 | Vättehöjd, vid bordskanten | koppar och kakfat i förgrunden, kusinen bakom |
+| K4 | Kusinens ögon, första person | köket med pistolen i handen, en vätte som smyger |
 
 ## 7. Mekanik med siffror (startvärden)
 - **Kusin:**
@@ -158,14 +159,23 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 ### Fas 0: looktestet ← **vi är här**
 **Mål:** låsa stilen innan vi bygger mer.
 **Du får se:** köket i färdig kvalitet med en kusin (med pistol) och en vätte, i tre ljusvarianter.
-- [ ] Projektet uppsatt (Voxel Party SDK, `--fps`-mallen som grund).
-- [ ] Texturer: golv, tapet, kakel, trä och porslin.
-- [ ] Köket som husvolym: väggar, fönster med spröjs, dörröppning och tak.
-- [ ] Kit-modeller: bord, stolar, spis, diskbänk, skåp, kyl, koppar, kakfat, kaffepanna och berättardetaljer.
-- [ ] Utsikten: trädgård, lada, tvättlina med mammelucker och himmel.
-- [ ] Karaktärerna: kusin med sugkoppspistol och vätte.
-- [ ] Tre ljusvarianter (A/B/C) och fotopunkterna K1–K3.
-- [ ] Bildtestet på alla bilder och galleriet läst.
+- [x] Projektet uppsatt (Voxel Party SDK, `--fps`-mallen som grund).
+- [x] Texturer: golv, tapet, kakel, trä, porslin och pärlspont i taket.
+- [x] Köket som husvolym: väggar, fönster med spröjs, dörröppning och tak (`house.ts`, 1/8 m).
+- [x] Kit-modeller: bord, stolar, spis, diskbänk, skåp, kyl, vitrinskåp, koppar, kakfat, kaffepanna och berättardetaljer (`models.ts`, `kitchen.ts`).
+- [x] Utsikten: trädgård, lada, björkar, staket, skog och tvättlina med mammelucker.
+- [x] Karaktärerna: kusin med sugkoppspistol (egen modell i första person, med hand) och vätte, med varianter.
+- [x] Tre ljusvarianter (A/B/C) och fotopunkterna K1–K4 (K4: kusinens egna ögon, med pistolen).
+- [x] Bildtestet på alla bilder (`tools/qa.py`), galleriet läst utan ⚠, och `vp check` helt grönt.
+- [ ] **Du väljer en look.** Sedan kalibreras bildtestets gränser mot den bilden.
+
+**Läge 2026-10-05:**
+- **Bilderna:** `qa/fas0/jamforelse/` (valj-look, alla-fotopunkter, fore-efter) och `qa/fas0/efter/`.
+- **Bildtestet:** A och B klarar alla fotopunkter utom A-K3, som har för få mörka partier och för många signalfärger i närbilden på kopparna. C klarar inte K4, som är för mörk.
+- **Kvar i fas 0:**
+  - kalibrera mot vald look;
+  - dammkorn i solstrimmorna;
+  - kusinens ansikte kan bli mindre fyrkantigt.
 
 **Klart när:** du har valt en look, bilderna klarar bildtestet och det går i 60 fps.
 **Bevis:** varianterna sida vid sida från samma fotopunkt och gallerisidorna.

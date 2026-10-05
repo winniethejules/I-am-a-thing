@@ -1,1 +1,1 @@
-{ "id": "i-am-a-thing", "name": "I Am a Thing", "players": { "min": 1, "max": 8 }, "input": ["mouse", "pointerLock", "keyboard"], "description": "", "tags": [] }
+{ "id": "i-am-a-thing", "name": "I Am a Thing", "players": { "min": 1, "max": 10 }, "input": ["mouse", "pointerLock", "keyboard"], "description": "Vättarna förvandlar sig till saker i mormors hus och gömmer sig. Kusinerna letar med sugkoppspistoler innan kaffet är klart. Överlev rundan som en kaffekopp, eller hitta alla vättar.", "tags": ["prop-hunt", "kurragömma", "party"] }

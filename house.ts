@@ -16,6 +16,8 @@ export interface HouseBox {
   m: Mat;
   /** Bumped into (walls, floors). Trim, sills and lists are only drawn. Default true unless AIR. */
   solid?: boolean;
+  /** An opening you see through but can't walk through (a window): carved when drawn, glass in the grid. */
+  glass?: boolean;
 }
 
 /** The house volume's voxel: 12.5 cm. */
@@ -26,9 +28,9 @@ export const HOUSE_SIZE: [number, number, number] = [56, 28, 66];
 
 /** The kitchen's inside. */
 export const KITCHEN = { x0: 0, x1: 6, z0: 0, z1: 5, h: 2.5 };
-/** Window openings in the north wall: [x0, x1], sill at y 1, top at y 2. */
+/** Window openings in the north wall: [x0, x1], the sill at 0.875 m, the top at 2.125 m. */
 export const WINDOWS: [number, number][] = [[1.25, 2.375], [3.625, 4.75]];
-export const SILL = 1, WIN_TOP = 2;
+export const SILL = 0.875, WIN_TOP = 2.125;
 /** The door from the hall, in the kitchen's south wall. */
 export const DOOR = { x0: 2.5, x1: 3.5, h: 2.125 };
 
@@ -36,7 +38,7 @@ const T = HV; // one voxel: a lip, a list
 
 function shell(): HouseBox[] {
   const k = KITCHEN, out: HouseBox[] = [];
-  const add = (b: HouseBox['b'], m: Mat, solid?: boolean) => out.push({ b, m, solid });
+  const add = (b: HouseBox['b'], m: Mat, solid?: boolean, glass?: boolean) => out.push({ b, m, solid, glass });
 
   // Plinth and floors: the kitchen on linoleum, the hall on pine.
   add([-0.25, -0.5, -0.25, 6.25, -0.125, 5.25], 'GREY');
@@ -49,25 +51,26 @@ function shell(): HouseBox[] {
   add([-0.25, 0, 5, 6.25, k.h, 5.25], 'ROSE');           // south: the hall's side is rose
   add([-0.25, 0, -0.25, 0, k.h, 5.25], 'FALU');          // west
   add([6, 0, -0.25, 6.25, k.h, 5.25], 'FALU');           // east
-  add([0, 0, -T, 6, k.h, 0], 'MINT', true);
-  add([0, 0, 5, 6, k.h, 5 + T], 'MINT', true);
-  add([-T, 0, 0, 0, k.h, 5], 'MINT', true);
-  add([6, 0, 0, 6 + T, k.h, 5], 'MINT', true);
+  add([0, 0, -T, 6, k.h, 0], 'MINT', false);
+  add([0, 0, 5, 6, k.h, 5 + T], 'MINT', false);
+  add([-T, 0, 0, 0, k.h, 5], 'MINT', false);
+  add([6, 0, 0, 6 + T, k.h, 5], 'MINT', false);
   // Ceilings.
-  add([-0.25, k.h, -0.25, 6.25, k.h + 0.25, 5.25], 'WHITE');
-  add([1.5, k.h, 5.25, 4.5, k.h + 0.25, 7.75], 'WHITE');
+  add([-0.25, k.h, -0.25, 6.25, k.h + 0.25, 5.25], 'CEILING');
+  add([1.5, k.h, 5.25, 4.5, k.h + 0.25, 7.75], 'CEILING');
 
   // The hall stub: rose walls, a closed end.
   add([1.5, 0, 5.25, 1.75, k.h, 7.75], 'ROSE');
   add([4.25, 0, 5.25, 4.5, k.h, 7.75], 'ROSE');
   add([1.5, 0, 7.5, 4.5, k.h, 7.75], 'ROSE');
 
+  // (The inner skins are drawn only: the walls behind them are what you bump into.)
   // Tiles behind the stove (west wall) and over the counter (east wall).
-  add([-T, 0, 1.25, 0, 1.5, 2.75], 'TILE', true);
-  add([6, 0.875, 0.5, 6 + T, 1.5, 2.75], 'TILE', true);
+  add([-T, 0, 1.25, 0, 1.5, 2.75], 'TILE', false);
+  add([6, 0.875, 0.5, 6 + T, 1.5, 2.75], 'TILE', false);
 
   // Openings: two windows north, the door south.
-  for (const [x0, x1] of WINDOWS) add([x0, SILL, -0.25, x1, WIN_TOP, 0], 'AIR');
+  for (const [x0, x1] of WINDOWS) add([x0, SILL, -0.25, x1, WIN_TOP, 0], 'AIR', false, true);
   add([DOOR.x0, 0, 5, DOOR.x1, DOOR.h, 5.25], 'AIR');
 
   // Window frames and bars (in the outer half of the wall, so the inside has a recess), and sills.

@@ -4,18 +4,23 @@
  * it says: your eyes and gun (`FpsCamera`), everyone else's avatars, tracers, the HUD. Everything
  * per player is keyed by player id, because in a session people join and leave mid-game.
  */
-import { Group, InstancedMesh, Matrix4, Mesh, Quaternion, Vector3 } from 'three';
+import { Group, InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import {
-  Avatar, B, FpsCamera, Fx, Island, Popups, Sfx, Volume, arenaStage, blockGeometry, esc, meadow, meshVolume, mulberry32, readIntent,
+  Avatar, FpsCamera, Fx, Popups, Sfx, arenaStage, blockGeometry, esc, meshVolume, readIntent, useGameAssets,
   type ArenaStage, type FpsIntent, type GameContext, type GameStage, type LinkPlayer,
 } from '@voxelparty/sdk';
 import type { Intent } from './bot';
+import { GUN_VOXEL, KUSIN_VOXEL, kusin, kusinLook, suctionGun, suctionGunFp } from './characters';
 import { Core, type Pawn } from './core';
-import { CELL, GX0, GY0, GZ0, M, NX, NY, NZ, land } from './map';
+import { PHOTOS, type LookName, type PhotoPoint } from './look';
 import { MAX_HP } from './rules';
+import { KitchenScene } from './scene';
 import { SOUNDS } from './sounds';
+import { BLOCKS, TEXTURES, type Ids } from './textures';
 
 const FOV = 90;
+/** A stable number per player id: their kusin's jumper, hair and hat. */
+const lookNo = (id: string) => [...id].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7) >>> 0;
 // scratch
 const _v = new Vector3(), _u = new Vector3(), _s = new Vector3(), _q = new Quaternion(), _m = new Matrix4();
 const _z = new Vector3(0, 0, 1);
@@ -48,7 +53,11 @@ export class Shooter implements GameStage {
   private readonly rigs = new Map<string, Rig>();
   private readonly tracers: InstancedMesh;
   /** Everyone's avatar holds one of these. */
-  private readonly avatarGun = blockGeometry(B.METAL_DARK, [0.1, 0.12, 0.45]);
+  private readonly avatarGun;
+  private readonly ids: Ids;
+  private readonly kitchen: KitchenScene;
+  /** A photo point holding the camera (voxelparty-kvalitet §2), or null. */
+  private photoAt: PhotoPoint | null = null;
   private readonly streaks: Streak[] = [];
   private readonly shownFrags = new Map<string, number>();
   private readonly read: FpsIntent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, alt: false, firePressed: false, altPressed: false, slot: null, wheel: 0 };
@@ -60,30 +69,26 @@ export class Shooter implements GameStage {
 
   constructor(private readonly ctx: GameContext) {
     const { engine, link, flow } = ctx;
-    // First person: no tilt-shift, a wide lens, a near plane close enough for the gun.
-    this.view = arenaStage(engine, { fov: FOV, tilt: 0, near: 0.04, far: 900, shadowExtent: 24, pollen: false, fog: [140, 700] });
+    this.ids = useGameAssets(TEXTURES, BLOCKS);
+    this.avatarGun = meshVolume(suctionGun(this.ids), { voxel: GUN_VOXEL, origin: [1.5, 0, 3] }).opaque!;
+    // First person: no tilt-shift, a near plane close enough for the gun. A low evening sun from
+    // the north-west, so it shines in through the kitchen windows.
+    this.view = arenaStage(engine, {
+      fov: FOV, tilt: 0, near: 0.04, far: 400, shadowExtent: 13, pollen: false, fog: [70, 320], sun: [-0.3, 0.42, -0.85],
+    });
+    this.view.sunAt(new Vector3(3, 0, 0));
     const scene = this.view.scene;
     scene.add(this.view.camera); // the gun is a child of the camera, so the camera must be in the scene
     this.fp = new FpsCamera(this.view.camera, { fov: FOV });
-    this.flash = new Mesh(blockGeometry(B.LANTERN, 0.1), engine.mats.actor);
+    this.flash = new Mesh(blockGeometry(this.ids.LAMP, 0.08), engine.mats.actor);
     this.buildGun();
-    this.fp.hold(this.gun, { scale: 0.26 });
+    this.fp.hold(this.gun);
 
-    // The island: the same land shape as the grid (map.ts), a paved arena in a meadow.
-    const island = new Island({
-      rand: mulberry32(link.seed), mats: engine.mats, size: [40, 40], origin: [-20, -20],
-      land: (x, z) => land(x - 20 + 0.5, z - 20 + 0.5),
-      top: (v, x, z, r) => {
-        const inside = Math.max(Math.abs(x - 20 + 0.5), Math.abs(z - 20 + 0.5)) < 13;
-        v.set(x, 1, z, inside ? B.PATH : B.GRASS);
-        if (!inside) meadow(v, x, 2, z, r);
-      },
-    });
-    scene.add(island.group);
+    // Mormors kök: the house, the garden, every thing in it, the light (scene.ts).
+    this.kitchen = new KitchenScene(ctx, this.view, this.ids);
 
     this.core = new Core(link, flow, () => this.intent());
-    this.buildStructures();
-    this.tracers = new InstancedMesh(blockGeometry(B.GOLD, [0.05, 0.05, 1]), engine.mats.actor, 64);
+    this.tracers = new InstancedMesh(blockGeometry(this.ids.DART, [0.03, 0.03, 1]), engine.mats.actor, 64);
     this.tracers.count = 0;
     this.tracers.frustumCulled = false;
     scene.add(this.tracers);
@@ -108,6 +113,7 @@ export class Shooter implements GameStage {
     this.hud.dispose();
     this.fx.dispose();
     this.popups.dispose();
+    this.kitchen.dispose();
     this.tracers.geometry.dispose();
     this.avatarGun.dispose();
     this.view.dispose();
@@ -115,41 +121,42 @@ export class Shooter implements GameStage {
 
   // ------------------------------------------------------------ building
 
-  /** Your gun, in camera space (FpsCamera shrinks it into your body, so it never pokes into walls). */
+  /**
+   * Your suction gun in first person, with the hand that holds it and the jumper's sleeve
+   * (voxelparty-kvalitet §5), about 0.5 long with the muzzle to −z, as FpsCamera.hold expects.
+   */
   private buildGun() {
-    const mat = this.ctx.engine.mats.actor;
-    const part = (id: number, size: [number, number, number], x: number, y: number, z: number) => {
-      const m = new Mesh(blockGeometry(id, size), mat);
-      m.position.set(x, y, z);
-      this.gun.add(m);
-    };
-    part(B.METAL_DARK, [0.13, 0.15, 0.42], 0, 0, -0.08);
-    part(B.METAL, [0.07, 0.07, 0.26], 0, 0.02, -0.4);
-    part(B.PLANKS, [0.08, 0.2, 0.1], 0, -0.15, 0.04);
-    part(B.GEM, [0.09, 0.05, 0.12], 0, 0.1, -0.1);
-    this.flash.position.set(0, 0.02, -0.56);
+    const mat = this.ctx.engine.mats.actor, k = this.ids;
+    const gun = new Mesh(meshVolume(suctionGunFp(k), { voxel: 1 / 48, origin: [3.5, 6, 12] }).opaque!, mat);
+    gun.rotation.y = Math.PI;
+    const hand = new Mesh(blockGeometry(k.SKIN, [0.1, 0.1, 0.12]), mat);
+    hand.position.set(0, -0.08, 0.12);
+    const thumb = new Mesh(blockGeometry(k.SKIN, [0.04, 0.04, 0.08]), mat);
+    thumb.position.set(-0.06, -0.02, 0.08);
+    const sleeve = new Mesh(blockGeometry(k.KNIT, [0.14, 0.14, 0.36]), mat);
+    sleeve.position.set(0.03, -0.15, 0.34);
+    sleeve.rotation.x = 0.35;
+    const cuff = new Mesh(blockGeometry(k.WHITE, [0.145, 0.145, 0.04]), mat);
+    cuff.position.set(0.03, -0.1, 0.19);
+    cuff.rotation.x = 0.35;
+    this.gun.add(gun, hand, thumb, sleeve, cuff);
+    this.flash.position.set(0, 0.03, -0.3);
     this.flash.visible = false;
     this.gun.add(this.flash);
   }
 
-  /** Everything built on the island, meshed from the grid's cells (the floor is the Island's). */
-  private buildStructures() {
-    const { engine } = this.ctx, grid = this.core.arena;
-    const block: Record<number, number> = { [M.WALL]: B.STONE, [M.CRATE]: B.PLANKS, [M.TRIM]: B.COBBLE, [M.PAD]: B.GOLD };
-    const y0 = Math.round((0 - GY0) / CELL); // the cell row at world y 0
-    const vol = new Volume(NX, NY - y0, NZ);
-    for (let cy = y0; cy < NY; cy++)
-      for (let cz = 0; cz < NZ; cz++)
-        for (let cx = 0; cx < NX; cx++) {
-          const c = grid.get(cx, cy, cz);
-          if (c >= M.WALL) vol.set(cx, cy - y0, cz, block[c] ?? B.STONE);
-        }
-    const data = meshVolume(vol, { voxel: CELL });
-    if (!data.opaque) return;
-    const mesh = new Mesh(data.opaque, engine.mats.solid);
-    mesh.castShadow = mesh.receiveShadow = true;
-    mesh.position.set(GX0, 0, GZ0);
-    this.view.scene.add(mesh);
+  // ------------------------------------------------------------ the look test (PLAN.md phase 0)
+
+  /** Hold the camera on a photo point by name, or let go (null). Returns the point's name. */
+  photo(name: string | null) {
+    this.photoAt = name ? (PHOTOS.find((p) => p.name === name) ?? null) : null;
+    return this.photoAt?.name ?? null;
+  }
+
+  /** Switch the lighting variant: 'A', 'B' or 'C' (look.ts). */
+  look(name: LookName) {
+    this.kitchen.setLook(name);
+    return name;
   }
 
   // ------------------------------------------------------------ input
@@ -247,10 +254,9 @@ export class Shooter implements GameStage {
       if (!p) return;
       let rig = this.rigs.get(lp.id);
       if (!rig) {
-        const av = new Avatar(engine.mats.actor, players[i].look, { scale: 0.9, turn: 22 });
-        const gun = new Mesh(this.avatarGun, engine.mats.actor);
-        gun.position.set(-0.3, 1.05, 0.3);
-        av.char.body.add(gun);
+        // Everyone plays a kusin of their own (phase 1 adds the vättar), holding a suction gun.
+        const av = new Avatar(engine.mats.actor, kusin(this.ids, kusinLook(lookNo(lp.id))), { voxel: KUSIN_VOXEL, turn: 22 });
+        av.wear(new Mesh(this.avatarGun, engine.mats.actor), 'hand', { offset: [0, -0.02, 0.04] });
         this.view.scene.add(av.root);
         this.rigs.set(lp.id, (rig = { av, shown: false, walk: 0 }));
       }
@@ -269,11 +275,16 @@ export class Shooter implements GameStage {
     this.drawStreaks(dt);
     this.flashT -= dt;
     this.flash.visible = this.flashT > 0;
-    this.gun.visible = this.firstPerson;
+    const photo = this.photoAt;
+    this.gun.visible = photo ? !!photo.gun : this.firstPerson;
+    this.hud.hidden = !!photo;
     this.hud.update(dt, this.firstPerson, me ? (core.match.stats.get(me.pid)?.hp ?? MAX_HP) : MAX_HP, !!me && flow.live && !core.alive(me));
     this.camera(dt, t, me);
     this.fx.update(dt);
     this.popups.update(dt);
+    this.kitchen.staged = !!photo || !flow.live;
+    this.kitchen.kusin.root.visible &&= !photo?.noKusin;
+    this.kitchen.update(dt, t);
     this.view.update(dt, t);
   }
 
@@ -315,6 +326,16 @@ export class Shooter implements GameStage {
 
   private camera(dt: number, t: number, me: Pawn | undefined) {
     const cam = this.view.camera, core = this.core;
+    if (this.photoAt) {
+      const p = this.photoAt;
+      cam.position.set(...p.pos);
+      cam.lookAt(...p.look);
+      if ((cam as PerspectiveCamera).fov !== p.fov) {
+        (cam as PerspectiveCamera).fov = p.fov;
+        (cam as PerspectiveCamera).updateProjectionMatrix();
+      }
+      return;
+    }
     if (this.firstPerson && me) {
       const b = me.body;
       this.fp.update(dt, b, me, this.read);
@@ -337,11 +358,10 @@ export class Shooter implements GameStage {
       else cam.lookAt(this.deathAt.x, this.deathAt.y, this.deathAt.z + 0.01);
       return;
     }
-    // The title card, spectating: a slow flight round the island.
-    const a = t * 0.07;
-    _v.set(Math.sin(a) * 30, 15 + Math.sin(t * 0.13) * 3, Math.cos(a) * 30);
+    // The title card, spectating: a slow sway in the kitchen doorway, looking at the table.
+    _v.set(3 + Math.sin(t * 0.21) * 0.9, 1.55 + Math.sin(t * 0.13) * 0.1, 4.4);
     cam.position.lerp(_v, Math.min(1, dt * 2));
-    cam.lookAt(0, 1.5, 0);
+    cam.lookAt(3, 1.0, 1.2);
   }
 
   private name(pid: string) {
@@ -364,6 +384,7 @@ const CSS = `
 .fps .hurt { position: absolute; inset: 0; box-shadow: inset 0 0 120px #f00c; opacity: 0; transition: opacity .4s; }
 .fps .hurt.on { opacity: 1; transition: none; }
 .fps .hp { position: absolute; left: 24px; bottom: 20px; font-size: 40px; }
+html.vp-touching .fps .hp { bottom: calc(var(--vp-touch-h) + 12px); }
 .fps .hp small { font-size: 14px; opacity: .8; margin-left: 6px; }
 .fps .feed { position: absolute; right: 18px; top: 90px; text-align: right; font-size: 14px; line-height: 1.6; }
 .fps .mid { position: absolute; left: 0; right: 0; top: 60%; text-align: center; font-size: 22px; }
@@ -387,6 +408,11 @@ class Hud {
     this.el = { x: q('x'), hit: q('hit'), hurt: q('hurt'), hp: q('hp'), feed: q('feed'), mid: q('mid') };
     document.head.append(this.style);
     document.body.append(this.root);
+  }
+
+  /** Photo mode: none of it shows. */
+  set hidden(on: boolean) {
+    this.root.style.display = on ? 'none' : '';
   }
 
   update(dt: number, playing: boolean, hp: number, dead: boolean) {
