@@ -65,7 +65,7 @@ export default async (t: Shots) => {
     if (got !== want) t.warn(`${name}: the meter says ${got}, expected ${want} (${why})`);
   };
   await level('matare-hemma', 2);
-  await t.eval(place(5.3, 1.0, -2.3, -0.2));
+  await t.eval(place(5.4, 3.0, -2.3, -0.2));
   await level('matare-koket', 1);
   await t.eval(place(3.0, 6.6, Math.PI, -0.2));
   await level('matare-hallen', 0);

@@ -91,6 +91,8 @@ export class Shooter implements GameStage {
   private photoAt: PhotoPoint | null = null;
   private readonly shownFrags = new Map<string, string>();
   private lastTick = -1;
+  /** Who won the round that just ended, for the board. */
+  private roundWin: 'k' | 'v' | undefined;
   private readonly read: FpsIntent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, alt: false, firePressed: false, altPressed: false, slot: null, wheel: 0 };
   private readonly it: Intent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, become: NO_FORM, lock: false, taunt: false };
   private firstPerson = false;
@@ -328,6 +330,7 @@ export class Shooter implements GameStage {
       banner(kusin ? 'LETA!' : 'KUSINERNA KOMMER!', kusin ? '#ff8a1c' : '#c2402f');
       this.sfx.play(SOUNDS.whistle);
     } else if (ph === 'end') {
+      this.roundWin = win;
       banner(win === 'k' ? 'KUSINERNA VANN!' : 'VÄTTARNA VANN!', win === 'k' ? '#ff8a1c' : '#c2402f');
       this.sfx.play(SOUNDS.win);
     } else banner('VÄNTAR PÅ FLER', '#9fd3b0');
@@ -486,6 +489,7 @@ export class Shooter implements GameStage {
         ? link.players.map((lp) => ({ name: lp.name, role: core.match.stats.get(lp.id)?.role ?? 'v', score: core.match.stats.get(lp.id)?.score ?? 0, me: lp.id === link.you }))
           .sort((x, y) => y.score - x.score)
         : null,
+      win: this.roundWin,
     });
     this.camera(dt, t, me);
     this.kitchen.staged = !!photo || !flow.live;
@@ -680,7 +684,7 @@ html.vp-touching .ia .card { bottom: calc(var(--vp-touch-h) + 12px); }
 .ia .mid { position: absolute; left: 0; right: 0; top: 62%; text-align: center; font-size: 22px; }
 .ia .mid small { font-size: 15px; opacity: .85; }
 .ia .aim { position: absolute; left: 0; right: 0; top: calc(50% + 22px); text-align: center; font-size: 15px; }
-.ia .off { display: none; }
+.ia .off { display: none !important; }   /* over any panel's own display (the blind screen is flex) */
 .ia .timer { position: absolute; left: 18px; top: 16px; padding: 6px 12px; border: 3px solid #1d2340; border-radius: 12px; background: rgba(255,252,245,.88);
   color: #1d2340; text-shadow: none; box-shadow: 0 4px 0 #1d2340; font: 12px 'Press Start 2P', monospace; }
 .ia .timer b { display: block; margin-top: 4px; font-size: 18px; }
@@ -689,6 +693,8 @@ html.vp-touching .ia .card { bottom: calc(var(--vp-touch-h) + 12px); }
 .ia .blind .big { font: 22px 'Press Start 2P', monospace; color: #ffd98a; }
 .ia .blind .count { font: 56px 'Press Start 2P', monospace; }
 .ia .blind small { font-size: 16px; opacity: .8; max-width: 460px; text-align: center; }
+.ia .blind.listing { justify-content: flex-end; padding-bottom: 6vh; }
+.ia .blind.listing .big, .ia .blind.listing small { display: none; }
 .ia .meter { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .ia .meter i { display: inline-block; width: 14px; height: 14px; border: 2px solid #1d2340; border-radius: 4px; background: #e8dcc2; }
 .ia .meter i.on.l0 { background: #ff5a36; } .ia .meter i.on.l1 { background: #f2c94c; } .ia .meter i.on.l2 { background: #7ee081; }
@@ -716,6 +722,8 @@ export interface HudState {
   list: boolean;
   /** The round's end: everyone by points. */
   board: { name: string; role: 'k' | 'v'; score: number; me: boolean }[] | null;
+  /** Who won the round just ended. */
+  win?: 'k' | 'v';
   kusin: boolean;
   hp: number;
   form: number;
@@ -782,6 +790,8 @@ class Hud {
     this.el.timer.classList.toggle('hurry', s.left < 10.5);
     // Eyes shut: the whole screen, a count.
     this.el.blind.classList.toggle('off', !s.blind);
+    // Reading the list with eyes shut: just the count, under it.
+    this.el.blind.classList.toggle('listing', s.list);
     if (s.blind) {
       const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig i köket och skafferiet. Håll in <span class="key">Tab</span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
       if (html !== this.lastBlind) this.el.blind.innerHTML = this.lastBlind = html;
@@ -789,7 +799,8 @@ class Hud {
     this.el.list.classList.toggle('off', !s.list);
     this.el.board.classList.toggle('off', !s.board);
     if (s.board) {
-      const html = '<div class="row"><b>Poäng</b></div>' + s.board.map((r) => `<div class="row${r.me ? ' me' : ''}"><span>${esc(r.name)}</span><span>${r.role === 'k' ? 'kusin' : 'vätte'}</span><b>${r.score} p</b></div>`).join('');
+      const head = s.win === 'k' ? 'Kusinerna tog alla!' : s.win === 'v' ? 'Vättarna klarade sig!' : 'Poäng';
+      const html = `<div class="row"><b>${head}</b></div>` + s.board.map((r) => `<div class="row${r.me ? ' me' : ''}"><span>${esc(r.name)}</span><span>${r.role === 'k' ? 'kusin' : 'vätte'}</span><b>${r.score} p</b></div>`).join('');
       if (html !== this.lastBoard) this.el.board.innerHTML = this.lastBoard = html;
     }
     this.el.hit.classList.toggle('on', (this.hitT -= dt) > 0);
