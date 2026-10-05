@@ -189,6 +189,35 @@ Mormor är banans stjärna. Hon är **varken gömmarens eller sökarens vän**, 
 - "Sju sorters kakor" dyker upp på bordet. Sökare som skjuter på kakor förlorar HP dubbelt (mormor blir arg).
 - Radar-ping var 15:e sekund för sökarna.
 
+## Gömda roliga saker (easter eggs)
+
+Saker som får folk att skratta och peka, och som belönar dem som utforskar. De flesta går också att *vara*.
+
+### Gömda props (spelbara)
+De är med i inventarielistan, men under rubriken **"Övrigt (fråga inte)"**.
+| Prop | Var | Varför den är kul |
+|---|---|---|
+| **Mormors mammelucker** | Tvättlinan i trädgården | Fladdrar i vinden. En gömmare som mammelucka får fladdra gratis utan att avslöja sig. Taunt: ett pinsamt *flapp-flapp*. |
+| **Löständer i vattenglas** | Nattduksbordet i sovrummet | Taunten är klapprande tänder. Kan "bita" en sökare (gör ingen skada, men sökaren hoppar till och tappar siktet). |
+| **Toarullsdocka** | Badrummet | Den virkade damen över reservrullen. Ser ut att titta på dig. |
+| **Plastöverdrag** | Finsoffan i vardagsrummet | En gömmare kan krypa *in under* plasten. Det prasslar när sökare sätter sig. |
+| **Kakburken med sybehör** | Syrummet | Ser ut som en kakburk men innehåller knappar och nålar. Sökare som öppnar den får utmärkelsen "Besviken". |
+
+### Hemligheter och interaktiva saker
+- **Den hemliga gången:** drar man ut rätt bok i vardagsrummets bokhylla ("Nyttiga råd för husmodern, del 3") öppnas en lucka i garderoben som leder till syrummet. Gömmare som hittar den får en flyktväg. När den öppnats en gång syns den för alla.
+- **Telefonen med snurrskiva:** ringer ibland. Den sökare som svarar fastnar i 5 s med mormors väninna Gun-Britt, men får en ledtråd: *"Jag såg en så konstig kopp i köket, du."* (Ledtråden stämmer ungefär 70 % av gångerna.)
+- **Kylskåpsdörren:** barnteckningar med kritor föreställer **de spelare som är med i matchen**, ritade av "barnbarnen".
+- **Fotoalbumet** på soffbordet: när man bläddrar visas förra matchens vinnare och utmärkelser som gamla svartvita foton.
+- **Morfars porträtt:** mustaschen har en ny form varje runda. Ingen kommenterar det.
+- **Morfars godisgömma** bakom vedspisen: en sökare som hittar den får en halstablett (+10 % fart i 10 s).
+- **Tjock-TV:n:** visar ett testbild-mönster. Skjuter man på den byter den kanal, och kanal 3 visar en direktsändning från en av gömmarnas kamera i 1 s (ett grymt men ärligt tips).
+- **Vykortet på kylskåpet** är från Spökslottet: *"Hälsningar från slottet! Det spökar som vanligt. /Din syster"* (kopplar ihop banorna).
+
+### Hemliga utmärkelser
+- **"Mormors favorit"**: överlev en hel runda som mammelucka.
+- **"Gun-Britt-offret"**: svara i telefonen tre gånger i samma match.
+- **"Tandfen"**: hitta alla tre löständer (två är gömda någon annanstans i huset).
+
 ## Gömställen och siktlinjer (designregler)
 - **Inga perfekta gömställen.** Varje plats ska synas från minst en vinkel en sökare naturligt går förbi.
 - **Höjd:** hyllor, skåp och byrån ger höjdgömställen, men alltid åtkomliga för sökare via stol eller pall.
