@@ -1,0 +1,1 @@
+{ "id": "i-am-a-thing", "name": "I Am a Thing", "players": { "min": 1, "max": 8 }, "input": ["mouse", "pointerLock", "keyboard"], "description": "", "tags": [] }

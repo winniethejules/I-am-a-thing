@@ -1,0 +1,7 @@
+{
+  // Typechecks the tests too, with bun's test types (vp check runs it).
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "types": ["bun"] },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", ".vp"]
+}
