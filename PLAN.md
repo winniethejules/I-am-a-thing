@@ -239,6 +239,18 @@ Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollb
   - Vättar väljer först en sorts sak (så inte alla blir stolar), sedan en plats de faktiskt kan gå till.
   - Kusinen letar i skafferiet också, går mot taunts den hör, och testskjuter mer sällan.
   - Rättat: flera spelare kunde få samma startplats när en ny runda började.
+- [x] Blåbärssylten fick en egen, låg och bred burk (galleriet varnade för två burkar med samma form).
+
+**Resultat fas 2 (2026-10-05):**
+- **Tester:** 9 av 9 går igenom (nytt: rundor, rollbyte, poäng och matchslut).
+- **CPU-balans** (15 rundor, bara CPU:er, 1 kusin mot 3 vättar): kusinen tar 2–10 av 9 vättar per tre rundor beroende på seed och gissar fel 4–8 gånger per runda. Ingen vätte står kvar som sig själv när sökfasen börjar.
+- **Fotopunkterna K1–K4 och nya S1 (skafferiet)** klarar det kalibrerade bildtestet. S1 föll först på för lite ljust (7 %); glödlampan gjordes starkare, nu 18 %.
+- **Galleriet:** inga ⚠.
+- **Bevis:**
+  - `qa/fas2/efter/` (blunda, listan, sökfasen som filmremsa, slutet, mätaren på tre platser; mätningar i `qa/fas2-scener.ts`);
+  - `qa/fas2/jamforelse/` (skafferiet före och efter, en runda);
+  - `qa/fas2/fotopunkter/` och `qa/fas2/galleri/`.
+- **Hittat och rättat på bilderna:** blunda-skärmen låg kvar över hela sökfasen och poängtavlan (CSS), och listan krockade med blunda-texten.
 
 ### Detaljpass på sakerna (ditt önskemål, görs längre fram)
 "Sakerna behöver vara mycket mer detaljerade." Ett eget pass innan nya rum byggs, så att nya rum får samma nivå direkt.

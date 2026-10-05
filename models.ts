@@ -386,21 +386,24 @@ function shelf(k: Ids) {
 }
 
 /** En syltburk: glass, jam inside, a gingham cloth tied over the top with string, a paper label. */
-function jar(k: Ids, jam: number) {
-  const v = new Volume(7, 10, 7);
-  for (let y = 0; y < 8; y++) for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) {
-    if (!round2(x, z, 3, 3, 3.2)) continue;
-    const rim = !round2(x, z, 3, 3, 2.2);
-    v.set(x, y, z, y === 0 ? k.GLASS : rim ? (y >= 2 && y <= 4 ? k.PAPER : y > 6 ? k.GLASS : jam) : y < 7 ? jam : k.GLASS);
+/** A jam jar: glass, the jam, a paper label, a gingham cloth tied over the top. `h` is the glass's height. */
+function jar(k: Ids, jam: number, h: number, w: number) {
+  const c = (w - 1) / 2, n = w;
+  const v = new Volume(n, h + 2, n);
+  for (let y = 0; y < h; y++) for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) {
+    if (!round2(x, z, c, c, c + 0.2)) continue;
+    const rim = !round2(x, z, c, c, c - 0.8);
+    v.set(x, y, z, y === 0 ? k.GLASS : rim ? (y >= 2 && y <= h - 4 ? k.PAPER : y > h - 2 ? k.GLASS : jam) : y < h - 1 ? jam : k.GLASS);
   }
-  for (const [x, z] of [[1, 3], [5, 3], [3, 1], [3, 5]]) v.set(x, 3, z, k.INK);   // the label's handwriting
-  for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) if (round2(x, z, 3, 3, 3.6)) v.set(x, 8, z, k.GINGHAM);
-  for (let z = 1; z < 6; z++) for (let x = 1; x < 6; x++) if (round2(x, z, 3, 3, 2.4)) v.set(x, 9, z, k.GINGHAM);
-  for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) if (round2(x, z, 3, 3, 3.3) && !round2(x, z, 3, 3, 2.5)) v.set(x, 7, z, k.WHITE);   // the string
-  return { vol: v, voxel: F, origin: [3.5, 0, 3.5] as [number, number, number], ground: true };
+  for (const [x, z] of [[1, c], [n - 2, c], [c, 1], [c, n - 2]]) v.set(x, 3, z, k.INK);   // the label's handwriting
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) if (round2(x, z, c, c, c + 0.6)) v.set(x, h, z, k.GINGHAM);
+  for (let z = 1; z < n - 1; z++) for (let x = 1; x < n - 1; x++) if (round2(x, z, c, c, c - 0.6)) v.set(x, h + 1, z, k.GINGHAM);
+  for (let z = 0; z < n; z++) for (let x = 0; x < n; x++) if (round2(x, z, c, c, c + 0.3) && !round2(x, z, c, c, c - 0.5)) v.set(x, h - 1, z, k.WHITE);   // the string
+  return { vol: v, voxel: F, origin: [n / 2, 0, n / 2] as [number, number, number], ground: true };
 }
-const jarLingon = (k: Ids) => jar(k, k.RED);
-const jarBlueberry = (k: Ids) => jar(k, k.INK);
+/** Lingon in a tall jar; blueberries in a low, wide one (so the shelf isn't one jar in two colours). */
+const jarLingon = (k: Ids) => jar(k, k.RED, 8, 7);
+const jarBlueberry = (k: Ids) => jar(k, k.INK, 6, 9);
 
 /** En mjölpåse: a paper sack with a blue print, bulging at the bottom, its top folded over. */
 function sack(k: Ids) {

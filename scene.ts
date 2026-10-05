@@ -82,7 +82,7 @@ export class KitchenScene {
     L.add({ ...L.cell(3, 1.68, 1.55), color: '#ffcf8a', reach: 40, strength: 0.7, group: 1 });
     L.add({ ...L.cell(3, 2.2, 6.5), color: '#ffcf8a', reach: 22, strength: 0.6, group: 1 });
     L.add({ ...L.cell(0.98, 0.45, 1.75), color: '#ff8a3a', reach: 22, strength: 0.8, group: 2 });
-    L.add({ ...L.cell(7.0, 1.95, 4.35), color: '#ffd9a0', reach: 20, strength: 0.65, group: 1 });   // the pantry's bulb
+    L.add({ ...L.cell(7.0, 1.95, 4.35), color: '#ffd9a0', reach: 24, strength: 0.85, group: 1 });   // the pantry's bulb: a bare bulb in a small room, bright
     for (const [x0, x1] of WINDOWS) {
       const x = (x0 + x1) / 2;
       L.add({ ...L.cell(x, 1.5, 0.35), color: '#eaf2ff', reach: 44, strength: 0.55, group: 3 });
