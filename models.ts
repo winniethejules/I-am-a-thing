@@ -301,7 +301,7 @@ function crossword(k: Ids) {
 /** Trasmattan: a striped rag rug. */
 function ragRug(k: Ids) {
   const v = new Volume(12, 1, 28);
-  const stripes = [k.RED, k.CREAM, k.BLUE, k.CREAM, k.MINT_FLAT, k.CREAM, k.YELLOW, k.CREAM];
+  const stripes = [k.FALU_FLAT, k.CREAM, k.WOOD_DARK, k.CREAM, k.MINT_FLAT, k.CREAM, k.GREY, k.CREAM];   // the house's own colours: no new signal colour
   for (let z = 0; z < 28; z++) for (let x = 0; x < 12; x++) v.set(x, 0, z, stripes[Math.floor(z / 2) % stripes.length]);
   return prop(v);
 }

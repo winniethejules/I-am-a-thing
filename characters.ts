@@ -56,6 +56,8 @@ export function kusin(k: Ids, look: KusinLook): Volume {
     v.set(0, 13, 2, hair); v.set(8, 13, 2, hair);
   }
   v.set(3, 14, 4, k.EYE); v.set(5, 14, 4, k.EYE);
+  v.set(4, 13, 5, k.SKIN);   // a nose
+  for (const x of [2, 6]) { v.set(x, 12, 4, 0); v.set(x, 16, 4, 0); }   // round the head's front corners
   v.set(2, 13, 4, k.ROSEPINK); v.set(6, 13, 4, k.ROSEPINK);
   v.set(4, 12, 4, k.RED);   // a grin
   // The hat.

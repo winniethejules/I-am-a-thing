@@ -11,7 +11,7 @@ import {
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
 import { HOUSE_AT, HOUSE_SIZE, HV, WINDOWS, stampHouse, type Mat } from './house';
 import { KITCHEN_PROPS, STAGED } from './kitchen';
-import { LOOKS, type LookName } from './look';
+import { CHOSEN, LOOKS, type LookName } from './look';
 import { box, buildModels, type Model, type ModelKey } from './models';
 import type { Ids } from './textures';
 
@@ -28,7 +28,7 @@ export class KitchenScene {
   readonly kusin: Avatar;
   readonly vatte: Avatar;
   private readonly geos: BufferGeometry[] = [];
-  look: LookName = 'A';
+  look: LookName = CHOSEN;
 
   constructor(private readonly ctx: GameContext, private readonly view: ArenaStage, private readonly ids: Ids) {
     const { engine } = ctx;
@@ -61,7 +61,12 @@ export class KitchenScene {
       av.root.traverse((o) => void (o.castShadow = true));
       this.root.add(av.root);
     }
-    this.setLook('A');
+    this.setLook(CHOSEN);
+    // Dust in the lamplight over the table: warm motes, drifting slowly.
+    view.pollen({
+      count: 90, area: [4.2, 3.2], height: [0.5, 2.3], centre: [3, 0, 2.0],
+      colors: ['#ffe2a8', '#fff1d0', '#ffd27a'], size: [0.012, 0.026], speed: [0.02, 0.06], amp: [0.05, 0.15],
+    }, mulberry32(0xd057));
   }
 
   /** The lamp, the stove, daylight and dusk through each window, the hall's lamp: four dimmer groups. */

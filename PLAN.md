@@ -156,7 +156,7 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 
 ## 9. Faser
 
-### Fas 0: looktestet ← **vi är här**
+### Fas 0: looktestet ✔
 **Mål:** låsa stilen innan vi bygger mer.
 **Du får se:** köket i färdig kvalitet med en kusin (med pistol) och en vätte, i tre ljusvarianter.
 - [x] Projektet uppsatt (Voxel Party SDK, `--fps`-mallen som grund).
@@ -167,20 +167,21 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 - [x] Karaktärerna: kusin med sugkoppspistol (egen modell i första person, med hand) och vätte, med varianter.
 - [x] Tre ljusvarianter (A/B/C) och fotopunkterna K1–K4 (K4: kusinens egna ögon, med pistolen).
 - [x] Bildtestet på alla bilder (`tools/qa.py`), galleriet läst utan ⚠, och `vp check` helt grönt.
-- [ ] **Du väljer en look.** Sedan kalibreras bildtestets gränser mot den bilden.
+- [x] **Du valde look C, skymning** (2026-10-05). Den är nu standard (`look.ts`: `CHOSEN`).
+- [x] Bildtestet kalibrerat mot den godkända K1-bilden (`qa/bildtest.sh`).
+  - "Ljus" börjar vid luminans 80, eftersom det är ett skymningsspel.
+  - **Golv:** mörkt ≥ 15 %, mellan ≥ 10 % och ljust ≥ 10 %.
+  - **Signalfärger:** högst två, faluröd och mintväggarna.
+- [x] Dammkorn i lampljuset, en dämpad trasmatta, en näsa och ett rundare huvud på kusinen.
 
-**Läge 2026-10-05:**
-- **Bilderna:** `qa/fas0/jamforelse/` (valj-look, alla-fotopunkter, fore-efter) och `qa/fas0/efter/`.
-- **Bildtestet:** A och B klarar alla fotopunkter utom A-K3, som har för få mörka partier och för många signalfärger i närbilden på kopparna. C klarar inte K4, som är för mörk.
-- **Kvar i fas 0:**
-  - kalibrera mot vald look;
-  - dammkorn i solstrimmorna;
-  - kusinens ansikte kan bli mindre fyrkantigt.
+**Resultat fas 0 (2026-10-05):**
+- **Godkänt:** du valde look C.
+- **Bildtestet:** alla fyra fotopunkter (K1–K4) klarar det kalibrerade testet.
+- **Kontroller:** galleriet har inga ⚠ och `vp check` är helt grönt.
+- **Bevis:** `qa/fas0/jamforelse/` (valj-look, alla-fotopunkter, fore-efter, look-c-fore-efter) och `qa/fas0/c-kalibrering/`.
+- **Inte gjort:** ljud och de andra rummen. De hör till senare faser.
 
-**Klart när:** du har valt en look, bilderna klarar bildtestet och det går i 60 fps.
-**Bevis:** varianterna sida vid sida från samma fotopunkt och gallerisidorna.
-
-### Fas 1: känslan
+### Fas 1: känslan ← **vi är här**
 Förvandlingen och sugkoppsskottet med alla reaktioner. En vätte-CPU som gömmer sig och en kusin-CPU som letar, i köket.
 **Bevis:** filmremsor av förvandling, skott, fel träff och rätt träff.
 

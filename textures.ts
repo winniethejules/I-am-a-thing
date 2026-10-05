@@ -154,7 +154,7 @@ export const TEXTURES: TexDef[] = [
   { name: 'ia_moss', paint: flat('#5f7f3a', '#5a7936') },
   { name: 'ia_eye', paint: flat('#16182a', '#16182a') },
   { name: 'ia_eye_white', paint: flat('#fbfbf6', '#fbfbf6') },
-  { name: 'ia_orange', paint: flat('#ff6a2e', '#f8642a') },
+  { name: 'ia_orange', paint: flat('#ff8a1c', '#f8841a') },
   { name: 'ia_dart', paint: flat('#ffd23a', '#f8cb34') },
   { name: 'ia_fence', paint: flat('#f0ece2', '#e8e4da') },
   { name: 'ia_pine_tree', paint: flat('#2f5a3e', '#2b553a') },

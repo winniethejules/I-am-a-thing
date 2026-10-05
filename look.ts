@@ -36,10 +36,12 @@ export const LOOKS: Record<'A' | 'B' | 'C', LookVariant> = {
     name: 'Skymning',
     sky: { from: 'dusk', top: '#1f2b5c', horizon: '#c98a7a', sunIntensity: 0.8, sun: '#ff9d6a', bounce: 0.22, env: 0.2 },
     lamp: 1, stove: 1, day: 0, dusk: 0.9,
-    grade: { exposure: 1.2, saturation: 1.1, contrast: 1.12, highlights: '#ffd9a8', shadows: '#a9b9ff', split: 0.06, vignette: 1.1 },
+    grade: { exposure: 1.2, saturation: 0.98, contrast: 1.12, highlights: '#ffd9a8', shadows: '#a9b9ff', split: 0.06, vignette: 1.1 },
   },
 };
 export type LookName = keyof typeof LOOKS;
+/** The look you chose in the look test (2026-10-05): skymning. A and B stay for comparison. */
+export const CHOSEN: LookName = 'C';
 
 export interface PhotoPoint {
   name: string;
