@@ -3,37 +3,51 @@
  * (FakeRoom: joins, leaves, the host leaving, reloads). game.ts feeds it your intent each frame
  * and draws what it says.
  *
- * The shooter recipe (vp docs fps):
- * - Everyone moves their own body at once and streams it (PlayerSync); the host runs the CPUs.
- * - The shooter decides hits, from what it sees: a hitscan against the grid and everyone's bodies
- *   as drawn. It sends two one-offs riding along with its state: the shot (so everyone draws the
- *   tracer) and, if it hit, a claim naming the victim and the life it hit.
- * - The host judges claims (is it plausible?) and owns the match: HP, frags, deaths, respawns. It
- *   broadcasts snapshots and events (HostSync) and keeps the match with the room, so a new host
- *   carries on. A spawn names the spot; whoever runs that body moves it there.
+ * The recipe (vp docs fps, vp docs netcode):
+ * - Everyone moves their own body at once and streams it (PlayerSync): where it is, where it
+ *   looks, and for a vätte which thing it is (`f`) and whether it's locked still (`lk`). The host
+ *   runs the CPUs.
+ * - A kusin decides what its dart hit, from what it sees: the walls and furniture (the grid), every
+ *   real thing in the kitchen, and every vätte's body as drawn, in its form's box. It sends the dart
+ *   (so everyone draws it flying and sticking) and a claim: a vätte it hit, or a wrong guess.
+ * - The host judges claims (plausible?) and owns the match: roles, darts, catches, patience,
+ *   respawns. It broadcasts snapshots and events (HostSync) and keeps the match with the room, so a
+ *   new host carries on. A spawn names the spot; whoever runs that body moves it there.
  */
 import {
-  FPS_ARENA, HostSync, PlayerSync, Seats, botRng, fpsStep, mulberry32, newFpsBody, rayBox, spreadDir, turn,
+  HostSync, PlayerSync, Seats, botRng, fpsStep, mulberry32, newFpsBody, rayBox, spreadDir, turn,
   type GameFrame, type LinkPlayer, type MinigameLink, type Rng,
 } from '@voxelparty/sdk/core';
-import { Bot, IDLE, type Intent } from './bot';
+import { Bot, IDLE, NO_FORM, type Intent } from './bot';
 import { Arena, DEATH_Y } from './map';
-import { DAMAGE, FALL, FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Snap } from './rules';
+import { FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Role, type Snap } from './rules';
+import { FORMS, KUSIN_MOVE, REAL_THINGS, VATTE, formBox, formHp, moveOf } from './things';
 
-/** What each player streams about their body: feet, look, and which life they're on. */
-export type Net = { x: number; y: number; z: number; yw: number; pt: number; l: number };
+/** What each player streams about their body: feet, look, life, and (a vätte) its form and lock. */
+export type Net = { x: number; y: number; z: number; yw: number; pt: number; l: number; f: number; lk: number };
 
-/** A player's one-offs: a shot (from o to e) for the tracer, and a hit claim. */
-export type Shot = { k: 'shot'; o: number[]; e: number[] } | { k: 'hit'; v: string; d: number; l: number };
+/**
+ * A player's one-offs: a dart (from o to e; `t` the real thing it stuck in, -1 none; `v` 1 if it
+ * hit a vätte), a claim on a vätte, a wrong guess, a taunt.
+ */
+export type Shot =
+  | { k: 'shot'; o: number[]; e: number[]; t: number; v: number }
+  | { k: 'hit'; v: string; l: number }
+  | { k: 'wrong'; t: number }
+  | { k: 'taunt' };
 
 /** Something to show: game.ts turns these into effects and sounds, exactly once each. */
 export type Cue =
-  | { k: 'shot'; pid: string; o: number[]; e: number[] }
-  | { k: 'dmg'; v: string; a: string; d: number }
+  | { k: 'shot'; pid: string; o: number[]; e: number[]; t: number; v: number }
+  | { k: 'dmg'; v: string; a: string; hits: number }
+  | { k: 'wrong'; a: string; t: number; hp: number }
   | { k: 'frag'; v: string; a: string }
+  | { k: 'poff'; pid: string; from: number; to: number }
+  | { k: 'lock'; pid: string; on: boolean }
+  | { k: 'taunt'; pid: string }
+  | { k: 'role'; pid: string; r: Role }
   | { k: 'spawn'; pid: string }
   | { k: 'jump'; pid: string }
-  | { k: 'pad'; pid: string }
   | { k: 'land'; pid: string; speed: number }
   | { k: 'win'; pid: string; r: number };
 
@@ -43,6 +57,9 @@ export interface World {
   readonly pawns: ReadonlyMap<string, Pawn>;
   readonly now: number;
   alive(p: Pawn): boolean;
+  role(p: Pawn): Role;
+  /** A vätte's darts taken this life. */
+  hits(p: Pawn): number;
 }
 
 /** A player's body on this client: simulated here (`own`), or drawn from their stream. */
@@ -54,6 +71,11 @@ export class Pawn {
   life = 0;
   own = false;
   cool = 0;
+  /** A vätte's form: an index into FORMS, or VATTE (-1) as itself. */
+  form = VATTE;
+  /** A vätte locked still (it can look round, not move). */
+  locked = false;
+  tauntCool = 0;
   /** This frame's step-ups and landing speed, for the camera. */
   stepped = 0;
   landed = 0;
@@ -65,10 +87,23 @@ export class Pawn {
 const BOT_SKILL = [0.8, 1, 1.15, 0.9];
 /** How long a player may stream the wrong life before the host spawns them again (a spawn they missed). */
 const STALE_MS = 1500;
+/** Taunts: one every this many seconds. */
+const TAUNT_S = 1.5;
+/** A dart that reaches a thing's box within this of the grid's coarser cells hit the thing. */
+const THING_SLACK = 0.3;
+/** How far a vätte reaches to become something. */
+export const REACH = 2.6;
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 const isVec = (v: unknown): v is number[] => Array.isArray(v) && v.length === 3 && v.every(Number.isFinite);
 const hash = (s: string) => [...s].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261) >>> 0;
+
+/** What a ray from (o) along (d) meets first: the grid, a real thing (its index), or a vätte. */
+export interface RayHit {
+  t: number;
+  thing: number;
+  pawn: Pawn | null;
+}
 
 export class Core implements World {
   readonly arena = new Arena();
@@ -88,8 +123,12 @@ export class Core implements World {
   private readonly stale = new Map<string, number>();
   private readonly dir = [0, 0, 0];
   private roster: readonly LinkPlayer[] = [];
+  /** Host: the roster the roles were last balanced for. */
+  private balanced: readonly LinkPlayer[] | null = null;
   private wasHost: boolean;
   private botsMade = 0;
+  /** CPUs a staged scene holds still (`stage`'s `hold`). */
+  private readonly held = new Set<string>();
   private spawnNo = 0;
 
   constructor(
@@ -129,10 +168,10 @@ export class Core implements World {
       if (own && !p.own) this.adopt(p);
       p.own = own;
       if (!own) return this.remote(p, i);
-      const it = !this.frame.live ? IDLE : role === 'local' ? (this.intent() ?? this.bot(lp.id).update(dt, p, this)) : this.bot(lp.id).update(dt, p, this);
+      const it = !this.frame.live || this.held.has(lp.id) ? IDLE : role === 'local' ? (this.intent() ?? this.bot(lp.id).update(dt, p, this)) : this.bot(lp.id).update(dt, p, this);
       this.play(p, i, it, dt);
       const b = p.body;
-      this.moves.send(i, { x: r2(b.x), y: r2(b.y), z: r2(b.z), yw: r2(b.yaw), pt: r2(b.pitch), l: p.life });
+      this.moves.send(i, { x: r2(b.x), y: r2(b.y), z: r2(b.z), yw: r2(b.yaw), pt: r2(b.pitch), l: p.life, f: p.form, lk: p.locked ? 1 : 0 });
     });
 
     if (link.isHost) this.host(dt, now);
@@ -146,6 +185,58 @@ export class Core implements World {
   /** Is this body in play? Ours by what the host told us; everyone else's by the match. */
   alive(p: Pawn): boolean {
     return p.own ? p.alive : !!this.match.stats.get(p.pid)?.alive;
+  }
+
+  role(p: Pawn): Role {
+    return this.match.stats.get(p.pid)?.role ?? 'v';
+  }
+
+  hits(p: Pawn): number {
+    return this.match.stats.get(p.pid)?.hits ?? 0;
+  }
+
+  /**
+   * What a ray meets first: the walls and furniture, a real thing (its box, as map.ts fills the
+   * grid), or a vätte's body in its form's box. `skip` is the one looking.
+   */
+  cast(ox: number, oy: number, oz: number, dx: number, dy: number, dz: number, max: number, skip: Pawn | null): RayHit {
+    // A real thing stands in grid cells a little bigger than itself: one just behind the grid's hit is still the thing.
+    let t = this.arena.ray(ox, oy, oz, dx, dy, dz, max), thing = -1, pawn: Pawn | null = null, tt = Math.min(max, t + THING_SLACK);
+    REAL_THINGS.forEach((th, j) => {
+      const u = rayBox(ox, oy, oz, dx, dy, dz, th.x, th.y, th.z, tt, th.r, th.h);
+      if (u >= 0 && u < tt) [tt, thing] = [u, j];
+    });
+    if (thing >= 0) t = tt;
+    for (const q of this.pawns.values()) {
+      if (q === skip || !this.alive(q) || this.role(q) !== 'v') continue;
+      const { r, h } = formBox(q.form);
+      const u = rayBox(ox, oy, oz, dx, dy, dz, q.body.x, q.body.y, q.body.z, t, r, h);
+      if (u >= 0 && u < t) [t, thing, pawn] = [u, -1, q];
+    }
+    return { t, thing, pawn };
+  }
+
+  /** The thing a vätte looks at within reach: its form, or NO_FORM. */
+  aimedForm(p: Pawn): number {
+    const b = p.body, m = moveOf(false, p.form);
+    const [dx, dy, dz] = spreadDir(b.yaw, b.pitch, 0, () => 0.5, this.dir);
+    const hit = this.cast(b.x, b.y + m.eye, b.z, dx, dy, dz, REACH, p);
+    return hit.thing >= 0 && !hit.pawn ? REAL_THINGS[hit.thing].f : NO_FORM;
+  }
+
+  /**
+   * Host, for staged scenes (`vp shot` scripts, voxelparty-kvalitet §6): make `pid` a kusin or a
+   * vätte now and start them a new life as it, at spawn spot `s`; `hold` keeps a CPU standing still.
+   */
+  stage(pid: string, r: Role, s = 0, hold = false) {
+    const st = this.match.stats.get(pid);
+    if (!this.link.isHost || !st) return false;
+    if (hold) this.held.add(pid);
+    else this.held.delete(pid);
+    st.role = r;
+    this.emit({ k: 'role', pid, r });
+    this.emit(this.match.respawn(pid, s));
+    return true;
   }
 
   dispose() {
@@ -188,14 +279,17 @@ export class Core implements World {
     return b;
   }
 
-  /** Move, look and shoot for a body this client runs (you, or a CPU on the host). */
+  /** Move, look, shoot or hide for a body this client runs (you, or a CPU on the host). */
   private play(p: Pawn, i: number, it: Intent, dt: number) {
     p.stepped = p.landed = 0;
     if (!p.alive) return;
-    const b = p.body;
-    turn(b, it.dyaw, it.dpitch);
+    const b = p.body, kusin = this.role(p) === 'k';
+    p.tauntCool -= dt;
+    if (!kusin) this.hide(p, i, it);
+    // A locked vätte stays exactly as it is: the look is the camera's (game.ts), not the body's.
+    if (!p.locked) turn(b, it.dyaw, it.dpitch);
     if (!this.frame.live) return;
-    const r = fpsStep(this.arena, b, it, dt);
+    const r = fpsStep(this.arena, b, p.locked ? IDLE : it, dt, moveOf(kusin, p.form));
     p.stepped = r.stepped;
     if (r.jumped) this.cues.push({ k: 'jump', pid: p.pid });
     if (r.landed > 6) {
@@ -203,10 +297,13 @@ export class Core implements World {
       this.cues.push({ k: 'land', pid: p.pid, speed: r.landed });
     }
     if (b.y < DEATH_Y) {
-      // Fell off: out of play at once here, and the host counts the death.
+      // Fell out: out of play at once here, and the host counts it.
       p.alive = false;
-      return this.claim(p, i, p.pid, FALL, p.life);
+      if (this.link.isHost) for (const e of this.match.fall(p.pid, p.life, this.now)) this.emit(e);
+      else this.moves.event(i, { k: 'hit', v: p.pid, l: p.life });
+      return;
     }
+    if (!kusin) return;
     p.cool -= dt;
     if (it.fire && p.cool <= 0) {
       p.cool = FIRE_MS / 1000;
@@ -214,32 +311,58 @@ export class Core implements World {
     }
   }
 
-  /** A hitscan from the eye: the grid, then every body as this client draws it. */
-  private fire(p: Pawn, i: number) {
-    const b = p.body, ox = b.x, oy = b.y + FPS_ARENA.eye, oz = b.z;
-    const [dx, dy, dz] = spreadDir(b.yaw, b.pitch, SPREAD, p.rand, this.dir);
-    let t = this.arena.ray(ox, oy, oz, dx, dy, dz, RANGE), victim: Pawn | null = null;
-    for (const q of this.pawns.values()) {
-      if (q === p || !this.alive(q)) continue;
-      const u = rayBox(ox, oy, oz, dx, dy, dz, q.body.x, q.body.y, q.body.z, t);
-      if (u >= 0 && u < t) [t, victim] = [u, q];
+  /** A vätte's own moves: become a thing, lock or unlock, taunt. */
+  private hide(p: Pawn, i: number, it: Intent) {
+    if (it.become !== NO_FORM && it.become !== p.form && this.fits(p, it.become)) {
+      this.cues.push({ k: 'poff', pid: p.pid, from: p.form, to: it.become });
+      p.form = it.become;
+      p.locked = false;
     }
-    const o = [r2(ox), r2(oy), r2(oz)], e = [r2(ox + dx * t), r2(oy + dy * t), r2(oz + dz * t)];
-    this.cues.push({ k: 'shot', pid: p.pid, o, e });
-    this.moves.event(i, { k: 'shot', o, e });
-    if (victim) this.claim(p, i, victim.pid, DAMAGE, victim.life);
+    if (it.lock && (p.locked || p.body.ground)) {
+      p.locked = !p.locked;
+      if (p.locked) Object.assign(p.body, { vx: 0, vz: 0 });
+      this.cues.push({ k: 'lock', pid: p.pid, on: p.locked });
+    }
+    if (it.taunt && p.tauntCool <= 0) {
+      p.tauntCool = TAUNT_S;
+      this.cues.push({ k: 'taunt', pid: p.pid });
+      this.moves.event(i, { k: 'taunt' });
+    }
   }
 
-  /** A hit (or a fall): the host judges it now; anyone else asks the host. */
-  private claim(p: Pawn, i: number, v: string, d: number, l: number) {
-    if (this.link.isHost) this.judge(p.pid, v, d, l);
-    else this.moves.event(i, { k: 'hit', v, d, l });
+  /** Is there room for this form where the body stands? (A chair doesn't fit under the table.) */
+  private fits(p: Pawn, f: number): boolean {
+    if (f !== VATTE && !FORMS[f]) return false;
+    const b = p.body, { r, h } = formBox(f), m = moveOf(false, f);
+    const rr = Math.min(r, m.radius);
+    return !this.arena.boxHits(b.x - rr, b.y + 0.02, b.z - rr, b.x + rr, b.y + h, b.z + rr);
+  }
+
+  /** A dart from the kusin's eye: whatever it meets first. A vätte is a claim, a real thing a wrong guess. */
+  private fire(p: Pawn, i: number) {
+    const b = p.body, ox = b.x, oy = b.y + KUSIN_MOVE.eye, oz = b.z;
+    const [dx, dy, dz] = spreadDir(b.yaw, b.pitch, SPREAD, p.rand, this.dir);
+    const hit = this.cast(ox, oy, oz, dx, dy, dz, RANGE, p);
+    const o = [r2(ox), r2(oy), r2(oz)], e = [r2(ox + dx * hit.t), r2(oy + dy * hit.t), r2(oz + dz * hit.t)];
+    const shot = { k: 'shot' as const, o, e, t: hit.thing, v: hit.pawn ? 1 : 0 };
+    this.cues.push({ ...shot, pid: p.pid });
+    this.moves.event(i, shot);
+    if (hit.pawn) this.claim(p, i, { k: 'hit', v: hit.pawn.pid, l: hit.pawn.life });
+    else if (hit.thing >= 0) this.claim(p, i, { k: 'wrong', t: hit.thing });
+  }
+
+  /** A claim: the host judges it now; anyone else asks the host. */
+  private claim(p: Pawn, i: number, c: Shot) {
+    if (this.link.isHost) this.judge(p.pid, c);
+    else this.moves.event(i, c);
   }
 
   /** Something the host said: follow it in our copy of the match, move our body if it's a spawn, show it. */
   private apply(e: Ev) {
     this.match.follow(e, this.now);
-    if (e.k === 'dmg') this.cues.push({ k: 'dmg', v: e.v, a: e.a, d: e.d });
+    if (e.k === 'dmg') this.cues.push({ k: 'dmg', v: e.v, a: e.a, hits: e.hits });
+    else if (e.k === 'wrong') this.cues.push({ k: 'wrong', a: e.a, t: e.t, hp: e.hp });
+    else if (e.k === 'role') this.cues.push({ k: 'role', pid: e.pid, r: e.r });
     else if (e.k === 'frag') {
       const p = this.pawns.get(e.v);
       if (p?.own) p.alive = false;
@@ -250,18 +373,19 @@ export class Core implements World {
       p.life = e.l;
       if (p.own) {
         Object.assign(p.body, newFpsBody(s.x, s.y, s.z, s.yaw));
-        p.alive = true;
-        p.cool = 0;
+        Object.assign(p, { alive: true, cool: 0, form: VATTE, locked: false });
       }
       this.cues.push({ k: 'spawn', pid: e.pid });
     } else if (e.k === 'win') this.cues.push({ k: 'win', pid: e.pid, r: e.r });
   }
 
-  /** Other players' one-offs: shots to draw, and (on the host) hits to judge. */
+  /** Other players' one-offs: darts to draw, taunts to hear, and (on the host) claims to judge. */
   private heard(pid: string, e: Shot) {
     if (!e || typeof e !== 'object') return;
-    if (e.k === 'shot' && isVec(e.o) && isVec(e.e)) this.cues.push({ k: 'shot', pid, o: e.o, e: e.e });
-    else if (e.k === 'hit' && this.link.isHost && typeof e.v === 'string' && Number.isFinite(e.d) && Number.isInteger(e.l)) this.judge(pid, e.v, e.d, e.l);
+    if (e.k === 'shot' && isVec(e.o) && isVec(e.e) && Number.isInteger(e.t) && (e.v === 0 || e.v === 1)) {
+      this.cues.push({ k: 'shot', pid, o: e.o, e: e.e, t: e.t, v: e.v });
+    } else if (e.k === 'taunt') this.cues.push({ k: 'taunt', pid });
+    else if (this.link.isHost) this.judge(pid, e);
   }
 
   /** A player's game started over (a reload): forget what we counted for them; they need a body again. */
@@ -271,16 +395,35 @@ export class Core implements World {
     if (this.link.isHost && st?.alive) this.emit(this.match.respawn(pid, this.spot(pid)));
   }
 
-  /** Someone else's body: where their stream says, drawn a moment behind. */
+  /** Someone else's body: where their stream says, drawn a moment behind; a new form or lock is a cue. */
   private remote(p: Pawn, i: number) {
     const s = this.moves.smooth(i), l = this.moves.latest(i);
     if (s && [s.x, s.y, s.z, s.yw, s.pt].every(Number.isFinite)) Object.assign(p.body, { x: s.x, y: s.y, z: s.z, yaw: s.yw, pitch: s.pt });
-    if (l && Number.isInteger(l.l)) p.life = l.l;
+    if (!l) return;
+    if (Number.isInteger(l.l)) p.life = l.l;
+    const f = Number.isInteger(l.f) && (l.f === VATTE || FORMS[l.f]) ? l.f : VATTE;
+    if (f !== p.form) {
+      this.cues.push({ k: 'poff', pid: p.pid, from: p.form, to: f });
+      p.form = f;
+    }
+    const lk = l.lk === 1;
+    if (lk !== p.locked) {
+      p.locked = lk;
+      this.cues.push({ k: 'lock', pid: p.pid, on: lk });
+    }
   }
 
   // ------------------------------------------------------------ host
 
   private host(dt: number, now: number) {
+    if (this.balanced !== this.link.players) {
+      // Kusiner and vättar as the room wants them; a changed role starts a new life as it.
+      this.balanced = this.link.players;
+      for (const e of this.match.balance(this.link.players.map((p) => p.id))) {
+        this.emit(e);
+        if (e.k === 'role' && this.match.stats.get(e.pid)?.life) this.emit(this.match.respawn(e.pid, this.spot(e.pid)));
+      }
+    }
     if (this.frame.live) for (const e of this.match.tick(now, (pid) => this.spot(pid))) this.emit(e);
     this.heal(now);
     this.sync.tick(dt, () => this.match.snapshot(this.link.players.map((p) => p.id)));
@@ -292,16 +435,30 @@ export class Core implements World {
     this.apply(e);
   }
 
-  /** Is a claimed hit plausible? The right damage, in range, not faster than the gun fires; then the match decides. */
-  private judge(a: string, v: string, d: number, l: number) {
-    if (a === v ? d !== FALL : d !== DAMAGE) return;
-    const pa = this.pawns.get(a), pv = this.pawns.get(v);
-    if (!pa || !pv) return;
-    if (a !== v) {
-      if (Math.hypot(pa.body.x - pv.body.x, pa.body.y - pv.body.y, pa.body.z - pv.body.z) > RANGE + 4) return;
+  /**
+   * Is a claim plausible? A dart in range, not faster than the gun fires, at a vätte (its form's
+   * darts, as we see it) or a real thing; or a fall (a player claiming their own body). Then the
+   * match decides.
+   */
+  private judge(a: string, c: Shot) {
+    const pa = this.pawns.get(a);
+    if (!pa) return;
+    if (c.k === 'hit') {
+      if (typeof c.v !== 'string' || !Number.isInteger(c.l)) return;
+      if (c.v === a) {
+        for (const e of this.match.fall(a, c.l, this.now)) this.emit(e);
+        return;
+      }
+      const pv = this.pawns.get(c.v);
+      if (!pv || Math.hypot(pa.body.x - pv.body.x, pa.body.y - pv.body.y, pa.body.z - pv.body.z) > RANGE + 4) return;
       if (!this.rate.take(a, this.now)) return;
+      for (const e of this.match.hit(a, c.v, c.l, formHp(pv.form), this.now)) this.emit(e);
+    } else if (c.k === 'wrong') {
+      const th = REAL_THINGS[c.t];
+      if (!th || Math.hypot(pa.body.x - th.x, pa.body.z - th.z) > RANGE + 4) return;
+      if (!this.rate.take(a, this.now)) return;
+      for (const e of this.match.wrong(a, c.t, this.now)) this.emit(e);
     }
-    for (const e of this.match.hit(a, v, d, l, this.now)) this.emit(e);
   }
 
   /**
@@ -349,3 +506,4 @@ export class Core implements World {
     if (s) this.match.apply(s, this.now);
   }
 }
+

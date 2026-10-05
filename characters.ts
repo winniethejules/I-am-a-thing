@@ -51,9 +51,9 @@ export function kusin(k: Ids, look: KusinLook): Volume {
   box(v, 2, 16, 2, 7, 17, 5, hair);
   if (look.hair) {
     // Pigtails: they stick out at the sides, so the blond kusiner have their own silhouette.
-    box(v, 1, 13, 2, 2, 15, 3, hair);
-    box(v, 7, 13, 2, 8, 15, 3, hair);
-    v.set(0, 13, 2, hair); v.set(8, 13, 2, hair);
+    box(v, 0, 12, 2, 2, 15, 4, hair);
+    box(v, 7, 12, 2, 9, 15, 4, hair);
+    v.set(0, 11, 2, hair); v.set(8, 11, 2, hair);   // the tips hang down
   }
   v.set(3, 14, 4, k.EYE); v.set(5, 14, 4, k.EYE);
   v.set(4, 13, 5, k.SKIN);   // a nose

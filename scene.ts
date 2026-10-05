@@ -10,12 +10,15 @@ import {
 } from '@voxelparty/sdk';
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
 import { HOUSE_AT, HOUSE_SIZE, HV, WINDOWS, stampHouse, type Mat } from './house';
-import { KITCHEN_PROPS, STAGED } from './kitchen';
+import { KITCHEN_PROPS, STAGED, type Placed } from './kitchen';
 import { CHOSEN, LOOKS, type LookName } from './look';
 import { box, buildModels, type Model, type ModelKey } from './models';
 import type { Ids } from './textures';
 
-const _m = new Matrix4(), _q = new Quaternion(), _p = new Vector3(), _s = new Vector3(1, 1, 1), _up = new Vector3(0, 1, 0);
+const _m = new Matrix4(), _q = new Quaternion(), _tilt = new Quaternion(), _p = new Vector3(), _s = new Vector3(1, 1, 1);
+const _up = new Vector3(0, 1, 0), _x = new Vector3(1, 0, 0);
+/** How long a hit thing wobbles. */
+const WOBBLE_S = 0.5;
 
 /** A model's geometry, meshed once (voxel size and origin as the model says). */
 function geometry(m: Model): BufferGeometry {
@@ -28,6 +31,10 @@ export class KitchenScene {
   readonly kusin: Avatar;
   readonly vatte: Avatar;
   private readonly geos: BufferGeometry[] = [];
+  /** Where each placed thing is drawn: its instanced mesh and slot, so a hit can wobble it. */
+  private readonly slots = new Map<Placed, { mesh: InstancedMesh; i: number }>();
+  /** Things wobbling from a dart: how long they have left. */
+  private readonly wobbles = new Map<Placed, number>();
   look: LookName = CHOSEN;
 
   constructor(private readonly ctx: GameContext, private readonly view: ArenaStage, private readonly ids: Ids) {
@@ -94,6 +101,7 @@ export class KitchenScene {
       list.forEach((p, i) => {
         _q.setFromAxisAngle(_up, p.yaw);
         mesh.setMatrixAt(i, _m.compose(_p.set(p.x, p.y, p.z), _q, _s));
+        this.slots.set(p, { mesh, i });
       });
       mesh.castShadow = mesh.receiveShadow = true;
       mesh.name = key;
@@ -217,8 +225,23 @@ export class KitchenScene {
     if (glow) glow.visible = v.lamp > 0;
   }
 
-  /** Every frame: the actors stand and breathe, the stove flickers. */
+  /** A dart hit this real thing: it wobbles on its base for a moment. */
+  wobble(p: Placed) {
+    if (this.slots.has(p)) this.wobbles.set(p, WOBBLE_S);
+  }
+
+  /** Every frame: the actors stand and breathe, the stove flickers, hit things wobble. */
   update(dt: number, t: number) {
+    for (const [p, left] of this.wobbles) {
+      const slot = this.slots.get(p)!, k = Math.max(0, left - dt);
+      const tilt = k > 0 ? Math.sin((WOBBLE_S - k) * 34) * 0.16 * (k / WOBBLE_S) : 0;
+      _q.setFromAxisAngle(_up, p.yaw).multiply(_tilt.setFromAxisAngle(_x, tilt));
+      const hop = k > 0 ? Math.abs(Math.sin((WOBBLE_S - k) * 17)) * 0.03 * (k / WOBBLE_S) : 0;
+      slot.mesh.setMatrixAt(slot.i, _m.compose(_p.set(p.x, p.y + hop, p.z), _q, _s));
+      slot.mesh.instanceMatrix.needsUpdate = true;
+      if (k > 0) this.wobbles.set(p, k);
+      else this.wobbles.delete(p);
+    }
     for (const av of [this.kusin, this.vatte]) av.update(dt);
     this.vatte.char.body.scale.y = 1 + Math.sin(t * 2.2) * 0.025;
     this.kusin.char.body.scale.y = 1 + Math.sin(t * 1.7 + 1) * 0.015;

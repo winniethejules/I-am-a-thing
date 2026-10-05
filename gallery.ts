@@ -43,7 +43,8 @@ export default (g: Gallery) => {
   }
 
   g.group('Kusiner och vättar', { scale: 'shared', ghost: false });
-  for (let n = 0; n < 4; n++) g.add(`Kusin ${n + 1}`, () => new Avatar(mat, kusin(ids, kusinLook(n * 5 + (n & 1) * 8)), { voxel: KUSIN_VOXEL }).root);
+  // Four kusiner that differ in shape as well as colour: bobble hat or cap, pigtails or not.
+  for (const [i, n] of [0, 13, 6, 11].entries()) g.add(`Kusin ${i + 1}`, () => new Avatar(mat, kusin(ids, kusinLook(n)), { voxel: KUSIN_VOXEL }).root);
   for (const [i, n] of [0, 5, 10, 31].entries()) g.add(`Vätte ${i + 1}`, () => new Avatar(mat, vatte(ids, vatteLook(n)), { voxel: VATTE_VOXEL }).root);
 
   g.group('Sugkoppspistolen', { ground: false });

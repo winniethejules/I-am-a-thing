@@ -181,9 +181,46 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 - **Bevis:** `qa/fas0/jamforelse/` (valj-look, alla-fotopunkter, fore-efter, look-c-fore-efter) och `qa/fas0/c-kalibrering/`.
 - **Inte gjort:** ljud och de andra rummen. De hör till senare faser.
 
-### Fas 1: känslan ← **vi är här**
+### Fas 1: känslan ← **klar, väntar på ditt speltest**
 Förvandlingen och sugkoppsskottet med alla reaktioner. En vätte-CPU som gömmer sig och en kusin-CPU som letar, i köket.
 **Bevis:** filmremsor av förvandling, skott, fel träff och rätt träff.
+- [x] Roller från hosten: 1 kusin per 3 vättar (`rules.ts`: `kusinerFor`, `balance`).
+- [x] Vätten: `E` blir saken den tittar på, `R` låser och `Q` tauntar. Tredjepersonskamera som inte går genom väggar; när vätten är låst tittar musen runt den.
+- [x] Sju former med egna träffar och fart (`things.ts`): kopp 1 pil, stol 2 och så vidare.
+- [x] Kusinen i första person:
+  - Sugkoppspilen flyger och fastnar, med eget ljud och egen effekt för porslin, trä, tyg och vägg.
+  - Saken som träffas vickar.
+  - En fel gissning kostar 8 tålamod (rött i kanten, skakning, "Fel!"). En fångst ger 15 tillbaka.
+- [x] Tagen: hitstop, "Tagen!", stjärnor och konfetti. Vätten snurrar ut ur saken och bleknar, och pilen faller till golvet.
+- [x] CPU:er:
+  - Vättar väljer en sak och ställer sig bredvid en likadan, förvandlar sig och låser. De flyr om de blir träffade och tauntar ibland.
+  - Kusinen letar, blir misstänksam mot saker som rör sig eller står fel, och testskjuter ibland en riktig sak.
+- [x] Ett eget tema: en smygande vals i a-moll, 3/4-takt.
+- [x] Ljud: 18 egna ljud.
+- [x] Effekter: 11 egna effekter (`vfx.ts`).
+
+**Resultat fas 1 (2026-10-05):**
+- **Tester:** 8 av 8 går igenom, bland annat:
+  - roller;
+  - pilar per form;
+  - fel gissning;
+  - strålen mot formens låda;
+  - CPU:er som gömmer sig och hittas;
+  - nätkod med join, leave, host-byte och omladdning där alla är överens om roll, fångster och form.
+- **Fotopunkterna K1–K4** klarar fortfarande det kalibrerade bildtestet. Galleriet har inga ⚠.
+- **Bevis:**
+  - `qa/fas1/jamforelse/` (fore-efter, kanslan);
+  - `qa/fas1/efter/` (filmremsor med mätningar i `qa/fas1-scener.ts`);
+  - `qa/fas1/fotopunkter/` och `qa/fas1/galleri/`.
+- **`vp check`:** allt grönt utom sessionen med seed 8919, och den är mätt till en tidsartefakt i molnmiljön.
+  - Utan grafikkort tar riggens första skärmdump 15,7 s (spelet går i cirka 1 bildruta/s, fas 0 likaså).
+  - Kontrollen gör då alla sina joins och sin leave i en klump och jämför mot en spelarlista som den läste innan dess.
+  - En egen logger i samma webbläsare visade att riggen hade rätt antal spelare.
+  - **Behöver bekräftas** med `bunx vp check` på en dator med grafikkort.
+- **Kvar till fas 2:**
+  - Kusin-CPU:n gissar fel ungefär var 8:e sekund, vilket är för ofta för en hel runda.
+  - Nästan alla CPU-vättar blir stolar.
+  - Alla vättar kan just nu bara gömma sig på golvet.
 
 ### Fas 2: en hel runda i köket och skafferiet
 Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollbyte mellan rundor.
