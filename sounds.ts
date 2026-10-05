@@ -153,6 +153,27 @@ export const SOUNDS = {
     reverb: 0.25,
     layers: [{ wave: 'sine', freq: 523, steps: [0, 4, 7, 12], stepTime: 0.05, env: { a: 0.002, d: 0.3, s: 0 }, dur: 0.25 }],
   },
+  /** The round starts: a soft bell, the kusiner shut their eyes. */
+  bell: {
+    vol: 0.36,
+    reverb: 0.35,
+    layers: [
+      { wave: 'sine', freq: 880, env: { a: 0.002, d: 1.2, s: 0 }, vol: 0.6 },
+      { wave: 'sine', freq: 2213, env: { a: 0.002, d: 0.6, s: 0 }, vol: 0.25 },
+    ],
+  },
+  /** The seeking starts: "Nu kommer jag!", a two-note whistle. */
+  whistle: {
+    vol: 0.38,
+    reverb: 0.2,
+    layers: [{ wave: 'sine', freq: 1568, steps: [0, -5], stepTime: 0.18, env: { a: 0.01, d: 0.4, s: 0 }, dur: 0.38 }],
+  },
+  /** A tick for the last seconds of a phase. */
+  tick: {
+    vol: 0.18,
+    cooldown: 0.3,
+    layers: [{ wave: 'triangle', freq: 1320, env: { a: 0.001, d: 0.04, s: 0 } }],
+  },
   /** Someone won the round: an accordion-ish fanfare. */
   win: {
     vol: 0.4,

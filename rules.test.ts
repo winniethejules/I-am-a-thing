@@ -3,7 +3,7 @@ import { gridText, mulberry32 } from '@voxelparty/sdk/core';
 import { FakeFlow, FakeRoom, type FakeLink } from '@voxelparty/sdk/test';
 import { Bot, IDLE, type Intent } from './bot';
 import { Core } from './core';
-import { Match, WRONG, kusinerFor } from './rules';
+import { END_MS, HIDE_MS, MATCH_ROUNDS, MAX_HP, Match, POINTS, SEEK_MS, WRONG, kusinerFor } from './rules';
 import { REAL_THINGS, formHp, formOf } from './things';
 import { Arena } from './map';
 
@@ -25,39 +25,82 @@ describe('the arena', () => {
   });
 });
 
-describe('roles and darts', () => {
-  test('one kusin for every three vättar, the earliest staying kusiner as people come and go', () => {
+describe('rounds, roles and darts', () => {
+  const spot = (_pid: string, hall: boolean) => (hall ? 4 : 0);
+
+  test('a round: hide, seek, end; the kusin passes on; a match after MATCH_ROUNDS rounds', () => {
     expect([1, 2, 3, 4, 5, 8, 10].map(kusinerFor)).toEqual([1, 1, 1, 1, 1, 2, 3]);
-    const m = new Match();
-    const room = (ids: string[]) => {
-      m.sync(ids);
-      m.balance(ids);
-      return ids.filter((id) => m.stats.get(id)!.role === 'k');
-    };
-    expect(room(['a'])).toEqual(['a']);
-    expect(room(['a', 'b', 'c', 'd'])).toEqual(['a']);
-    expect(room(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])).toEqual(['a', 'b']);
-    expect(room(['b', 'c', 'd', 'e', 'f', 'g', 'h'])).toEqual(['b', 'c']);   // a left: c steps up
-    expect(room(['c', 'd', 'e'])).toEqual(['c']);
+    const m = new Match(), ids = ['a', 'b', 'c', 'd'];
+    m.sync(ids);
+    let now = 0;
+    const kusiner: string[] = [];
+    const events: string[] = [];
+    let final: number[] = [];
+    for (let round = 0; round < MATCH_ROUNDS + 1; round++) {
+      for (const e of m.tick(now, ids, spot)) {
+        events.push(e.k === 'phase' ? `${e.ph}${e.win ? `:${e.win}` : ''}` : e.k);
+        if (e.k === 'match') final = e.scores;
+      }
+      expect(m.phase).toBe('hide');
+      kusiner.push(ids.filter((id) => m.stats.get(id)!.role === 'k').join());
+      m.tick((now += HIDE_MS), ids, spot);
+      expect(m.phase).toBe('seek');
+      m.tick((now += SEEK_MS), ids, spot);            // nobody caught: the vättar win
+      expect(m.phase).toBe('end');
+      now += END_MS;
+    }
+    expect(kusiner.slice(0, 4)).toEqual(['a', 'b', 'c', 'd']);   // everyone's turn as kusin
+    expect(events.filter((e) => e === 'match').length).toBe(1);
+    // Each was a vätte that stayed hidden in three of the four rounds: the survival bonus and the time, three times.
+    const vattePoints = POINTS.survive + (SEEK_MS / 10_000) * POINTS.per10s;
+    expect(final).toEqual([3, 3, 3, 3].map((n) => n * vattePoints));
+    expect(m.stats.get('a')!.score).toBe(0);   // the next match starts from 0
   });
 
-  test("a chair takes two darts, a cup one; a wrong guess costs patience; a caught vätte can't be caught again", () => {
+  test("darts only while seeking; a chair takes two, a cup one; a wrong guess costs; taunts score a few times", () => {
     const m = new Match();
     m.sync(['k', 'v']);
-    m.balance(['k', 'v']);
-    m.respawn('k', 0);
-    m.respawn('v', 1);
+    m.tick(0, ['k', 'v'], spot);
+    expect(m.stats.get('k')!.role).toBe('k');
+    const life = m.stats.get('v')!.life;
     const chair = formHp(formOf('chair')), cup = formHp(formOf('cup'));
     expect([chair, cup]).toEqual([2, 1]);
-    expect(m.hit('k', 'v', 1, chair, 0).map((e) => e.k)).toEqual(['dmg']);
-    expect(m.hit('k', 'v', 1, chair, 0).map((e) => e.k)).toEqual(['dmg', 'frag']);
-    expect(m.hit('k', 'v', 1, chair, 0)).toEqual([]);
-    expect(m.stats.get('k')!.frags).toBe(1);
-    const before = m.stats.get('k')!.hp;
-    expect(m.wrong('k', 0, 0)).toEqual([{ k: 'wrong', a: 'k', t: 0, hp: before - WRONG }]);
-    expect(m.hit('v', 'k', 1, 1, 0)).toEqual([]);   // a vätte has no darts
+    expect(m.hit('k', 'v', life, chair, 1000)).toEqual([]);   // still hiding: no darts
+    expect(m.taunt('v')).toEqual([]);
+    m.tick(HIDE_MS, ['k', 'v'], spot);
+    for (let i = 0; i < 9; i++) m.taunt('v');
+    expect(m.stats.get('v')!.taunts).toBe(POINTS.taunts);
+    expect(m.hit('k', 'v', life, chair, HIDE_MS + 25_000).map((e) => e.k)).toEqual(['dmg']);
+    expect(m.hit('k', 'v', life, chair, HIDE_MS + 25_000).map((e) => e.k)).toEqual(['dmg', 'frag']);
+    expect(m.hit('k', 'v', life, chair, HIDE_MS + 25_000)).toEqual([]);
+    expect(m.stats.get('k')!.score).toBe(POINTS.catch);
+    expect(m.stats.get('v')!.score).toBe(POINTS.taunts * POINTS.taunt + 2 * POINTS.per10s);
+    // Every vätte caught: the kusiner win, and the caught vätte stays out till the next round.
+    expect(m.tick(HIDE_MS + 26_000, ['k', 'v'], spot).map((e) => (e.k === 'phase' ? `${e.ph}:${e.win}` : e.k))).toEqual(['end:k']);
+    m.tick(HIDE_MS + 30_000, ['k', 'v'], spot);
+    expect(m.stats.get('v')!.alive).toBe(false);
+    const fresh = new Match();
+    fresh.sync(['k', 'v']);
+    fresh.tick(0, ['k', 'v'], spot);
+    fresh.tick(HIDE_MS, ['k', 'v'], spot);
+    expect(fresh.wrong('k', 0, HIDE_MS + 1)).toEqual([{ k: 'wrong', a: 'k', t: 0, hp: MAX_HP - WRONG }]);
+    expect(fresh.stats.get('k')!.score).toBe(POINTS.wrong);
   });
 
+  test('someone joining while the vättar hide is a vätte; once the seeking has started, a kusin', () => {
+    const m = new Match();
+    m.sync(['a', 'b', 'c']);
+    m.tick(0, ['a', 'b', 'c'], spot);
+    m.sync(['a', 'b', 'c', 'd']);
+    expect(m.admit('d', spot).map((e) => (e.k === 'role' ? e.r : e.k))).toEqual(['v', 'spawn']);
+    m.tick(HIDE_MS, ['a', 'b', 'c', 'd'], spot);
+    m.sync(['a', 'b', 'c', 'd', 'e']);
+    expect(m.admit('e', spot).map((e) => (e.k === 'role' ? e.r : e.k))).toEqual(['k', 'spawn']);
+  });
+
+});
+
+describe('darts', () => {
   test("a dart finds a vätte in its form's box, and a real thing behind the grid's coarser cells", () => {
     const room = new FakeRoom({ mg: { id: 'test' }, seed: 3, players: [{ id: 'k' }, { id: 'v', cpu: true }], clients: ['k'] });
     const core = new Core(room.links[0], new FakeFlow(room.links[0]), () => IDLE);
@@ -148,15 +191,18 @@ describe('netcode, in a session', () => {
     play(5000);
     const ids = ['p1', 'c2', 'p3'];
     const host = live().find((c) => c.link.isHost)!;
-    const score = (c: Core) => ids.map((id) => `${c.match.stats.get(id)!.role}:${c.match.stats.get(id)!.frags}`);
+    const score = (c: Core) => ids.map((id) => `${c.match.stats.get(id)!.role}:${c.match.stats.get(id)!.score}`);
     for (const c of live()) {
       expect([...c.pawns.keys()].sort()).toEqual([...ids].sort());
       expect(score(c)).toEqual(score(host));                // the same roles and catches everywhere
+      expect(c.match.phase).toBe(host.match.phase);
       for (const id of ids) {
         const owner = live().find((o) => o.pawns.get(id)?.own)!;
         const theirs = owner.pawns.get(id)!, mine = c.pawns.get(id)!;
-        expect(c.alive(mine)).toBe(true);                     // nobody stuck dead
-        expect(theirs.alive).toBe(true);
+        // In play or out (a caught vätte waits for the next round), but the same everywhere: nobody stuck.
+        expect(c.alive(mine)).toBe(host.alive(host.pawns.get(id)!));
+        expect(theirs.alive).toBe(host.alive(host.pawns.get(id)!));
+        if (!theirs.alive) continue;
         expect(mine.life).toBe(theirs.life);
         expect(mine.form).toBe(theirs.form);                  // the same thing, everywhere
         // …or invisible: drawn about where its owner has it (the CPU still runs about: a moment behind).

@@ -355,7 +355,7 @@ function sampler(k: Ids) {
   for (let x = 0; x < w; x++) for (const y of [0, h - 1]) v.set(x, y, 0, x % 2 ? k.RED : k.GREEN);
   for (let y = 0; y < h; y++) for (const x of [0, w - 1]) v.set(x, y, 0, y % 2 ? k.RED : k.GREEN);
   write(v, text, 3, h - 3, 1, k.FALU_FLAT);
-  return wall(v, 1 / 40);
+  return wall(v, 1 / 48);   // narrow enough to fit between the cabinets and the pantry door
 }
 
 /** Lappen på kylen: "GLÖM EJ KAFFET!" in pencil on yellow paper. */
@@ -365,6 +365,94 @@ function note(k: Ids) {
   box(v, 0, 0, 0, w, h, 1, k.YELLOW);
   write(v, text, 1, h - 2, 1, k.INK);
   return wall(v, 1 / 96);
+}
+
+// ------------------------------------------------------------ skafferiet (finer: 1/32 m, the detail to come)
+
+const F = 1 / 32;
+const round2 = (x: number, z: number, cx: number, cz: number, r: number) => (x - cx) ** 2 + (z - cz) ** 2 <= r * r;
+
+/** En skafferihylla: pine boards on dark uprights, a lip on each shelf (a wall piece's depth, standing). */
+function shelf(k: Ids) {
+  const v = new Volume(21, 32, 6);
+  box(v, 0, 0, 0, 1, 32, 6, k.WOOD_DARK);
+  box(v, 20, 0, 0, 21, 32, 6, k.WOOD_DARK);
+  for (const y of [1, 8, 15, 22, 29]) {
+    box(v, 1, y, 0, 20, y + 1, 6, k.WOOD);
+    box(v, 1, y + 1, 5, 20, y + 2, 6, k.WOOD_DARK);   // the lip
+  }
+  box(v, 0, 31, 0, 21, 32, 6, k.WOOD_DARK);
+  return prop(v);
+}
+
+/** En syltburk: glass, jam inside, a gingham cloth tied over the top with string, a paper label. */
+function jar(k: Ids, jam: number) {
+  const v = new Volume(7, 10, 7);
+  for (let y = 0; y < 8; y++) for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) {
+    if (!round2(x, z, 3, 3, 3.2)) continue;
+    const rim = !round2(x, z, 3, 3, 2.2);
+    v.set(x, y, z, y === 0 ? k.GLASS : rim ? (y >= 2 && y <= 4 ? k.PAPER : y > 6 ? k.GLASS : jam) : y < 7 ? jam : k.GLASS);
+  }
+  for (const [x, z] of [[1, 3], [5, 3], [3, 1], [3, 5]]) v.set(x, 3, z, k.INK);   // the label's handwriting
+  for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) if (round2(x, z, 3, 3, 3.6)) v.set(x, 8, z, k.GINGHAM);
+  for (let z = 1; z < 6; z++) for (let x = 1; x < 6; x++) if (round2(x, z, 3, 3, 2.4)) v.set(x, 9, z, k.GINGHAM);
+  for (let z = 0; z < 7; z++) for (let x = 0; x < 7; x++) if (round2(x, z, 3, 3, 3.3) && !round2(x, z, 3, 3, 2.5)) v.set(x, 7, z, k.WHITE);   // the string
+  return { vol: v, voxel: F, origin: [3.5, 0, 3.5] as [number, number, number], ground: true };
+}
+const jarLingon = (k: Ids) => jar(k, k.RED);
+const jarBlueberry = (k: Ids) => jar(k, k.INK);
+
+/** En mjölpåse: a paper sack with a blue print, bulging at the bottom, its top folded over. */
+function sack(k: Ids) {
+  // 11 voxels tall: it fits a shelf's 12 with a hair to spare.
+  const v = new Volume(10, 11, 8);
+  for (let y = 0; y < 9; y++) {
+    const inset = y < 7 ? 0 : 1;
+    box(v, inset, y, inset, 10 - inset, y + 1, 8 - inset, k.PAPER);
+  }
+  box(v, 1, 9, 1, 9, 10, 7, k.CREAM);    // the fold
+  box(v, 1, 10, 3, 9, 11, 6, k.CREAM);
+  box(v, 0, 3, 7, 10, 4, 8, k.BLUE);     // the print: a band and a wheat sheaf
+  box(v, 4, 4, 7, 6, 8, 8, k.BLUE);
+  v.set(3, 7, 7, k.BLUE); v.set(6, 7, 7, k.BLUE);
+  box(v, 0, 0, 0, 10, 1, 8, k.CREAM);    // flour dust round its foot
+  return { vol: v, voxel: F, origin: [5, 0, 4] as [number, number, number], ground: true };
+}
+
+/** En pepparkaksburk: a round red tin with brass bands and a star on its lid. */
+function tin(k: Ids) {
+  const v = new Volume(9, 9, 9);
+  for (let y = 0; y < 9; y++) for (let z = 0; z < 9; z++) for (let x = 0; x < 9; x++) {
+    if (!round2(x, z, 4, 4, y >= 7 ? 4.4 : 4)) continue;
+    v.set(x, y, z, y === 1 || y === 6 ? k.BRASS : y >= 7 ? (y === 8 && round2(x, z, 4, 4, 1.6) ? k.YELLOW : k.RED) : k.RED);
+  }
+  for (const [x, z] of [[4, 0], [0, 4], [8, 4], [4, 8]]) v.set(x, 3, z, k.WHITE);   // little hearts
+  return { vol: v, voxel: F, origin: [4.5, 0, 4.5] as [number, number, number], ground: true };
+}
+
+/** Skafferiets glödlampa: a bare bulb on a cord (hangs from its top). */
+function bulb(k: Ids) {
+  const v = new Volume(5, 18, 5);
+  box(v, 2, 6, 2, 3, 18, 3, k.IRON);
+  box(v, 1, 5, 1, 4, 6, 4, k.BRASS);
+  return { vol: v, voxel: F, origin: [2.5, 18, 2.5] as [number, number, number], ground: false };
+}
+
+/** The bulb's glass, its own mesh so it can go out. */
+function bulbGlow(k: Ids) {
+  const v = new Volume(5, 18, 5);
+  box(v, 1, 1, 1, 4, 5, 4, k.LAMP);
+  box(v, 2, 0, 2, 3, 1, 3, k.LAMP);
+  return { vol: v, voxel: F, origin: [2.5, 18, 2.5] as [number, number, number], ground: false };
+}
+
+/** En kvast: a long handle and a fan of straw, standing in the corner. */
+function broom(k: Ids) {
+  const v = new Volume(9, 42, 3);
+  box(v, 4, 10, 1, 5, 42, 2, k.WOOD);
+  box(v, 2, 8, 0, 7, 10, 3, k.RED);       // the binding
+  for (let y = 0; y < 8; y++) box(v, 1 - (y < 3 ? 1 : 0), y, 0, 8 + (y < 3 ? 1 : 0), y + 1, 3, (y + 1) % 3 ? k.YELLOW : k.COOKIE);
+  return { vol: v, voxel: 1 / 24, origin: [4.5, 0, 1.5] as [number, number, number], ground: true };
 }
 
 // ------------------------------------------------------------ the garden's small things
@@ -394,6 +482,7 @@ export const MODELS = {
   table, cloth, chair, sofa, stove, counter, upper, fridge, vitrine, lamp, lampGlow, curtains,
   cup, biscuits, coffeePot, breadBasket, logBasket, geranium, crossword, ragRug, potholder, clock,
   sampler, note, bloomers, towel,
+  shelf, jarLingon, jarBlueberry, sack, tin, bulb, bulbGlow, broom,
 };
 export type ModelKey = keyof typeof MODELS;
 

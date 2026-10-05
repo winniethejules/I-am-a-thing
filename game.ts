@@ -20,11 +20,11 @@ import { GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL, dart, kusin, kusinLook, suctionGun
 import { Core, type Cue, type Pawn } from './core';
 import { PHOTOS, type LookName, type PhotoPoint } from './look';
 import { buildModels, type ModelKey } from './models';
-import { MAX_HP, WRONG } from './rules';
+import { MAX_HP, WRONG, type Phase } from './rules';
 import { KitchenScene } from './scene';
 import { SOUNDS } from './sounds';
 import { BLOCKS, TEXTURES, type Ids } from './textures';
-import { FORMS, KUSIN_MOVE, REAL_THINGS, VATTE, formBox } from './things';
+import { FORMS, INVENTORY, KUSIN_MOVE, REAL_THINGS, VATTE, blendIn, formBox } from './things';
 import { EFFECTS } from './vfx';
 
 const FOV = 84;
@@ -89,7 +89,8 @@ export class Shooter implements GameStage {
   private readonly formVoxel: number[];
   /** A photo point holding the camera (voxelparty-kvalitet §2), or null. */
   private photoAt: PhotoPoint | null = null;
-  private readonly shownFrags = new Map<string, number>();
+  private readonly shownFrags = new Map<string, string>();
+  private lastTick = -1;
   private readonly read: FpsIntent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, alt: false, firePressed: false, altPressed: false, slot: null, wheel: 0 };
   private readonly it: Intent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, become: NO_FORM, lock: false, taunt: false };
   private firstPerson = false;
@@ -302,12 +303,34 @@ export class Shooter implements GameStage {
           else if (p) this.sfx.at3d(def, p.body.x, p.body.y, p.body.z, { vol: 0.6 });
           break;
         }
-        case 'win':
-          this.ctx.flow.hud.banner(`${this.name(c.pid).toUpperCase()} VANN RUNDA ${c.r}!`, this.color(c.pid));
-          this.sfx.play(SOUNDS.win);
+        case 'phase': this.phaseCue(c.ph, c.win); break;
+        case 'score':
+          if (c.pid === you) this.hud.center('Taunt! <small>+2 poäng</small>');
           break;
+        case 'match': {
+          // The match is decided: the party gets its "play again?" vote while the game carries on.
+          const scores = this.ctx.link.players.map((lp) => c.scores[c.ids.indexOf(lp.id)] ?? 0);
+          this.ctx.flow.matchOver(scores);
+          this.ctx.flow.hud.banner(`${this.name(c.ids[0]).toUpperCase()} VANN MATCHEN!`, '#ffd34a');
+          break;
+        }
       }
     }
+  }
+
+  /** A new phase of the round: a banner and a sound for what it means to you. */
+  private phaseCue(ph: Phase, win?: 'k' | 'v') {
+    const me = this.core.me(), kusin = !!me && this.core.role(me) === 'k', { banner } = this.ctx.flow.hud;
+    if (ph === 'hide') {
+      banner(kusin ? 'BLUNDA OCH RÄKNA!' : 'GÖM DIG!', kusin ? '#ff8a1c' : '#c2402f');
+      this.sfx.play(SOUNDS.bell);
+    } else if (ph === 'seek') {
+      banner(kusin ? 'LETA!' : 'KUSINERNA KOMMER!', kusin ? '#ff8a1c' : '#c2402f');
+      this.sfx.play(SOUNDS.whistle);
+    } else if (ph === 'end') {
+      banner(win === 'k' ? 'KUSINERNA VANN!' : 'VÄTTARNA VANN!', win === 'k' ? '#ff8a1c' : '#c2402f');
+      this.sfx.play(SOUNDS.win);
+    } else banner('VÄNTAR PÅ FLER', '#9fd3b0');
   }
 
   /** A dart leaves the gun: the gun kicks, a puff at the muzzle, the dart flies. */
@@ -424,25 +447,45 @@ export class Shooter implements GameStage {
       if (show && !rig.shown) rig.av.teleport(p.body.x, p.body.y, p.body.z, p.body.yaw);
       rig.shown = show;
       if (show) this.pose(rig, p, dt);
-      const f = core.match.stats.get(lp.id)?.frags ?? 0;
-      if (f !== this.shownFrags.get(lp.id)) {
-        this.shownFrags.set(lp.id, f);
-        flow.hud.setStat(i, role === 'k' ? `${f} tagna` : 'vätte');
+      // The chip: role and points; a caught vätte's chip greys out until the next round.
+      const st = core.match.stats.get(lp.id), stat = `${role === 'k' ? 'kusin' : 'vätte'} · ${st?.score ?? 0} p`;
+      const out = role === 'v' && !alive && core.phase !== 'wait';
+      const key = `${stat}|${out}`;
+      if (key !== this.shownFrags.get(lp.id)) {
+        this.shownFrags.set(lp.id, key);
+        flow.hud.setStat(i, stat);
+        flow.hud.setOut(i, out);
       }
     });
 
     this.drawDarts(dt);
     this.gun.visible = photo ? !!photo.gun : this.firstPerson;
     this.hud.hidden = !!photo;
-    const st = me ? core.match.stats.get(me.pid) : undefined;
+    const st = me ? core.match.stats.get(me.pid) : undefined, playing = !!me && flow.live && core.alive(me);
+    const left = Math.max(0, (core.match.until - link.now()) / 1000);
+    // The last ten seconds of hiding (or seeking) tick.
+    if (flow.live && core.phase !== 'wait' && core.phase !== 'end' && left < 10.5 && Math.ceil(left) !== this.lastTick) {
+      this.lastTick = Math.ceil(left);
+      if (this.lastTick > 0) this.sfx.play(SOUNDS.tick);
+    }
+    const b = me?.body;
     this.hud.update(dt, {
-      playing: !!me && flow.live && core.alive(me),
+      playing,
       kusin: myRole === 'k',
       hp: st?.hp ?? MAX_HP,
       form: me?.form ?? VATTE,
       locked: !!me?.locked,
-      aimed: me && myRole === 'v' && core.alive(me) ? core.aimedForm(me) : NO_FORM,
-      out: !!me && flow.live && !core.alive(me),
+      aimed: me && myRole === 'v' && playing ? core.aimedForm(me) : NO_FORM,
+      out: !!me && flow.live && !core.alive(me) && core.phase !== 'end',
+      phase: flow.live ? core.phase : 'wait',
+      left,
+      blind: playing && myRole === 'k' && core.phase === 'hide',
+      blend: playing && myRole === 'v' && b ? blendIn(me!.form, b.x, b.y, b.z) : null,
+      list: playing && myRole === 'k' && this.ctx.input.down('list'),
+      board: flow.live && core.phase === 'end'
+        ? link.players.map((lp) => ({ name: lp.name, role: core.match.stats.get(lp.id)?.role ?? 'v', score: core.match.stats.get(lp.id)?.score ?? 0, me: lp.id === link.you }))
+          .sort((x, y) => y.score - x.score)
+        : null,
     });
     this.camera(dt, t, me);
     this.kitchen.staged = !!photo || !flow.live;
@@ -579,6 +622,15 @@ export class Shooter implements GameStage {
       cam.lookAt(_u.x - dx, _u.y - dy * 0.6, _u.z - dz);
       return;
     }
+    const outFor = me ? this.ctx.link.now() - (core.match.stats.get(me.pid)?.deadAt ?? 0) : 0;
+    if (me && live && !core.alive(me) && core.role(me) === 'v' && outFor > 2500) {
+      // Caught: watch the rest of the round, from up by the ceiling, slowly round the kitchen.
+      const a = t * 0.12;
+      _v.set(3.5 + Math.sin(a) * 2.2, 2.2, 2.6 + Math.cos(a) * 1.8);
+      cam.position.lerp(_v, Math.min(1, dt * 1.5));
+      cam.lookAt(3.2, 0.6, 2.4);
+      return;
+    }
     if (me && live && !core.alive(me)) {
       // Out: rise over where it happened and look at who did it.
       const k = this.rigs.get(this.killer);
@@ -628,10 +680,42 @@ html.vp-touching .ia .card { bottom: calc(var(--vp-touch-h) + 12px); }
 .ia .mid { position: absolute; left: 0; right: 0; top: 62%; text-align: center; font-size: 22px; }
 .ia .mid small { font-size: 15px; opacity: .85; }
 .ia .aim { position: absolute; left: 0; right: 0; top: calc(50% + 22px); text-align: center; font-size: 15px; }
-.ia .off { display: none; }`;
+.ia .off { display: none; }
+.ia .timer { position: absolute; left: 18px; top: 16px; padding: 6px 12px; border: 3px solid #1d2340; border-radius: 12px; background: rgba(255,252,245,.88);
+  color: #1d2340; text-shadow: none; box-shadow: 0 4px 0 #1d2340; font: 12px 'Press Start 2P', monospace; }
+.ia .timer b { display: block; margin-top: 4px; font-size: 18px; }
+.ia .timer.hurry b { color: #e0661a; }
+.ia .blind { position: absolute; inset: 0; background: radial-gradient(#1a1d2e, #07080f); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+.ia .blind .big { font: 22px 'Press Start 2P', monospace; color: #ffd98a; }
+.ia .blind .count { font: 56px 'Press Start 2P', monospace; }
+.ia .blind small { font-size: 16px; opacity: .8; max-width: 460px; text-align: center; }
+.ia .meter { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.ia .meter i { display: inline-block; width: 14px; height: 14px; border: 2px solid #1d2340; border-radius: 4px; background: #e8dcc2; }
+.ia .meter i.on.l0 { background: #ff5a36; } .ia .meter i.on.l1 { background: #f2c94c; } .ia .meter i.on.l2 { background: #7ee081; }
+.ia .list { position: absolute; left: 50%; top: 14%; transform: translateX(-50%) rotate(-1.5deg); width: 300px; padding: 16px 20px 18px;
+  background: repeating-linear-gradient(#fbf6e6 0 25px, #cfe0f0 25px 26px); border: 3px solid #1d2340; border-radius: 6px; color: #2a3a6a;
+  text-shadow: none; box-shadow: 0 6px 0 #1d2340; font: 700 italic 16px/26px Nunito, sans-serif; }
+.ia .list h3 { margin: 0 0 4px; font: 900 18px Nunito, sans-serif; color: #a8322a; }
+.ia .list .room { margin-top: 6px; font-weight: 900; text-decoration: underline; }
+.ia .board { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); min-width: 320px; padding: 12px 16px; border: 3px solid #1d2340;
+  border-radius: 14px; background: rgba(255,252,245,.92); color: #1d2340; text-shadow: none; box-shadow: 0 5px 0 #1d2340; }
+.ia .board .row { display: flex; gap: 10px; padding: 3px 0; font-size: 16px; }
+.ia .board .row.me { color: #a8322a; }
+.ia .board .row span:first-child { flex: 1; }`;
 
 export interface HudState {
   playing: boolean;
+  phase: Phase;
+  /** Seconds left in the phase. */
+  left: number;
+  /** A kusin waiting with eyes shut. */
+  blind: boolean;
+  /** A vätte's Smälter in-mätare, or null. */
+  blend: { level: 0 | 1 | 2; why: string } | null;
+  /** A kusin holding Tab: mormors inventarielista. */
+  list: boolean;
+  /** The round's end: everyone by points. */
+  board: { name: string; role: 'k' | 'v'; score: number; me: boolean }[] | null;
   kusin: boolean;
   hp: number;
   form: number;
@@ -645,19 +729,26 @@ export interface HudState {
 class Hud {
   private readonly root = document.createElement('div');
   private readonly style = document.createElement('style');
-  private readonly el: Record<'x' | 'hit' | 'hurt' | 'card' | 'feed' | 'mid' | 'aim', HTMLElement>;
+  private readonly el: Record<'x' | 'hit' | 'hurt' | 'card' | 'feed' | 'mid' | 'aim' | 'timer' | 'blind' | 'list' | 'board', HTMLElement>;
   private hitT = 0;
   private hurtT = 0;
   private midT = 0;
   private last = '';
   private lastAim = '';
+  private lastTimer = '';
+  private lastBlind = '';
+  private lastBoard = '';
 
   constructor() {
     this.style.textContent = CSS;
     this.root.className = 'ia';
-    this.root.innerHTML = '<div class="hurt"></div><div class="x"></div><div class="hit">+</div><div class="card"></div><div class="feed"></div><div class="mid"></div><div class="aim"></div>';
+    this.root.innerHTML = '<div class="hurt"></div><div class="x"></div><div class="hit">+</div><div class="card"></div><div class="feed"></div>'
+      + '<div class="mid"></div><div class="aim"></div><div class="timer"></div><div class="blind off"></div><div class="list off"></div><div class="board off"></div>';
     const q = (c: string) => this.root.querySelector<HTMLElement>(`.${c}`)!;
-    this.el = { x: q('x'), hit: q('hit'), hurt: q('hurt'), card: q('card'), feed: q('feed'), mid: q('mid'), aim: q('aim') };
+    this.el = { x: q('x'), hit: q('hit'), hurt: q('hurt'), card: q('card'), feed: q('feed'), mid: q('mid'), aim: q('aim'), timer: q('timer'), blind: q('blind'), list: q('list'), board: q('board') };
+    // Mormors inventarielista: written once, shown while a kusin holds Tab.
+    this.el.list.innerHTML = '<h3>Mormors lista</h3>' + INVENTORY.map(({ room, rows }) =>
+      `<div class="room">${room}</div>` + rows.map(({ f, n }) => `<div>${n} ${n > 1 ? FORMS[f].some : FORMS[f].name}</div>`).join('')).join('');
     document.head.append(this.style);
     document.body.append(this.root);
   }
@@ -671,17 +762,36 @@ class Hud {
     for (const k of ['x', 'card'] as const) this.el[k].classList.toggle('off', !s.playing);
     this.el.x.classList.toggle('v', !s.kusin);
     // The card: only rebuilt when what it says changes.
-    const key = `${s.kusin}|${Math.round(s.hp)}|${s.form}|${s.locked}`;
+    const key = `${s.kusin}|${Math.round(s.hp)}|${s.form}|${s.locked}|${s.blend?.level}|${s.blend?.why}`;
     if (key !== this.last) {
       this.last = key;
       this.el.card.innerHTML = s.kusin
         ? `<div class="role k">KUSIN</div><div class="line">Tålamod</div><div class="bar"><i class="${s.hp < 30 ? 'low' : ''}" style="width:${Math.max(0, s.hp)}%"></i></div>`
-          + `<div class="line">Hitta vättarna. Fel gissning kostar!</div>`
+          + `<div class="line">Hitta vättarna. Fel gissning kostar!</div><div class="line"><span class="key">Tab</span> mormors lista</div>`
         : `<div class="role v">VÄTTE</div><div class="line">${s.form >= 0 ? `Du är en <b>${FORMS[s.form].name}</b>${s.locked ? ' (låst)' : ''}` : 'Göm dig som en sak!'}</div>`
+          + (s.blend && s.form >= 0 ? `<div class="meter">Smälter in ${[0, 1, 2].map((l) => `<i class="${l <= s.blend!.level ? `on l${s.blend!.level}` : ''}"></i>`).join('')}</div><div class="line"><small>${s.blend.why}</small></div>` : '')
           + `<div class="line"><span class="key">E</span> bli sak · <span class="key">R</span> ${s.locked ? 'lås upp' : 'lås'} · <span class="key">Q</span> taunt</div>`;
     }
     const aim = !s.kusin && s.playing && s.aimed >= 0 && s.aimed !== s.form ? `<span class="key">E</span> bli ${FORMS[s.aimed].name}` : '';
     if (aim !== this.lastAim) this.el.aim.innerHTML = this.lastAim = aim;
+    // The round's clock, top left (the top centre is the platform's chips).
+    const label = { wait: 'VÄNTAR', hide: 'GÖMFAS', seek: 'SÖKFAS', end: 'SLUT' }[s.phase];
+    const clock = s.phase === 'wait' || s.phase === 'end' ? '' : `${Math.floor(s.left / 60)}:${String(Math.floor(s.left % 60)).padStart(2, '0')}`;
+    const timer = `${label}${clock ? `<b>${clock}</b>` : ''}`;
+    if (timer !== this.lastTimer) this.el.timer.innerHTML = this.lastTimer = timer;
+    this.el.timer.classList.toggle('hurry', s.left < 10.5);
+    // Eyes shut: the whole screen, a count.
+    this.el.blind.classList.toggle('off', !s.blind);
+    if (s.blind) {
+      const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig i köket och skafferiet. Håll in <span class="key">Tab</span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
+      if (html !== this.lastBlind) this.el.blind.innerHTML = this.lastBlind = html;
+    }
+    this.el.list.classList.toggle('off', !s.list);
+    this.el.board.classList.toggle('off', !s.board);
+    if (s.board) {
+      const html = '<div class="row"><b>Poäng</b></div>' + s.board.map((r) => `<div class="row${r.me ? ' me' : ''}"><span>${esc(r.name)}</span><span>${r.role === 'k' ? 'kusin' : 'vätte'}</span><b>${r.score} p</b></div>`).join('');
+      if (html !== this.lastBoard) this.el.board.innerHTML = this.lastBoard = html;
+    }
     this.el.hit.classList.toggle('on', (this.hitT -= dt) > 0);
     this.el.hurt.classList.toggle('on', (this.hurtT -= dt) > 0);
     if (s.out) this.el.mid.innerHTML = s.kusin ? 'Slut på tålamod… tillbaka strax' : 'Tagen! Tillbaka strax…';

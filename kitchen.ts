@@ -44,7 +44,7 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'chair', x: 3.55, y: 0, z: 2.4, yaw: N + 0.12, solid: true, thing: true },
   { key: 'chair', x: 1.62, y: 0, z: 1.55, yaw: E, solid: true, thing: true },
   { key: 'chair', x: 4.38, y: 0, z: 1.5, yaw: W, solid: true, thing: true },
-  { key: 'chair', x: 4.6, y: 0, z: 4.35, yaw: N + 0.6, solid: true, thing: true },
+  { key: 'chair', x: 4.4, y: 0, z: 4.55, yaw: N + 0.6, solid: true, thing: true },
   { key: 'chair', x: 1.05, y: 0, z: 3.55, yaw: E + 0.35, solid: true, thing: true },
   { key: 'stove', x: 0.52, y: 0, z: 2.0, yaw: E, solid: true },
   { key: 'counter', x: 5.53, y: 0, z: 1.6, yaw: W, solid: true },
@@ -57,7 +57,7 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'curtains', x: 4.1875, y: SILL, z: 0, yaw: 0 },
   { key: 'ragRug', x: 4.75, y: 0, z: 1.65, yaw: 0 },
   // The story: what you can read and what's been left lying.
-  { key: 'sampler', x: 6, y: 1.62, z: 3.4, yaw: W },
+  { key: 'sampler', x: 6, y: 1.66, z: 3.2, yaw: W },
   { key: 'note', x: 5.18, y: 1.06, z: 3.4, yaw: W },
   { key: 'clock', x: 4.85, y: 1.6, z: 5, yaw: N },
   { key: 'crossword', x: 2.75, y: CLOTH_Y, z: 1.62, yaw: 0.35 },
@@ -78,6 +78,33 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'geranium', x: 4.45, y: SILL, z: 0.06, yaw: 0.5, thing: true },
 ];
 
+/**
+ * Skafferiet: shelves on the east and north walls, jars of lingon and blueberry jam, flour sacks,
+ * gingerbread tins, a bare bulb, a broom in the corner. (The plan's inventory: 10 jars, 3 sacks, 2 tins.)
+ */
+const SHELF_Y = [0.125, 0.5625, 1.0, 1.4375];
+export const PANTRY_PROPS: Placed[] = [
+  { key: 'shelf', x: 7.8125, y: 0, z: 4.25, yaw: W, solid: true },
+  { key: 'shelf', x: 6.95, y: 0, z: 3.6875, yaw: 0, solid: true },
+  ...[3.78, 4.05, 4.32, 4.6].map((z, i): Placed => ({ key: 'jarLingon', x: 7.8, y: SHELF_Y[1], z, yaw: i * 0.7, thing: true })),
+  ...[3.85, 4.2, 4.55].map((z, i): Placed => ({ key: 'jarBlueberry', x: 7.8, y: SHELF_Y[2], z, yaw: i * 1.1, thing: true })),
+  { key: 'jarLingon', x: 7.8, y: SHELF_Y[3], z: 4.0, yaw: 0.3, thing: true },
+  { key: 'jarLingon', x: 7.35, y: 0, z: 4.72, yaw: 0.9, thing: true },
+  { key: 'jarBlueberry', x: 7.18, y: 0, z: 4.55, yaw: 2.2, thing: true },
+  { key: 'sack', x: 6.62, y: SHELF_Y[0], z: 3.68, yaw: 0, thing: true },
+  { key: 'sack', x: 7.05, y: SHELF_Y[0], z: 3.68, yaw: 0, thing: true },
+  { key: 'sack', x: 6.62, y: 0, z: 4.68, yaw: 0.5, thing: true },
+  { key: 'tin', x: 6.65, y: SHELF_Y[2], z: 3.66, yaw: 0, thing: true },
+  { key: 'tin', x: 7.25, y: SHELF_Y[2], z: 3.66, yaw: 0.6, thing: true },
+  { key: 'bulb', x: 7.0, y: 2.5, z: 4.35, yaw: 0 },
+  { key: 'bulbGlow', x: 7.0, y: 2.5, z: 4.35, yaw: 0 },
+  { key: 'broom', x: 6.42, y: 0, z: 4.86, yaw: 0.4 },
+];
+KITCHEN_PROPS.push(...PANTRY_PROPS);
+
+/** Which room a spot is in, for the inventory list. */
+export const roomOf = (x: number) => (x > 6.1 ? 'Skafferiet' : 'Köket');
+
 /** The look slice's two actors, posed (Phase 0 only: in play they are the players). */
 export const STAGED = {
   /** A kusin who has just come in, gun up, turning to the table. */
@@ -88,6 +115,6 @@ export const STAGED = {
 
 /** Spawn spots, on the kitchen floor and in the hall. */
 export const SPAWNS: [number, number, number][] = [
-  [3, 0, 3.4], [1.9, 0, 4.1], [3.9, 0, 3.7], [2.2, 0, 3.0],
+  [3, 0, 3.4], [1.9, 0, 4.1], [3.55, 0, 3.6], [2.2, 0, 3.0],
   [3, 0, 6.4], [2.3, 0, 7.0], [3.7, 0, 7.0], [4.6, 0, 2.9],
 ];

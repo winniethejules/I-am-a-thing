@@ -11,8 +11,9 @@ import { MODELS, buildModels, type ModelKey } from './models';
 import { BLOCKS, TEXTURES } from './textures';
 
 const FURNITURE: ModelKey[] = ['table', 'chair', 'sofa', 'stove', 'counter', 'fridge', 'vitrine'];
-const THINGS: ModelKey[] = ['cup', 'biscuits', 'coffeePot', 'breadBasket', 'logBasket', 'geranium', 'crossword', 'cloth', 'ragRug'];
-const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'potholder', 'clock', 'sampler', 'note', 'bloomers', 'towel'];
+const FURNITURE_PANTRY: ModelKey[] = ['shelf', 'broom'];
+const THINGS: ModelKey[] = ['cup', 'biscuits', 'coffeePot', 'breadBasket', 'logBasket', 'geranium', 'crossword', 'cloth', 'ragRug', 'jarLingon', 'jarBlueberry', 'sack', 'tin'];
+const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'bulb', 'potholder', 'clock', 'sampler', 'note', 'bloomers', 'towel'];
 
 export default (g: Gallery) => {
   const ids = useGameAssets(TEXTURES, BLOCKS);
@@ -23,11 +24,11 @@ export default (g: Gallery) => {
     return new Mesh(meshVolume(m.vol, { voxel: m.voxel, origin: m.origin }).opaque!, mat);
   };
   // Every key in MODELS is in one group below.
-  const listed = new Set<ModelKey>([...FURNITURE, ...THINGS, ...WALL, 'lampGlow']);   // the glow is the lamp's 'tänd' variant
+  const listed = new Set<ModelKey>([...FURNITURE, ...FURNITURE_PANTRY, ...THINGS, ...WALL, 'lampGlow', 'bulbGlow']);   // the glows are the lamps' 'tänd' variants
   for (const key of Object.keys(MODELS) as ModelKey[]) if (!listed.has(key)) throw new Error(`gallery.ts: ${key} isn't in a group`);
 
   g.group('Möbler i köket', { scale: 'shared', ghost: false });
-  for (const key of FURNITURE) g.add(key, mesh(key));
+  for (const key of [...FURNITURE, ...FURNITURE_PANTRY]) g.add(key, mesh(key));
 
   g.group('Saker en vätte kan bli', { scale: 'shared', ghost: false });
   for (const key of THINGS) g.add(key, mesh(key));
@@ -35,8 +36,9 @@ export default (g: Gallery) => {
   g.group('På väggar och i taket', { ground: false });
   const signs: Partial<Record<ModelKey, number>> = { sampler: 3000, note: 2600 };   // letters cost voxels
   for (const key of WALL) {
-    if (key === 'lamp') {
-      g.add(key, mesh(key), { variants: { tänd: () => new Group().add(mesh('lamp')(), mesh('lampGlow')()) } });
+    if (key === 'lamp' || key === 'bulb') {
+      const glow = key === 'lamp' ? 'lampGlow' : 'bulbGlow';
+      g.add(key, mesh(key), { variants: { tänd: () => new Group().add(mesh(key)(), mesh(glow)()) } });
       continue;
     }
     g.add(key, mesh(key), signs[key] ? { budget: signs[key] } : {});

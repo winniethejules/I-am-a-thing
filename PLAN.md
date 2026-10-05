@@ -181,7 +181,7 @@ Se `docs/maps/mormors-hus.md` för alla rum. I fas 0 byggs **bara köket** i fä
 - **Bevis:** `qa/fas0/jamforelse/` (valj-look, alla-fotopunkter, fore-efter, look-c-fore-efter) och `qa/fas0/c-kalibrering/`.
 - **Inte gjort:** ljud och de andra rummen. De hör till senare faser.
 
-### Fas 1: känslan ← **klar, väntar på ditt speltest**
+### Fas 1: känslan ✔
 Förvandlingen och sugkoppsskottet med alla reaktioner. En vätte-CPU som gömmer sig och en kusin-CPU som letar, i köket.
 **Bevis:** filmremsor av förvandling, skott, fel träff och rätt träff.
 - [x] Roller från hosten: 1 kusin per 3 vättar (`rules.ts`: `kusinerFor`, `balance`).
@@ -222,8 +222,31 @@ Förvandlingen och sugkoppsskottet med alla reaktioner. En vätte-CPU som gömme
   - Nästan alla CPU-vättar blir stolar.
   - Alla vättar kan just nu bara gömma sig på golvet.
 
-### Fas 2: en hel runda i köket och skafferiet
+### Fas 2: en hel runda i köket och skafferiet ← **klar, väntar på ditt speltest**
 Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollbyte mellan rundor.
+**Bevis:** filmremsa av en hel runda (blunda, söka, slut), listan och mätaren, fotopunkt S1 i skafferiet.
+- [x] Skafferiet: hyllor, syltburkar (lingon och blåbär), mjölpåsar, pepparkaksburkar, en glödlampa i taket och en sopkvast. Dörr från köket, musahål i väggen. Fotopunkt S1.
+- [x] Rundor (`rules.ts`):
+  - Gömfas 40 s: kusinen blundar i hallen (svart skärm med nedräkning) medan vättarna gömmer sig.
+  - Sökfas 3 min: slutar tidigare om alla vättar är tagna.
+  - Slut 8 s med poängtavla, sedan nästa runda med nästa kusin i tur. Efter 4 rundor vinner den med flest poäng.
+  - Poäng: 5 per fångst, −1 per fel gissning, 1 per 10 s gömd, 5 för att klara rundan, 2 per taunt (högst 5 taunts).
+  - En vätte som blir tagen tittar på resten av rundan; en kusin som tappat tålamodet kommer tillbaka efter 3 s.
+- [x] Nya former: syltburk, mjölpåse, pepparkaksburk (10 totalt).
+- [x] Mormors lista (`Tab`, för kusinen): vad varje rum ska innehålla, räknat från samma placeringar som banan byggs av, så den stämmer alltid.
+- [x] Smälter in-mätaren (för vätten): grönt bland sina egna, gult i rätt rum men fel plats, rött där saken inte hör hemma.
+- [x] CPU-justeringar:
+  - Vättar väljer först en sorts sak (så inte alla blir stolar), sedan en plats de faktiskt kan gå till.
+  - Kusinen letar i skafferiet också, går mot taunts den hör, och testskjuter mer sällan.
+  - Rättat: flera spelare kunde få samma startplats när en ny runda började.
+
+### Detaljpass på sakerna (ditt önskemål, görs längre fram)
+"Sakerna behöver vara mycket mer detaljerade." Ett eget pass innan nya rum byggs, så att nya rum får samma nivå direkt.
+- Små saker (kopp, kakfat, syltburk, pepparkaksburk) i 1/64 i stället för 1/32–1/40: hänkel, kant, lock, etikett med text.
+- Möbler (stol, bord, skåp, hyllor) i 1/32: svarvade ben, fogar, ådring, slitna kanter, knoppar.
+- Mönster i texturerna: rosor på porslinet, rutor på dukar, vävda korgar, tryck på mjölpåsar.
+- Gräns: varje modell håller sig under kitets budget, och galleriet får före- och efter-bilder per sak.
+- Vättarna kopierar exakt samma modeller, så en detaljerad sak blir en detaljerad gömställe-form utan extra arbete.
 
 ### Fas 3: vardagsrummet och hallen
 Gökuren och dess event, samt radion.

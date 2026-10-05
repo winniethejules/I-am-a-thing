@@ -20,7 +20,7 @@ import {
 } from '@voxelparty/sdk/core';
 import { Bot, IDLE, NO_FORM, type Intent } from './bot';
 import { Arena, DEATH_Y } from './map';
-import { FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Role, type Snap } from './rules';
+import { FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Phase, type Role, type Snap } from './rules';
 import { FORMS, KUSIN_MOVE, REAL_THINGS, VATTE, formBox, formHp, moveOf } from './things';
 
 /** What each player streams about their body: feet, look, life, and (a vätte) its form and lock. */
@@ -49,7 +49,9 @@ export type Cue =
   | { k: 'spawn'; pid: string }
   | { k: 'jump'; pid: string }
   | { k: 'land'; pid: string; speed: number }
-  | { k: 'win'; pid: string; r: number };
+  | { k: 'phase'; r: number; ph: Phase; win?: Role }
+  | { k: 'score'; pid: string }
+  | { k: 'match'; ids: string[]; scores: number[] };
 
 /** Everything a CPU gets to know. */
 export interface World {
@@ -60,6 +62,8 @@ export interface World {
   role(p: Pawn): Role;
   /** A vätte's darts taken this life. */
   hits(p: Pawn): number;
+  /** The round's phase. */
+  readonly phase: Phase;
 }
 
 /** A player's body on this client: simulated here (`own`), or drawn from their stream. */
@@ -76,6 +80,8 @@ export class Pawn {
   /** A vätte locked still (it can look round, not move). */
   locked = false;
   tauntCool = 0;
+  /** When it last taunted (ms, this client's clock): a kusin within earshot hears where. */
+  tauntAt = -Infinity;
   /** This frame's step-ups and landing speed, for the camera. */
   stepped = 0;
   landed = 0;
@@ -123,12 +129,12 @@ export class Core implements World {
   private readonly stale = new Map<string, number>();
   private readonly dir = [0, 0, 0];
   private roster: readonly LinkPlayer[] = [];
-  /** Host: the roster the roles were last balanced for. */
-  private balanced: readonly LinkPlayer[] | null = null;
   private wasHost: boolean;
   private botsMade = 0;
   /** CPUs a staged scene holds still (`stage`'s `hold`). */
   private readonly held = new Set<string>();
+  /** Spawn spots handed out lately, by player. */
+  private readonly claimed = new Map<string, { k: number; at: number }>();
   private spawnNo = 0;
 
   constructor(
@@ -193,6 +199,10 @@ export class Core implements World {
 
   hits(p: Pawn): number {
     return this.match.stats.get(p.pid)?.hits ?? 0;
+  }
+
+  get phase(): Phase {
+    return this.match.phase;
   }
 
   /**
@@ -284,12 +294,14 @@ export class Core implements World {
     p.stepped = p.landed = 0;
     if (!p.alive) return;
     const b = p.body, kusin = this.role(p) === 'k';
+    // While the vättar hide, the kusiner wait in the hall with their eyes shut: they can look about, not move or shoot.
+    const waiting = kusin && this.match.phase === 'hide';
     p.tauntCool -= dt;
     if (!kusin) this.hide(p, i, it);
     // A locked vätte stays exactly as it is: the look is the camera's (game.ts), not the body's.
     if (!p.locked) turn(b, it.dyaw, it.dpitch);
     if (!this.frame.live) return;
-    const r = fpsStep(this.arena, b, p.locked ? IDLE : it, dt, moveOf(kusin, p.form));
+    const r = fpsStep(this.arena, b, p.locked || waiting ? IDLE : it, dt, moveOf(kusin, p.form));
     p.stepped = r.stepped;
     if (r.jumped) this.cues.push({ k: 'jump', pid: p.pid });
     if (r.landed > 6) {
@@ -303,7 +315,7 @@ export class Core implements World {
       else this.moves.event(i, { k: 'hit', v: p.pid, l: p.life });
       return;
     }
-    if (!kusin) return;
+    if (!kusin || waiting) return;
     p.cool -= dt;
     if (it.fire && p.cool <= 0) {
       p.cool = FIRE_MS / 1000;
@@ -325,8 +337,10 @@ export class Core implements World {
     }
     if (it.taunt && p.tauntCool <= 0) {
       p.tauntCool = TAUNT_S;
+      p.tauntAt = this.now;
       this.cues.push({ k: 'taunt', pid: p.pid });
       this.moves.event(i, { k: 'taunt' });
+      if (this.link.isHost) for (const e of this.match.taunt(p.pid)) this.emit(e);
     }
   }
 
@@ -363,6 +377,9 @@ export class Core implements World {
     if (e.k === 'dmg') this.cues.push({ k: 'dmg', v: e.v, a: e.a, hits: e.hits });
     else if (e.k === 'wrong') this.cues.push({ k: 'wrong', a: e.a, t: e.t, hp: e.hp });
     else if (e.k === 'role') this.cues.push({ k: 'role', pid: e.pid, r: e.r });
+    else if (e.k === 'phase') this.cues.push({ k: 'phase', r: e.r, ph: e.ph, ...(e.win && { win: e.win }) });
+    else if (e.k === 'taunt') this.cues.push({ k: 'score', pid: e.pid });
+    else if (e.k === 'match') this.cues.push({ k: 'match', ids: e.ids, scores: e.scores });
     else if (e.k === 'frag') {
       const p = this.pawns.get(e.v);
       if (p?.own) p.alive = false;
@@ -376,7 +393,7 @@ export class Core implements World {
         Object.assign(p, { alive: true, cool: 0, form: VATTE, locked: false });
       }
       this.cues.push({ k: 'spawn', pid: e.pid });
-    } else if (e.k === 'win') this.cues.push({ k: 'win', pid: e.pid, r: e.r });
+    }
   }
 
   /** Other players' one-offs: darts to draw, taunts to hear, and (on the host) claims to judge. */
@@ -384,15 +401,19 @@ export class Core implements World {
     if (!e || typeof e !== 'object') return;
     if (e.k === 'shot' && isVec(e.o) && isVec(e.e) && Number.isInteger(e.t) && (e.v === 0 || e.v === 1)) {
       this.cues.push({ k: 'shot', pid, o: e.o, e: e.e, t: e.t, v: e.v });
-    } else if (e.k === 'taunt') this.cues.push({ k: 'taunt', pid });
-    else if (this.link.isHost) this.judge(pid, e);
+    } else if (e.k === 'taunt') {
+      const p = this.pawns.get(pid);
+      if (p) p.tauntAt = this.now;
+      this.cues.push({ k: 'taunt', pid });
+      if (this.link.isHost) for (const ev of this.match.taunt(pid)) this.emit(ev);
+    } else if (this.link.isHost) this.judge(pid, e);
   }
 
   /** A player's game started over (a reload): forget what we counted for them; they need a body again. */
   private restarted(pid: string) {
     this.rate.forget(pid);
     const st = this.match.stats.get(pid);
-    if (this.link.isHost && st?.alive) this.emit(this.match.respawn(pid, this.spot(pid)));
+    if (this.link.isHost && st?.alive) this.emit(this.match.respawn(pid, this.spot(pid, st.role === 'k' && this.match.phase === 'hide')));
   }
 
   /** Someone else's body: where their stream says, drawn a moment behind; a new form or lock is a cue. */
@@ -416,15 +437,10 @@ export class Core implements World {
   // ------------------------------------------------------------ host
 
   private host(dt: number, now: number) {
-    if (this.balanced !== this.link.players) {
-      // Kusiner and vättar as the room wants them; a changed role starts a new life as it.
-      this.balanced = this.link.players;
-      for (const e of this.match.balance(this.link.players.map((p) => p.id))) {
-        this.emit(e);
-        if (e.k === 'role' && this.match.stats.get(e.pid)?.life) this.emit(this.match.respawn(e.pid, this.spot(e.pid)));
-      }
-    }
-    if (this.frame.live) for (const e of this.match.tick(now, (pid) => this.spot(pid))) this.emit(e);
+    const ids = this.link.players.map((p) => p.id), spot = (pid: string, hall: boolean) => this.spot(pid, hall);
+    // Someone new (never had a life): in as a vätte while hiding, as a kusin once the seeking's begun.
+    for (const id of ids) if (this.match.stats.get(id)?.life === 0) for (const e of this.match.admit(id, spot)) this.emit(e);
+    if (this.frame.live) for (const e of this.match.tick(now, ids, spot)) this.emit(e);
     this.heal(now);
     this.sync.tick(dt, () => this.match.snapshot(this.link.players.map((p) => p.id)));
   }
@@ -469,8 +485,9 @@ export class Core implements World {
     this.link.players.forEach((lp, i) => {
       const st = this.match.stats.get(lp.id), p = this.pawns.get(lp.id);
       if (!st?.alive || !p) return void this.stale.delete(lp.id);
+      const hall = st.role === 'k' && this.match.phase === 'hide';
       if (p.own) {
-        if (!p.alive || p.life !== st.life) this.emit(this.match.respawn(lp.id, this.spot(lp.id)));
+        if (!p.alive || p.life !== st.life) this.emit(this.match.respawn(lp.id, this.spot(lp.id, hall)));
         return;
       }
       const l = this.moves.latest(i)?.l;
@@ -479,21 +496,26 @@ export class Core implements World {
       this.stale.set(lp.id, since);
       if (now - since > STALE_MS) {
         this.stale.delete(lp.id);
-        this.emit(this.match.respawn(lp.id, this.spot(lp.id)));
+        this.emit(this.match.respawn(lp.id, this.spot(lp.id, hall)));
       }
     });
   }
 
-  /** The spawn spot farthest from everyone else in play (taking turns among ties). */
-  private spot(pid: string): number {
+  /** The spawn spot farthest from everyone else in play (taking turns among ties): in the hall (kusiner waiting) or the kitchen. */
+  private spot(pid: string, hall: boolean): number {
     const spawns = this.arena.spawns, n = spawns.length, k0 = this.spawnNo++;
-    let best = 0, bestD = -1;
+    let best = -1, bestD = -1;
     for (let j = 0; j < n; j++) {
       const k = (k0 + j) % n, s = spawns[k];
+      if (s.hall !== hall) continue;
       let d = 99;
       for (const q of this.pawns.values()) if (q.pid !== pid && this.alive(q)) d = Math.min(d, Math.hypot(q.body.x - s.x, q.body.z - s.z));
+      // A round starts everyone at once, before any body has moved: spots just handed out are taken.
+      for (const [q, c] of this.claimed) if (q !== pid && this.now - c.at < 1000) d = Math.min(d, Math.hypot(spawns[c.k].x - s.x, spawns[c.k].z - s.z));
       if (d > bestD + 0.5) [best, bestD] = [k, d];
     }
+    best = Math.max(0, best);
+    this.claimed.set(pid, { k: best, at: this.now });
     return best;
   }
 

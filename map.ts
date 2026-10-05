@@ -9,10 +9,10 @@ import { KITCHEN_PROPS, SPAWNS } from './kitchen';
 import { buildModels, sizeOf } from './models';
 import type { Ids } from './textures';
 
-/** Cells of a quarter metre, from (-0.25, -0.5, -0.5) to (6.75, 3, 8): the CPUs' 0.5 m columns land on the door's middle. */
+/** Cells of a quarter metre, from (-0.25, -0.5, -0.5) to (8.75, 3, 8): the CPUs' 0.5 m columns land on the doors' middles. */
 export const CELL = 0.25;
 export const GX0 = -0.25, GY0 = -0.5, GZ0 = -0.5;
-export const NX = 28, NY = 14, NZ = 34;
+export const NX = 36, NY = 14, NZ = 34;
 /** Below this you've fallen out of the world (the house has no holes: a safety net). */
 export const DEATH_Y = -10;
 
@@ -24,6 +24,8 @@ export interface Spawn {
   y: number;
   z: number;
   yaw: number;
+  /** In the hall (where the kusiner wait while the vättar hide), not the kitchen. */
+  hall: boolean;
 }
 
 /** Model sizes don't depend on block ids: build them with any id to measure footprints. */
@@ -48,7 +50,7 @@ export class Arena extends VoxelGrid {
       const hx = (w * c + d * s) / 2, hz = (w * s + d * c) / 2;
       this.fill(p.x - hx, p.y, p.z - hz, p.x + hx, Math.min(p.y + h, 2.5), p.z + hz, M.FURNITURE);
     }
-    for (const [x, y, z] of SPAWNS) this.spawns.push({ x, y, z, yaw: Math.atan2(3 - x, 1.5 - z) });
+    for (const [x, y, z] of SPAWNS) this.spawns.push({ x, y, z, yaw: Math.atan2(3 - x, 1.5 - z), hall: z > 5 });
     this.nav = new NavGrid(this, { spacing: 0.5 });
   }
 }

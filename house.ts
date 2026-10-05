@@ -24,7 +24,7 @@ export interface HouseBox {
 export const HV = 1 / 8;
 /** The house volume's low corner in the world, and its size in voxels. */
 export const HOUSE_AT: [number, number, number] = [-0.5, -0.5, -0.5];
-export const HOUSE_SIZE: [number, number, number] = [56, 28, 66];
+export const HOUSE_SIZE: [number, number, number] = [72, 28, 66];
 
 /** The kitchen's inside. */
 export const KITCHEN = { x0: 0, x1: 6, z0: 0, z1: 5, h: 2.5 };
@@ -33,6 +33,8 @@ export const WINDOWS: [number, number][] = [[1.25, 2.375], [3.625, 4.75]];
 export const SILL = 0.875, WIN_TOP = 2.125;
 /** The door from the hall, in the kitchen's south wall. */
 export const DOOR = { x0: 2.5, x1: 3.5, h: 2.125 };
+/** Skafferiet: the pantry east of the kitchen, its door in the kitchen's east wall (z from z0 to z1). */
+export const PANTRY = { x0: 6.25, x1: 8, z0: 3.5, z1: 5, door: { z0: 3.85, z1: 4.85 } };
 
 const T = HV; // one voxel: a lip, a list
 
@@ -64,6 +66,20 @@ function shell(): HouseBox[] {
   add([4.25, 0, 5.25, 4.5, k.h, 7.75], 'ROSE');
   add([1.5, 0, 7.5, 4.5, k.h, 7.75], 'ROSE');
 
+  // Skafferiet: pine floor, cream-painted walls, its own ceiling. A mouse hole by the floor.
+  const p = PANTRY;
+  add([p.x0, -0.5, p.z0 - 0.25, p.x1 + 0.25, -0.125, p.z1 + 0.25], 'GREY');
+  add([p.x0, -0.125, p.z0 - 0.25, p.x1 + 0.25, 0, p.z1 + 0.25], 'PINE');
+  add([p.x0, 0, p.z0 - 0.25, p.x1 + 0.25, k.h, p.z0], 'FALU');
+  add([p.x1, 0, p.z0 - 0.25, p.x1 + 0.25, k.h, p.z1 + 0.25], 'FALU');
+  add([p.x0, 0, p.z1, p.x1 + 0.25, k.h, p.z1 + 0.25], 'FALU');
+  add([p.x0, 0, p.z0 - T, p.x1, k.h, p.z0], 'CREAM', false);
+  add([p.x1, 0, p.z0, p.x1 + T, k.h, p.z1], 'CREAM', false);
+  add([p.x0, 0, p.z1, p.x1, k.h, p.z1 + T], 'CREAM', false);
+  add([6.25 - T, 0, p.z0, 6.25, k.h, p.z1], 'CREAM', false);
+  add([p.x0, k.h, p.z0 - 0.25, p.x1 + 0.25, k.h + 0.25, p.z1 + 0.25], 'CEILING');
+  add([7.4, 0, p.z1, 7.4 + T, T, p.z1 + T], 'INK', false);   // the mouse hole
+
   // (The inner skins are drawn only: the walls behind them are what you bump into.)
   // Tiles behind the stove (west wall) and over the counter (east wall).
   add([-T, 0, 1.25, 0, 1.5, 2.75], 'TILE', false);
@@ -72,6 +88,7 @@ function shell(): HouseBox[] {
   // Openings: two windows north, the door south.
   for (const [x0, x1] of WINDOWS) add([x0, SILL, -0.25, x1, WIN_TOP, 0], 'AIR', false, true);
   add([DOOR.x0, 0, 5, DOOR.x1, DOOR.h, 5.25], 'AIR');
+  add([6, 0, PANTRY.door.z0, 6.25, DOOR.h, PANTRY.door.z1], 'AIR');
 
   // Window frames and bars (in the outer half of the wall, so the inside has a recess), and sills.
   for (const [x0, x1] of WINDOWS) {
@@ -90,7 +107,16 @@ function shell(): HouseBox[] {
   add([0, 0, 5 - T, DOOR.x0 - T, T, 5], 'WHITE', false);
   add([DOOR.x1 + T, 0, 5 - T, 6, T, 5], 'WHITE', false);
   add([0, 0, T, T, T, 5 - T], 'WHITE', false);
-  add([6 - T, 0, T, 6, T, 5 - T], 'WHITE', false);
+  add([6 - T, 0, T, 6, T, PANTRY.door.z0 - T], 'WHITE', false);
+  add([6 - T, 0, PANTRY.door.z1 + T, 6, T, 5 - T], 'WHITE', false);
+  // The pantry door's frame on the kitchen side, and the pantry's own skirting.
+  add([6 - T, 0, PANTRY.door.z0 - T, 6, DOOR.h + T, PANTRY.door.z0], 'WHITE', false);
+  add([6 - T, 0, PANTRY.door.z1, 6, DOOR.h + T, PANTRY.door.z1 + T], 'WHITE', false);
+  add([6 - T, DOOR.h, PANTRY.door.z0, 6, DOOR.h + T, PANTRY.door.z1], 'WHITE', false);
+  add([PANTRY.x0, 0, PANTRY.z0, PANTRY.x1, T, PANTRY.z0 + T], 'WHITE', false);
+  add([PANTRY.x1 - T, 0, PANTRY.z0 + T, PANTRY.x1, T, PANTRY.z1 - T], 'WHITE', false);
+  add([PANTRY.x0, 0, PANTRY.z1 - T, 7.4, T, PANTRY.z1], 'WHITE', false);
+  add([7.4 + T, 0, PANTRY.z1 - T, PANTRY.x1, T, PANTRY.z1], 'WHITE', false);
   add([0, k.h - T, 0, 6, k.h, T], 'WHITE', false);
   add([0, k.h - T, 5 - T, 6, k.h, 5], 'WHITE', false);
   add([0, k.h - T, T, T, k.h, 5 - T], 'WHITE', false);

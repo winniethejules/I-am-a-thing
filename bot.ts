@@ -33,6 +33,10 @@ export const IDLE: Readonly<Intent> = { fwd: 0, side: 0, jump: false, dyaw: 0, d
 
 /** How fast it can turn, radians a second. */
 const TURN = 6;
+/** Where a kusin stands to look round the pantry: in its door, and inside. */
+const PANTRY_LOOKS = [{ x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }];
+/** How far a taunt carries, metres. */
+const EARSHOT = 9;
 
 /** What a kusin thinks of a vätte it can see: suspicion builds up to 1, then it shoots. */
 interface Hunch {
@@ -55,10 +59,16 @@ export class Bot {
   // The kusin.
   private target: { pid: string | null; thing: number; x: number; y: number; z: number } | null = null;
   private readonly hunches = new Map<string, Hunch>();
+  /** Real things it has already tested this life: it won't fall for the same one twice. */
+  private readonly tested = new Set<number>();
+  /** The last taunt it heard from each vätte (so it reacts to each taunt once). */
+  private readonly heard = new Map<string, number>();
   private errYaw = 0;
   private errPitch = 0;
   private aimT = 0;
   private sweep = 0;
+  /** Following a taunt it heard: it won't wander off for this long. */
+  private leadT = 0;
 
   // The vätte.
   private plan: { f: number; x: number; z: number } | null = null;
@@ -86,6 +96,7 @@ export class Bot {
       this.follow.reset();
       this.target = this.plan = null;
       this.hunches.clear();
+      this.tested.clear();
       this.lastHits = this.hidT = this.nearT = 0;
     }
     return w.role(me) === 'k' ? this.seek(dt, me, w, o) : this.hide(dt, me, w, o);
@@ -95,14 +106,18 @@ export class Bot {
 
   private seek(dt: number, me: Pawn, w: World, o: Intent): Intent {
     const b = me.body;
-    if (this.look.tick(dt)) this.watch(me, w);
+    if (this.look.tick(dt)) {
+      this.listen(me, w);
+      this.watch(me, w);
+    }
     if (this.target) this.aim(dt, me, o);
     this.idleT = this.follow.idle ? this.idleT + dt : 0;
+    this.leadT -= dt;
     if (this.think.tick(dt) || this.idleT > 0.4) {
       this.idleT = 0;
-      this.wander(me, w);
+      if (this.leadT <= 0 || this.follow.idle) this.wander(me, w);
       // Nerves: now and then, with nothing better to go on, test a real thing nearby.
-      if (!this.target && this.rand() < 0.07 / this.skill) this.test(me, w);
+      if (!this.target && w.phase === 'seek' && this.rand() < 0.015 / this.skill) this.test(me, w);
     }
     const s = this.follow.steer(b);
     const slow = this.target ? 0.25 : 0.75;   // creep while aiming, walk while searching
@@ -150,13 +165,36 @@ export class Bot {
     } else if (this.target?.pid) this.target = null;
   }
 
+  /**
+   * Hear a taunt: a kusin within earshot knows roughly where it came from. It heads there, and if
+   * the thing is in sight, the taunt is half a confession.
+   */
+  private listen(me: Pawn, w: World) {
+    const b = me.body;
+    for (const p of w.pawns.values()) {
+      if (p === me || !w.alive(p) || w.role(p) !== 'v' || w.now - p.tauntAt > 1000 || this.heard.get(p.pid) === p.tauntAt) continue;
+      const q = p.body, d = Math.hypot(q.x - b.x, q.z - b.z);
+      if (d > EARSHOT) continue;
+      this.heard.set(p.pid, p.tauntAt);
+      const hunch = this.hunches.get(p.pid) ?? { sus: 0, at: w.now };
+      hunch.sus = Math.min(1.5, hunch.sus + 0.45 * this.skill);
+      hunch.at = w.now;
+      this.hunches.set(p.pid, hunch);
+      // Off towards the sound, give or take a step: it's a guess, not a map.
+      const miss = 1.2 / this.skill;
+      this.leadT = 6;
+      if (!this.target) this.follow.goTo(b, q.x + (this.rand() - 0.5) * miss, 0, q.z + (this.rand() - 0.5) * miss);
+    }
+  }
+
   /** Pick a real thing in sight, close by, and shoot it to see (a wrong guess, on purpose). */
   private test(me: Pawn, w: World) {
     const b = me.body, ey = b.y + KUSIN_MOVE.eye;
     const near = REAL_THINGS.map((th, j) => ({ th, j, d: Math.hypot(th.x - b.x, th.z - b.z) }))
-      .filter(({ th, d }) => d < 5 && d > 0.8 && w.arena.sees(b.x, ey, b.z, th.x, th.y + th.h * 0.5, th.z));
+      .filter(({ th, j, d }) => d < 3 && d > 0.8 && !this.tested.has(j) && w.arena.sees(b.x, ey, b.z, th.x, th.y + th.h * 0.5, th.z));
     if (!near.length) return;
     const { th, j } = near[Math.floor(this.rand() * near.length)];
+    this.tested.add(j);
     this.aimAt(null, j, th.x, th.y + th.h * 0.5, th.z);
   }
 
@@ -182,17 +220,24 @@ export class Bot {
     o.dyaw = clampTurn(wrapAngle(yaw + this.errYaw - b.yaw), turn);
     o.dpitch = clampTurn(pitch + this.errPitch - b.pitch, turn * 0.7);
     const off = Math.abs(wrapAngle(yaw - b.yaw)) + Math.abs(pitch - b.pitch);
-    o.fire = this.aimT > 0.5 / this.skill && off < 0.05 + 0.25 / Math.max(2, d);
-    if (o.fire && !t.pid) this.target = null;   // one test dart, then back to searching
+    o.fire = this.aimT > 0.5 / this.skill && off < 0.03 + 0.14 / Math.max(2, d);
+    if (o.fire) {
+      // One dart, then look again: a hunch needs fresh evidence before the next (a hit shows itself:
+      // the thing squeaks and jumps), a test dart was only ever one.
+      const h = t.pid ? this.hunches.get(t.pid) : undefined;
+      if (h) h.sus = 0.4;
+      this.target = null;
+    }
     if (this.aimT > 4) this.target = null;      // lost it
   }
 
   /** Where next: a random spot in the kitchen (the hall is a dead end nobody hides in, yet). */
   private wander(me: Pawn, w: World) {
     if (!this.follow.idle && this.rand() < 0.7) return;
-    const kitchen = w.arena.spawns.filter((s) => s.z < 5);
-    const s = kitchen[Math.floor(this.rand() * kitchen.length)];
-    this.follow.goTo(me.body, s.x + (this.rand() - 0.5), s.y, s.z + (this.rand() - 0.5));
+    // Every room a vätte can hide in: the kitchen's spawns, and now and then a look in the pantry.
+    const spots = [...w.arena.spawns.filter((s) => s.z < 5), ...PANTRY_LOOKS];
+    const s = spots[Math.floor(this.rand() * spots.length)];
+    this.follow.goTo(me.body, s.x + (this.rand() - 0.5) * 0.6, s.y, s.z + (this.rand() - 0.5) * 0.6);
   }
 
   // ------------------------------------------------------------ the vätte
@@ -222,7 +267,10 @@ export class Bot {
       // a while, it settles for where it stands.
       let sx: number, sz: number;
       if (d > 0.9) {
-        if (this.follow.idle || this.think.tick(dt)) this.follow.goTo(b, p.x, 0, p.z);
+        if ((this.follow.idle || this.think.tick(dt)) && !this.follow.goTo(b, p.x, 0, p.z)) {
+          this.plan = null;   // no way there from here: think again
+          return o;
+        }
         const s = this.follow.steer(b);
         [sx, sz, o.jump] = [s.x, s.z, s.jump];
         this.nearT = 0;
@@ -252,16 +300,22 @@ export class Bot {
    * then (a sloppier vätte more often) a spot in the open instead, the mistake kusiner live for.
    */
   private choose(me: Pawn, w: World): { f: number; x: number; z: number } {
+    // A kind first (six chairs mustn't make everyone a chair), then one of that kind to stand by.
     const floor = REAL_THINGS.filter((th) => th.f >= 0 && th.y < 0.05);
+    const kinds = [...new Set(floor.map((th) => th.f))];
     const open = this.rand() < 0.15 / this.skill;
     for (let tries = 0; tries < 24; tries++) {
-      const th = floor[Math.floor(this.rand() * floor.length)];
+      const f = kinds[Math.floor(this.rand() * kinds.length)];
+      const ofKind = floor.filter((th) => th.f === f);
+      const th = ofKind[Math.floor(this.rand() * ofKind.length)];
       const { r, h } = formBox(th.f), m = moveOf(false, th.f), rr = Math.min(r, m.radius);
       const a = this.rand() * Math.PI * 2, gap = open ? 1.5 + this.rand() * 1.5 : th.r + r + 0.08;
       const x = th.x + Math.sin(a) * gap, z = th.z + Math.cos(a) * gap;
       if (w.arena.boxHits(x - rr, 0.02, z - rr, x + rr, h, z + rr)) continue;
       const node = w.arena.nav.nodes[w.arena.nav.nearest(x, 0, z)];
       if (!node || Math.hypot(node.x - x, node.z - z) > 0.6) continue;
+      // A spot it can't walk to (boxed in by the table and the wall) is no spot at all.
+      if (!this.follow.goTo(me.body, x, 0, z)) continue;
       return { f: th.f, x, z };
     }
     // Nowhere good: be a cup in the corner by the door. (It happens.)

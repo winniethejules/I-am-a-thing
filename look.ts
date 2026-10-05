@@ -64,4 +64,6 @@ export const PHOTOS: PhotoPoint[] = [
   { name: 'K3', pos: [1.75, 1.05, 1.0], look: [4.4, 0.85, 3.3], fov: 58 },
   /** Kusinens ögon: first person in the kitchen, the suction gun held. */
   { name: 'K4', pos: [2.7, 1.45, 4.4], look: [2.6, 0.9, 1.5], fov: 75, gun: true, noKusin: true },
+  /** Skafferiet: from the kitchen, through the pantry door, the shelves of jars under the bulb. */
+  { name: 'S1', pos: [4.7, 1.4, 4.35], look: [7.9, 1.0, 4.25], fov: 62, noKusin: true },
 ];
