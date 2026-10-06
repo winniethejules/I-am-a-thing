@@ -273,6 +273,12 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
 - [x] Kusin-CPU:n letar i hela huset och trädgården; testet är två rundor (huset är stort för en kusin).
 - [x] Fotopunkter för varje rum och tre i trädgården (`look.ts`: V1, V2, H1, F1, B1, R1, Y1, G1–G3).
 - **Undantag i galleriet (avsiktligt):** röd och blå dalahäst, garnnystan i tre färger och blomkrukor i två färger är samma form i olika färger. Det är meningen: de ska kunna förväxlas, och listan räknar dem var för sig.
+- **Resultat (2026-10-06):**
+  - Tester: 9 av 9 (CPU-testet spelar tre rundor i det stora huset).
+  - Bildtestet: 17 av 18 fotopunkter klarar det. J1 (jordkällaren) är mörk med flit: en lykta i ett stenvalv. Säg till om du vill ha den ljusare.
+  - Galleriet: 143 modeller, inga ⚠ utom de avsiktliga omfärgningarna ovan.
+  - `vp check`: allt grönt utom sessionen med seed 8919 (samma tidsartefakt i molnmiljön som i fas 1). Sessionen med seed 1000 slutar nu efter cirka 23 s med en spelare. Riggen räknar den som godkänd, men varför den slutar kan jag inte återskapa: ensam i spelet i 40 s står det kvar i VÄNTAR som det ska. Båda behöver köras om på en dator med grafikkort.
+  - Risk: scenen är tung för mjukvarurendering, med omkring 290 placerade saker i 140 modeller. På datorer med grafikkort ska det vara lugnt; på telefon behöver det mätas (`vp check --long` på riktig hårdvara).
 - [ ] Radion (dansband i 20 s som döljer ljud i vardagsrummet).
 - [ ] Mormor och Misse som rör sig.
 - [x] **Jordkällaren:** en gräsklädd kulle i trädgårdens nordvästra hörn, stenfasad, sju trappsteg ner, ett stenvalv med jordgolv och bjälkar, upplyst av en lykta. Hylla med sylt och saft, äppellådor, potatissäckar, mjölkkanna. Fotopunkter J1 och J2.
