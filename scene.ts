@@ -33,7 +33,6 @@ function geometry(m: Model): BufferGeometry {
 export class KitchenScene {
   readonly root = new Group();
   readonly light: BlockLight;
-  private cellarLight!: BlockLight;
   readonly kusin: Avatar;
   readonly vatte: Avatar;
   private readonly geos: BufferGeometry[] = [];
@@ -56,9 +55,13 @@ export class KitchenScene {
     hm.position.set(...HOUSE_AT);
     hm.castShadow = hm.receiveShadow = true;
     this.root.add(hm);
-    this.light = view.blockLight(house, { voxel: HV, at: { x: HOUSE_AT[0], y: HOUSE_AT[1], z: HOUSE_AT[2] } });
+    // One block light over the house and the root cellar together (a stage has one).
+    const cellar = this.buildCellar();
+    this.light = view.blockLight([
+      { vol: house, at: { x: HOUSE_AT[0], y: HOUSE_AT[1], z: HOUSE_AT[2] } },
+      { vol: cellar, at: { x: CELLAR_AT[0], y: CELLAR_AT[1], z: CELLAR_AT[2] } },
+    ], { voxel: HV });
     this.addLights();
-    this.buildCellar();
 
     this.buildGarden();
     this.buildProps();
@@ -101,6 +104,7 @@ export class KitchenScene {
     L.add({ ...L.cell(-4.5, 1.8, 10.1), color: '#ffcf8a', reach: 36, strength: 0.6, group: 1 });        // the bedroom's lamp
     L.add({ ...L.cell(-2.25, 0.85, 11.17), color: '#ffcf8a', reach: 16, strength: 0.6, group: 1 });     // the bedside lamp
     L.add({ ...L.cell(7.2, 1.8, 10.1), color: '#ffe2b0', reach: 38, strength: 0.7, group: 1 });         // the sewing room's lamp
+    L.add({ ...L.cell(-8.9, -1.55, -7.6), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });      // the root cellar's lantern
     for (const [i, w] of WINDOW_LIST.entries()) {
       const mid = (w.a0 + w.a1) / 2, inside = w.out < 0 ? w.at + 0.6 : w.at - 0.35;
       const [x, z] = w.along === 'x' ? [mid, inside] : [inside, mid];
@@ -271,8 +275,8 @@ export class KitchenScene {
     }
   }
 
-  /** Jordkällaren: its own volume under the mound, lit by one lantern (dimmer group 1, like the lamps). */
-  private buildCellar() {
+  /** Jordkällaren: its own volume under the mound (lit by one lantern, in addLights). */
+  private buildCellar(): Volume {
     const { engine } = this.ctx, ids = this.ids;
     const vol = new Volume(...CELLAR_SIZE);
     for (const { b, m } of CELLAR_BOXES) {
@@ -286,8 +290,7 @@ export class KitchenScene {
     mesh.position.set(...CELLAR_AT);
     mesh.castShadow = mesh.receiveShadow = true;
     this.root.add(mesh);
-    this.cellarLight = this.view.blockLight(vol, { voxel: CV, at: { x: CELLAR_AT[0], y: CELLAR_AT[1], z: CELLAR_AT[2] } });
-    this.cellarLight.add({ ...this.cellarLight.cell(-8.9, -1.55, -7.6), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });
+    return vol;
   }
 
   /**
@@ -341,7 +344,6 @@ export class KitchenScene {
     for (const k of ['exposure', 'vignette', 'saturation', 'contrast', 'shadows', 'highlights', 'split', 'tint']) delete g[k];
     Object.assign(this.view.grade, v.grade);
     this.light.dim(1, v.lamp);
-    this.cellarLight.dim(1, v.lamp);
     this.light.dim(2, v.stove);
     this.light.dim(3, v.day);
     this.light.dim(4, v.dusk);

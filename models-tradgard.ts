@@ -202,7 +202,10 @@ function lantern(k: Ids) {
   lathe(v, 5, 5, 0, 2, () => 4, k.STEEL);
   for (const [x, z] of [[1, 5], [9, 5], [5, 1], [5, 9]]) box(v, x, 2, z, x + 1, 11, z + 1, k.STEEL);
   lathe(v, 5, 5, 11, 13, (y) => (y === 11 ? 4 : 2.6), k.STEEL);
-  for (let i = 0; i <= 8; i++) { const a = Math.PI * (i / 8); dot(v, Math.floor(5 + Math.cos(a) * 4), Math.floor(13 + Math.sin(a) * 4), 5, k.STEEL); }
+  for (let i = 0; i < 8; i++) {
+    const a = Math.PI * (i / 8), b = Math.PI * ((i + 1) / 8);
+    line(v, [5.5 + Math.cos(a) * 3.5, 12.5 + Math.sin(a) * 4, 5.5], [5.5 + Math.cos(b) * 3.5, 12.5 + Math.sin(b) * 4, 5.5], k.STEEL);
+  }
   return prop(v, Q);
 }
 function lanternGlow(k: Ids) {
