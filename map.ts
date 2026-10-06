@@ -5,14 +5,14 @@
  */
 import { NavGrid, VoxelGrid } from '@voxelparty/sdk/core';
 import { HOUSE } from './house';
-import { KITCHEN_PROPS, SPAWNS } from './kitchen';
+import { ALL_PROPS, SPAWNS } from './props';
 import { buildModels, sizeOf } from './models';
 import type { Ids } from './textures';
 
-/** Cells of a quarter metre, from (-0.25, -0.5, -0.5) to (8.75, 3, 8): the CPUs' 0.5 m columns land on the doors' middles. */
+/** Cells of a quarter metre, from (-7.25, -0.5, -0.5) to (10.5, 3, 13): the CPUs' 0.5 m columns land on the doors' middles. */
 export const CELL = 0.25;
-export const GX0 = -0.25, GY0 = -0.5, GZ0 = -0.5;
-export const NX = 36, NY = 14, NZ = 34;
+export const GX0 = -7.25, GY0 = -0.5, GZ0 = -0.5;
+export const NX = 71, NY = 14, NZ = 54;
 /** Below this you've fallen out of the world (the house has no holes: a safety net). */
 export const DEATH_Y = -10;
 
@@ -43,14 +43,15 @@ export class Arena extends VoxelGrid {
       else if (solid !== false) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);
     }
     // Furniture: its footprint (turned by its yaw, as a box round it), from the floor to its top.
-    for (const p of KITCHEN_PROPS) {
+    for (const p of ALL_PROPS) {
       if (!p.solid) continue;
       const [w, h, d] = sizeOf(MEASURE[p.key]);
       const c = Math.abs(Math.cos(p.yaw)), s = Math.abs(Math.sin(p.yaw));
       const hx = (w * c + d * s) / 2, hz = (w * s + d * c) / 2;
       this.fill(p.x - hx, p.y, p.z - hz, p.x + hx, Math.min(p.y + h, 2.5), p.z + hz, M.FURNITURE);
     }
-    for (const [x, y, z] of SPAWNS) this.spawns.push({ x, y, z, yaw: Math.atan2(3 - x, 1.5 - z), hall: z > 5 });
+    // Kusiner face into the house from the front door; vättar face the room they're in.
+    for (const { x, z, hall } of SPAWNS) this.spawns.push({ x, y: 0, z, yaw: hall ? Math.PI : Math.atan2(3 - x, 1.5 - z), hall });
     this.nav = new NavGrid(this, { spacing: 0.5 });
   }
 }

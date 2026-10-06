@@ -91,6 +91,8 @@ export class Shooter implements GameStage {
   private photoAt: PhotoPoint | null = null;
   private readonly shownFrags = new Map<string, string>();
   private lastTick = -1;
+  /** The role the touch buttons are set for. */
+  private touchRole: 'k' | 'v' | null = null;
   /** Who won the round that just ended, for the board. */
   private roundWin: 'k' | 'v' | undefined;
   private readonly read: FpsIntent = { fwd: 0, side: 0, jump: false, dyaw: 0, dpitch: 0, fire: false, alt: false, firePressed: false, altPressed: false, slot: null, wheel: 0 };
@@ -419,6 +421,13 @@ export class Shooter implements GameStage {
     const me = core.me(), photo = this.photoAt;
     const myRole = me ? core.role(me) : 'k';
     this.firstPerson = !!me && flow.live && core.alive(me) && myRole === 'k';
+    // A phone shows the buttons of the role you have: the kusin shoots and reads the list, a vätte becomes, locks and taunts.
+    if (myRole !== this.touchRole) {
+      this.touchRole = myRole;
+      this.ctx.input.touch.setButtons(myRole === 'k'
+        ? [{ name: 'click', label: 'SKJUT' }, { name: 'list', label: 'LISTA' }, { name: 'action', label: 'HOPPA' }]
+        : [{ name: 'become', label: 'BLI SAK' }, { name: 'lock', label: 'LÅS' }, { name: 'taunt', label: 'TAUNT' }, { name: 'action', label: 'HOPPA' }]);
+    }
 
     // Everyone's body: add joiners, drop leavers, the right look for their role and form.
     for (const [pid, rig] of this.rigs) {
@@ -700,11 +709,14 @@ html.vp-touching .ia .blind small { max-width: 320px; }
 .ia .meter { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .ia .meter i { display: inline-block; width: 14px; height: 14px; border: 2px solid #1d2340; border-radius: 4px; background: #e8dcc2; }
 .ia .meter i.on.l0 { background: #ff5a36; } .ia .meter i.on.l1 { background: #f2c94c; } .ia .meter i.on.l2 { background: #7ee081; }
-.ia .list { position: absolute; left: 50%; top: 14%; transform: translateX(-50%) rotate(-1.5deg); width: 300px; padding: 16px 20px 18px;
-  background: repeating-linear-gradient(#fbf6e6 0 25px, #cfe0f0 25px 26px); border: 3px solid #1d2340; border-radius: 6px; color: #2a3a6a;
-  text-shadow: none; box-shadow: 0 6px 0 #1d2340; font: 700 italic 16px/26px Nunito, sans-serif; }
+.ia .list { position: absolute; left: 50%; top: 9%; transform: translateX(-50%) rotate(-1deg); width: min(860px, 94vw); max-height: 84vh; overflow: hidden; padding: 14px 20px 16px;
+  background: repeating-linear-gradient(#fbf6e6 0 20px, #cfe0f0 20px 21px); border: 3px solid #1d2340; border-radius: 6px; color: #2a3a6a;
+  text-shadow: none; box-shadow: 0 6px 0 #1d2340; font: 700 italic 14px/21px Nunito, sans-serif; }
 .ia .list h3 { margin: 0 0 4px; font: 900 18px Nunito, sans-serif; color: #a8322a; }
 .ia .list .room { margin-top: 6px; font-weight: 900; text-decoration: underline; }
+.ia .list .cols { columns: 3; column-gap: 22px; }
+.ia .list .block { break-inside: avoid; }
+html.vp-touching .ia .list .cols { columns: 4; }
 .ia .board { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); min-width: 320px; padding: 12px 16px; border: 3px solid #1d2340;
   border-radius: 14px; background: rgba(255,252,245,.92); color: #1d2340; text-shadow: none; box-shadow: 0 5px 0 #1d2340; }
 .ia .board .row { display: flex; gap: 10px; padding: 3px 0; font-size: 16px; }
@@ -757,8 +769,9 @@ class Hud {
     const q = (c: string) => this.root.querySelector<HTMLElement>(`.${c}`)!;
     this.el = { x: q('x'), hit: q('hit'), hurt: q('hurt'), card: q('card'), feed: q('feed'), mid: q('mid'), aim: q('aim'), timer: q('timer'), blind: q('blind'), list: q('list'), board: q('board') };
     // Mormors inventarielista: written once, shown while a kusin holds Tab.
-    this.el.list.innerHTML = '<h3>Mormors lista</h3>' + INVENTORY.map(({ room, rows }) =>
-      `<div class="room">${room}</div>` + rows.map(({ f, n }) => `<div>${n} ${n > 1 ? FORMS[f].some : FORMS[f].name}</div>`).join('')).join('');
+    // A room to a block; the blocks flow into columns, so the whole house fits on one sheet.
+    this.el.list.innerHTML = '<h3>Mormors lista</h3><div class="cols">' + INVENTORY.map(({ room, rows }) =>
+      `<div class="block"><div class="room">${room}</div>` + rows.map(({ f, n }) => `<div>${n} ${n > 1 ? FORMS[f].some : FORMS[f].name}</div>`).join('') + '</div>').join('') + '</div>';
     document.head.append(this.style);
     document.body.append(this.root);
   }
@@ -795,7 +808,7 @@ class Hud {
     // Reading the list with eyes shut: just the count, under it.
     this.el.blind.classList.toggle('listing', s.list);
     if (s.blind) {
-      const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig i köket och skafferiet. Håll in <span class="kb"><span class="key">Tab</span></span><span class="tc"><span class="key">LISTA</span></span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
+      const html = `<div class="big">DU BLUNDAR…</div><div class="count">${Math.ceil(s.left)}</div><small>Vättarna gömmer sig någonstans i mormors hus. Håll in <span class="kb"><span class="key">Tab</span></span><span class="tc"><span class="key">LISTA</span></span> och lär dig mormors lista, så ser du vad som inte hör hemma.</small>`;
       if (html !== this.lastBlind) this.el.blind.innerHTML = this.lastBlind = html;
     }
     this.el.list.classList.toggle('off', !s.list);

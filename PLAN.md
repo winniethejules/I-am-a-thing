@@ -222,7 +222,7 @@ Förvandlingen och sugkoppsskottet med alla reaktioner. En vätte-CPU som gömme
   - Nästan alla CPU-vättar blir stolar.
   - Alla vättar kan just nu bara gömma sig på golvet.
 
-### Fas 2: en hel runda i köket och skafferiet ← **klar, väntar på ditt speltest**
+### Fas 2: en hel runda i köket och skafferiet ✔
 Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollbyte mellan rundor.
 **Bevis:** filmremsa av en hel runda (blunda, söka, slut), listan och mätaren, fotopunkt S1 i skafferiet.
 - [x] Skafferiet: hyllor, syltburkar (lingon och blåbär), mjölpåsar, pepparkaksburkar, en glödlampa i taket och en sopkvast. Dörr från köket, musahål i väggen. Fotopunkt S1.
@@ -253,23 +253,26 @@ Gömfas, sökfas, slut, poäng, inventarielistan och Smälter in-mätaren. Rollb
 - **`vp check`:** allt grönt, även sessionen med seed 8919 som föll i fas 1. Telefonvarningarna (rollkortet över klockan, blunda-texten under knapparna) är rättade och fotade i `qa/fas2/telefon/`.
 - **Hittat och rättat på bilderna:** blunda-skärmen låg kvar över hela sökfasen och poängtavlan (CSS), och listan krockade med blunda-texten.
 
-### Detaljpass på sakerna (ditt önskemål, görs längre fram)
-"Sakerna behöver vara mycket mer detaljerade." Ett eget pass innan nya rum byggs, så att nya rum får samma nivå direkt.
-- Små saker (kopp, kakfat, syltburk, pepparkaksburk) i 1/64 i stället för 1/32–1/40: hänkel, kant, lock, etikett med text.
-- Möbler (stol, bord, skåp, hyllor) i 1/32: svarvade ben, fogar, ådring, slitna kanter, knoppar.
-- Mönster i texturerna: rosor på porslinet, rutor på dukar, vävda korgar, tryck på mjölpåsar.
-- Gräns: varje modell håller sig under kitets budget, och galleriet får före- och efter-bilder per sak.
-- Vättarna kopierar exakt samma modeller, så en detaljerad sak blir en detaljerad gömställe-form utan extra arbete.
+### Fas 3: hela huset och detaljpasset ← **pågår**
+Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huset med en massa props", och "sakerna behöver vara mycket mer detaljerade". Botarna är inte det viktigaste.
+- [x] **Detaljpass på köket och skafferiet:** varje modell byggd om i 1/32 m (möbler) och 1/48–1/64 m (småsaker), samma storlek i världen som förut så att placeringar, kollision och former står kvar.
+  - Ett eget modellkit (`kit.ts`): svarvade former, cylindrar, rundade lådor, ådring, rutor, ränder och fläckar.
+  - Exempel: koppen har guldkant, blått band, rosor med blad och kaffe i, köksstolen har svarvade ben, hjärta i ryggen och en rutig dyna, kylskåpet har barnbarnens teckningar och vykortet från slottet.
+- [x] **Huset utbyggt** (`house.ts`: alla rum som rektanglar i `ROOMS`, väggar, tapeter, golv, lister, dörrar och fönster byggs från listan):
+  - **Vardagsrummet:** kakelugn, gökur, finsoffa med plastöverdrag, fåtöljer, gungstol, tjock-tv på ben, radio, bokhylla (en röd bok sticker ut lite), dalahästar, Misse som sover, palm, rya, kristallkrona.
+  - **Hallen** (en lång korridor längs hela huset): hatthylla med rockar, telefonbord med telefon, spegel, löpare, tre glasglober.
+  - **Farstun:** ytterdörren, dörrmatta med VÄLKOMMEN, skohylla, stövlar, paraplyer, pall med hatt. Här väntar kusinerna i gömfasen.
+  - **Badrummet:** badkar med bubblor och badanka, handfat, toalett med högt sittande cistern, handdukar, tvålkopp, tvättkorg, toarullsdocka, potta.
+  - **Sovrummet:** säng med lapptäcke och kurbitsmålad gavel, nattduksbord med väckarklocka och löständer i glas, målad byrå, garderob med hattaskar, tofflor, kuddar.
+  - **Syrummet:** trampsymaskin, arbetsbord, kistor från 1896, provdocka, tygbalar, garnnystan i tre färger, knappburk, strykbräda och strykjärn.
+  - **Utanför:** gräs runt hela huset, grusgång till vägen, staket, brevlåda, busshållplats, björkar.
+- [x] 52 former att gömma sig som (förut 10), alla med i mormors lista per rum.
+- [ ] Gökurens event och radion (från designdokumentet).
+- [ ] Mormor och Misse som rör sig.
 
-### Fas 3: vardagsrummet och hallen
-Gökuren och dess event, samt radion.
+### Fas 4: källaren, trädgården, kafferepet och easter eggs
 
-### Fas 4: sovrum, syrum och badrum, plus Mormor och Misse
-Mormors städrutin.
-
-### Fas 5: källaren, trädgården, kafferepet och easter eggs
-
-### Fas 6: polering och delning
+### Fas 5: polering och delning
 Musik, alla ljud, utmärkelser, `vp check --long` och `vp share`.
 
 ## 10. Tester och speltest

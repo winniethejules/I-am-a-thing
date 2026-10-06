@@ -33,8 +33,8 @@ export const IDLE: Readonly<Intent> = { fwd: 0, side: 0, jump: false, dyaw: 0, d
 
 /** How fast it can turn, radians a second. */
 const TURN = 6;
-/** Where a kusin stands to look round the pantry: in its door, and inside. */
-const PANTRY_LOOKS = [{ x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }];
+/** Where a kusin stands to look round the small rooms: the pantry, the bathroom, farstun, the bedroom's far end. */
+const LOOKS = [{ x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }, { x: 0, y: 0, z: 8.8 }, { x: 3.0, y: 0, z: 8.9 }, { x: -4.6, y: 0, z: 11.6 }, { x: 8.2, y: 0, z: 11.3 }];
 /** How far a taunt carries, metres. */
 const EARSHOT = 9;
 
@@ -152,7 +152,7 @@ export class Bot {
       const moving = Math.hypot(q.vx, q.vz) > 0.4;
       const bare = p.form === VATTE;
       const home = REAL_THINGS.some((th) => th.f === p.form && Math.hypot(th.x - q.x, th.z - q.z) < 1.4 && Math.abs(th.y - q.y) < 0.3);
-      const rate = bare ? 4 : (moving ? 1.6 : 0.12) * (home ? 0.35 : 1.4) * this.skill * (d < 3 ? 1.6 : 1);
+      const rate = bare ? 4 : (moving ? 1.6 : 0.2) * (home ? 0.45 : 1.4) * this.skill * (d < 3 ? 2 : 1);
       hunch.sus = Math.min(1.5, hunch.sus + rate * 0.25);
       hunch.at = w.now;
       this.hunches.set(p.pid, hunch);
@@ -234,8 +234,8 @@ export class Bot {
   /** Where next: a random spot in the kitchen (the hall is a dead end nobody hides in, yet). */
   private wander(me: Pawn, w: World) {
     if (!this.follow.idle && this.rand() < 0.7) return;
-    // Every room a vätte can hide in: the kitchen's spawns, and now and then a look in the pantry.
-    const spots = [...w.arena.spawns.filter((s) => s.z < 5), ...PANTRY_LOOKS];
+    // Every room a vätte can hide in: the vättar's spawns, which are spread through the house, and a look into the small rooms.
+    const spots = [...w.arena.spawns.filter((s) => !s.hall), ...LOOKS];
     const s = spots[Math.floor(this.rand() * spots.length)];
     this.follow.goTo(me.body, s.x + (this.rand() - 0.5) * 0.6, s.y, s.z + (this.rand() - 0.5) * 0.6);
   }

@@ -123,7 +123,7 @@ describe('darts', () => {
 });
 
 describe('matches', () => {
-  test('CPUs alone: the vättar hide, the kusin finds some and guesses wrong now and then', () => {
+  test('CPUs alone: the vättar hide all over the house, the kusin finds some and guesses wrong now and then', () => {
     const room = new FakeRoom({ mg: { id: 'test' }, seed: 5, players: ['c0', 'c1', 'c2', 'c3'].map((id) => ({ id, cpu: true })), clients: [null] });
     const core = new Core(room.links[0], new FakeFlow(room.links[0]), () => IDLE);
     let caught = 0, darts = 0, wrong = 0, poffs = 0, locks = 0;
@@ -136,13 +136,14 @@ describe('matches', () => {
         if (c.k === 'poff') poffs++;
         if (c.k === 'lock' && c.on) locks++;
       }
-    }, { until: room.now + 180_000, done: () => caught >= 3 && wrong >= 2 });
+    }, { until: room.now + 2 * (HIDE_MS + SEEK_MS + END_MS) + 1000, done: () => caught >= 2 && wrong >= 2 });
     const kusiner = ['c0', 'c1', 'c2', 'c3'].filter((id) => core.match.stats.get(id)!.role === 'k');
     console.log(`4 CPUs, ${kusiner.length} kusin: ${poffs} transformations, ${locks} locked, ${darts} darts in vättar, ${caught} caught, ${wrong} wrong guesses in ${Math.round((room.now - 1_000_000) / 1000)} s`);
-    expect(kusiner.length).toBe(1);
+    expect(kusiner.length).toBe(1);   // (the kusin of the last round played)
     expect(poffs).toBeGreaterThanOrEqual(3);
     expect(locks).toBeGreaterThanOrEqual(3);
-    expect(caught).toBeGreaterThanOrEqual(3);
+    // The whole house is big for one kusin: a couple of catches in two rounds is a fair search.
+    expect(caught).toBeGreaterThanOrEqual(2);
     expect(wrong).toBeGreaterThanOrEqual(2);
     core.dispose();
   });

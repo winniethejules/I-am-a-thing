@@ -66,4 +66,18 @@ export const PHOTOS: PhotoPoint[] = [
   { name: 'K4', pos: [2.7, 1.45, 4.4], look: [2.6, 0.9, 1.5], fov: 75, gun: true, noKusin: true },
   /** Skafferiet: from the kitchen, through the pantry door, the shelves of jars under the bulb. */
   { name: 'S1', pos: [4.7, 1.4, 4.35], look: [7.9, 1.0, 4.25], fov: 62, noKusin: true },
+  /** Vardagsrummet: from the double door, the armchairs, the TV under the gökur, the windows. */
+  { name: 'V1', pos: [-3.5, 1.5, 5.6], look: [-5.0, 1.0, 1.0], fov: 64, noKusin: true },
+  /** Vardagsrummet: from the sofa's corner, the kakelugn, the rocking chair, the kitchen door. */
+  { name: 'V2', pos: [-6.2, 1.4, 4.3], look: [-1.5, 1.2, 0.8], fov: 64, noKusin: true },
+  /** Hallen: the long corridor from its west end, doors on both sides, the globes. */
+  { name: 'H1', pos: [-6.6, 1.5, 6.4], look: [9.5, 1.0, 6.4], fov: 60, noKusin: true },
+  /** Farstun: from the hall, the front door, boots and umbrellas where the kusiner wait. */
+  { name: 'F1', pos: [3.0, 1.5, 6.0], look: [3.0, 0.9, 10.0], fov: 64, noKusin: true },
+  /** Badrummet: from its door, the tub with the duck, the towels. */
+  { name: 'B1', pos: [0.0, 1.5, 7.3], look: [-0.6, 0.6, 10.2], fov: 66, noKusin: true },
+  /** Sovrummet: from its door, the bed, the dresser, the windows. */
+  { name: 'R1', pos: [-3.5, 1.55, 7.9], look: [-5.5, 0.8, 11.8], fov: 66, noKusin: true },
+  /** Syrummet: from its door, the work table, the sewing machine under the window, yarn everywhere. */
+  { name: 'Y1', pos: [7.0, 1.5, 7.9], look: [6.5, 0.8, 12.0], fov: 66, noKusin: true },
 ];

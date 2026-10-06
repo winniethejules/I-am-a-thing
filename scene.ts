@@ -9,14 +9,17 @@ import {
   type ArenaStage, type BlockLight, type GameContext,
 } from '@voxelparty/sdk';
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
-import { HOUSE_AT, HOUSE_SIZE, HV, WINDOWS, stampHouse, type Mat } from './house';
-import { KITCHEN_PROPS, STAGED, type Placed } from './kitchen';
+import { HOUSE_AT, HOUSE_SIZE, HV, WINDOW_LIST, stampHouse, type Mat } from './house';
+import { STAGED, type Placed } from './kitchen';
+import { ALL_PROPS } from './props';
 import { CHOSEN, LOOKS, type LookName } from './look';
 import { box, buildModels, type Model, type ModelKey } from './models';
 import type { Ids } from './textures';
 
 const _m = new Matrix4(), _q = new Quaternion(), _tilt = new Quaternion(), _p = new Vector3(), _s = new Vector3(1, 1, 1);
 const _up = new Vector3(0, 1, 0), _x = new Vector3(1, 0, 0);
+/** The lamps' lit parts: shown while the lamps are on. */
+const GLOWS = ['lampGlow', 'bulbGlow', 'chandelierGlow', 'floorLampGlow', 'globeGlow', 'tableLampGlow'];
 /** How long a hit thing wobbles. */
 const WOBBLE_S = 0.5;
 
@@ -74,27 +77,39 @@ export class KitchenScene {
       count: 90, area: [4.2, 3.2], height: [0.5, 2.3], centre: [3, 0, 2.0],
       colors: ['#ffe2a8', '#fff1d0', '#ffd27a'], size: [0.012, 0.026], speed: [0.02, 0.06], amp: [0.05, 0.15],
     }, mulberry32(0xd057));
+    view.pollen({
+      count: 70, area: [5.5, 3.5], height: [0.5, 2.3], centre: [-3.6, 0, 2.3],
+      colors: ['#ffe2a8', '#fff1d0', '#ffd27a'], size: [0.012, 0.026], speed: [0.02, 0.06], amp: [0.05, 0.15],
+    }, mulberry32(0xd058));
   }
 
-  /** The lamp, the stove, daylight and dusk through each window, the hall's lamp: four dimmer groups. */
+  /** Every lamp in the house, the stove, daylight and dusk through each window: four dimmer groups. */
   private addLights() {
     const L = this.light;
-    L.add({ ...L.cell(3, 1.68, 1.55), color: '#ffcf8a', reach: 40, strength: 0.7, group: 1 });
-    L.add({ ...L.cell(3, 2.2, 6.5), color: '#ffcf8a', reach: 22, strength: 0.6, group: 1 });
-    L.add({ ...L.cell(0.98, 0.45, 1.75), color: '#ff8a3a', reach: 22, strength: 0.8, group: 2 });
-    L.add({ ...L.cell(7.0, 1.95, 4.35), color: '#ffd9a0', reach: 24, strength: 0.85, group: 1 });   // the pantry's bulb: a bare bulb in a small room, bright
-    for (const [x0, x1] of WINDOWS) {
-      const x = (x0 + x1) / 2;
-      L.add({ ...L.cell(x, 1.5, 0.35), color: '#eaf2ff', reach: 44, strength: 0.55, group: 3 });
-      L.add({ ...L.cell(x, 1.5, 0.35), color: '#5b7cff', reach: 44, strength: 0.5, group: 4 });
+    L.add({ ...L.cell(3, 1.68, 1.55), color: '#ffcf8a', reach: 40, strength: 0.7, group: 1 });          // the kitchen's lamp
+    L.add({ ...L.cell(0.98, 0.45, 1.75), color: '#ff8a3a', reach: 22, strength: 0.8, group: 2 });       // the stove
+    L.add({ ...L.cell(7.0, 1.95, 4.35), color: '#ffd9a0', reach: 24, strength: 0.85, group: 1 });       // the pantry's bulb: a bare bulb in a small room, bright
+    L.add({ ...L.cell(-3.6, 1.9, 2.5), color: '#ffd59a', reach: 44, strength: 0.7, group: 1 });         // the chandelier
+    L.add({ ...L.cell(-6.6, 1.35, 4.05), color: '#ffc6a0', reach: 26, strength: 0.6, group: 1 });       // the pink floor lamp
+    for (const x of [-4.5, 1.5, 7.5]) L.add({ ...L.cell(x, 2.2, 6.375), color: '#ffe0b0', reach: 28, strength: 0.6, group: 1 });   // the hall's globes
+    L.add({ ...L.cell(3.0, 2.2, 8.9), color: '#ffe0b0', reach: 24, strength: 0.6, group: 1 });          // farstun
+    L.add({ ...L.cell(0, 2.2, 9.1), color: '#f4f0ff', reach: 26, strength: 0.65, group: 1 });           // the bathroom
+    L.add({ ...L.cell(-4.5, 1.8, 10.1), color: '#ffcf8a', reach: 36, strength: 0.6, group: 1 });        // the bedroom's lamp
+    L.add({ ...L.cell(-2.25, 0.85, 11.17), color: '#ffcf8a', reach: 16, strength: 0.6, group: 1 });     // the bedside lamp
+    L.add({ ...L.cell(7.2, 1.8, 10.1), color: '#ffe2b0', reach: 38, strength: 0.7, group: 1 });         // the sewing room's lamp
+    for (const w of WINDOW_LIST) {
+      const mid = (w.a0 + w.a1) / 2, inside = w.out < 0 ? w.at + 0.6 : w.at - 0.35;
+      const [x, z] = w.along === 'x' ? [mid, inside] : [inside, mid];
+      L.add({ ...L.cell(x, 1.5, z), color: '#eaf2ff', reach: 44, strength: 0.55, group: 3 });
+      L.add({ ...L.cell(x, 1.5, z), color: '#5b7cff', reach: 44, strength: 0.5, group: 4 });
     }
   }
 
   /** Every kit model in the kitchen: one instanced mesh per kind (draw calls by kind, not by thing). */
   private buildProps() {
     const { engine } = this.ctx, models = buildModels(this.ids);
-    const byKey = new Map<ModelKey, typeof KITCHEN_PROPS>();
-    for (const p of KITCHEN_PROPS) byKey.set(p.key, [...(byKey.get(p.key) ?? []), p]);
+    const byKey = new Map<ModelKey, Placed[]>();
+    for (const p of ALL_PROPS) byKey.set(p.key, [...(byKey.get(p.key) ?? []), p]);
     for (const [key, list] of byKey) {
       const g = geometry(models[key]);
       this.geos.push(g);
@@ -126,13 +141,13 @@ export class KitchenScene {
   /** The garden north of the kitchen at 1/4 m: lawn, fence, birches, the washing line's posts, the barn, the forest. */
   private buildGarden() {
     const k = this.ids, GV = 0.25, at: [number, number, number] = [-20, -1, -50];
-    const v = new Volume(184, 44, 200);
+    const v = new Volume(184, 44, 300);
     const fill = (x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, id: number) =>
       box(v, Math.round((x0 - at[0]) / GV), Math.round((y0 - at[1]) / GV), Math.round((z0 - at[2]) / GV),
         Math.round((x1 - at[0]) / GV), Math.round((y1 - at[1]) / GV), Math.round((z1 - at[2]) / GV), id);
     const rand = mulberry32(0x6a7d);
 
-    fill(-20, -1, -50, 26, -0.5, -0.25, k.LAWN);
+    fill(-20, -1, -50, 26, -0.5, 25, k.LAWN);
     fill(2.5, -0.75, -10.25, 3.5, -0.5, -0.25, B.PATH);   // the path to the gate, sunk into the lawn
     // Flowers along the house and the fence.
     for (let x = -20; x < 26; x += 0.25) {
@@ -167,6 +182,33 @@ export class KitchenScene {
         fill(px, y, pz, px + 0.5, y + 0.5, pz + 0.5, k.LEAF);
       }
     }
+    // South of the house: the gravel path from the front door to the road, flowers along the walls,
+    // the picket fence with a gate, the mailbox and the bus stop where the kusiner got off.
+    fill(2.5, -0.75, 10.25, 3.5, -0.5, 19, B.PATH);
+    fill(-20, -0.75, 20, 26, -0.5, 22.5, B.PATH);
+    fill(2, -0.5, 10.25, 4, -0.25, 10.75, k.GREY);   // the front step
+    for (let x = -20; x < 26; x += 0.25) {
+      if (x > -7.5 && x < 10.5 && rand() < 0.4) fill(x, -0.5, 12.75, x + 0.25, -0.25, 13, [B.FLOWER_RED, B.FLOWER_YELLOW, B.FLOWER_WHITE, B.TALL_GRASS][Math.floor(rand() * 4)]);
+      if (x % 0.5 === 0 && (x < 2.5 || x >= 3.5)) fill(x, -0.5, 19, x + 0.25, 0.5, 19.25, k.FENCE);
+    }
+    for (const y of [-0.25, 0.25]) { fill(-20, y, 19.25, 2.5, y + 0.25, 19.5, k.FENCE); fill(3.5, y, 19.25, 26, y + 0.25, 19.5, k.FENCE); }
+    fill(4.25, -0.5, 19.5, 4.5, 0.75, 19.75, k.WOOD_DARK);
+    fill(4.0, 0.75, 19.5, 4.75, 1.25, 20.0, k.FALU);             // the mailbox
+    fill(9, -0.5, 22.5, 9.25, 2.0, 22.75, k.GREY);                // the bus stop's sign
+    fill(8.5, 2.0, 22.5, 9.75, 2.5, 22.75, k.YELLOW);
+    for (let i = 0; i < 160; i++) {
+      const x = -20 + rand() * 46, z = 13.5 + rand() * 5.25;
+      if (Math.abs(x - 3) < 0.8) continue;
+      fill(x, -0.5, z, x + 0.25, -0.25, z + 0.25, rand() < 0.7 ? B.TALL_GRASS : B.FLOWER_WHITE);
+    }
+    for (const [x, z, h] of [[-10, 15, 6], [13, 16, 7], [-12, 4, 6.5], [14, 8, 5.5], [-9.5, 10, 7]]) {
+      fill(x, -0.5, z, x + 0.25, h, z + 0.25, k.BIRCH);
+      for (let i = 0; i < 90; i++) {
+        const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 1.7, y = h - 2.4 + rand() * 3;
+        const px = x + Math.cos(a) * r * (1 - (y - h + 2.4) / 4.5), pz = z + Math.sin(a) * r * (1 - (y - h + 2.4) / 4.5);
+        fill(px, y, pz, px + 0.5, y + 0.5, pz + 0.5, k.LEAF);
+      }
+    }
     // The barn: falu red walls, white corners, a gable facing the house, a big double door.
     const bx0 = 5, bx1 = 15, bz0 = -31, bz1 = -25, wall = 2.75;
     fill(bx0, -0.5, bz0, bx1, wall, bz1, k.FALU);
@@ -189,9 +231,10 @@ export class KitchenScene {
     }
     fill(9.75, 3.25, bz1, 10.25, 3.75, bz1 + 0.25, k.WINDOW_LIT);   // the hayloft's lit window
     fill(9.5, 3.0, bz1, 10.5, 3.25, bz1 + 0.25, k.WHITE);
-    // The forest beyond: dark spruce cones.
-    for (let x = -20; x < 26; x += 1.25 + rand() * 1.5) {
-      const z = -47 + rand() * 3, h = 4 + rand() * 3.5;
+    // The forest beyond, north and south: dark spruce cones.
+    for (const [zb, xs] of [[-47, 1.25], [23.5, 1.6]] as const) for (let x = -20; x < 26; x += xs + rand() * 1.5) {
+      if (zb > 0 && x > -11 && x < 15) continue;   // south: the meadow and the road stay open to the windows
+      const z = zb + rand() * 1.2, h = 4 + rand() * 3.5;
       fill(x, -0.5, z, x + 0.25, 1, z + 0.25, k.TRUNK);
       for (let y = 0.5; y < h; y += 0.25) {
         const r = (1 - (y - 0.5) / h) * 1.6;
@@ -222,7 +265,7 @@ export class KitchenScene {
     this.light.dim(2, v.stove);
     this.light.dim(3, v.day);
     this.light.dim(4, v.dusk);
-    for (const name of ['lampGlow', 'bulbGlow']) {
+    for (const name of GLOWS) {
       const glow = this.root.getObjectByName(name);
       if (glow) glow.visible = v.lamp > 0;
     }

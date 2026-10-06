@@ -45,7 +45,7 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'chair', x: 1.62, y: 0, z: 1.55, yaw: E, solid: true, thing: true },
   { key: 'chair', x: 4.38, y: 0, z: 1.5, yaw: W, solid: true, thing: true },
   { key: 'chair', x: 4.4, y: 0, z: 4.55, yaw: N + 0.6, solid: true, thing: true },
-  { key: 'chair', x: 1.05, y: 0, z: 3.55, yaw: E + 0.35, solid: true, thing: true },
+  { key: 'chair', x: 1.5, y: 0, z: 2.95, yaw: E + 0.35, solid: true, thing: true },
   { key: 'stove', x: 0.52, y: 0, z: 2.0, yaw: E, solid: true },
   { key: 'counter', x: 5.53, y: 0, z: 1.6, yaw: W, solid: true },
   { key: 'upper', x: 6, y: 1.55, z: 1.6, yaw: W },
@@ -69,7 +69,7 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'biscuits', x: 3.15, y: CLOTH_Y, z: 1.55, yaw: 0.2, thing: true },
   { key: 'coffeePot', x: 0.46, y: 0.875, z: 2.25, yaw: E, thing: true },
   { key: 'breadBasket', x: 5.45, y: 0.875, z: 1.0, yaw: W + 0.2, thing: true },
-  { key: 'logBasket', x: 0.4, y: 0, z: 3.0, yaw: E, thing: true },
+  { key: 'logBasket', x: 0.4, y: 0, z: 2.85, yaw: E, thing: true },
   { key: 'potholder', x: 0.9, y: 0.72, z: 1.72, yaw: E, thing: true },
   { key: 'potholder', x: 0.9, y: 0.72, z: 2.1, yaw: E, thing: true },
   { key: 'geranium', x: 1.55, y: SILL, z: 0.06, yaw: 0, thing: true },
@@ -102,9 +102,6 @@ export const PANTRY_PROPS: Placed[] = [
 ];
 KITCHEN_PROPS.push(...PANTRY_PROPS);
 
-/** Which room a spot is in, for the inventory list. */
-export const roomOf = (x: number) => (x > 6.1 ? 'Skafferiet' : 'Köket');
-
 /** The look slice's two actors, posed (Phase 0 only: in play they are the players). */
 export const STAGED = {
   /** A kusin who has just come in, gun up, turning to the table. */
@@ -112,9 +109,3 @@ export const STAGED = {
   /** A vätte sneaking past the chair by the stove. */
   vatte: { x: 1.55, z: 3.05, yaw: 0.9 },
 };
-
-/** Spawn spots, on the kitchen floor and in the hall. */
-export const SPAWNS: [number, number, number][] = [
-  [3, 0, 3.4], [1.9, 0, 4.1], [3.55, 0, 3.6], [2.2, 0, 3.0],
-  [3, 0, 6.4], [2.3, 0, 7.0], [3.7, 0, 7.0], [4.6, 0, 2.9],
-];

@@ -10,7 +10,7 @@ export default defineGame({
   id: 'i-am-a-thing',
   name: 'I Am a Thing',
   // Phase 1 (PLAN.md): the feel. Kusiner hunt vättar with suction darts; vättar hide as things.
-  blurb: `Vättarna har ${HIDE_MS / 1000} sekunder på sig att gömma sig som saker i mormors kök. Sedan letar kusinerna med sugkoppspistoler i ${SEEK_MS / 60_000} minuter, men fel gissning kostar tålamod. Rollerna byts varje runda.`,
+  blurb: `Vättarna har ${HIDE_MS / 1000} sekunder på sig att gömma sig som saker någonstans i mormors hus: kök, skafferi, vardagsrum, hall, sovrum, badrum och syrum. Sedan letar kusinerna med sugkoppspistoler i ${SEEK_MS / 60_000} minuter, men fel gissning kostar tålamod. Rollerna byts varje runda.`,
   controls: [
     ['WASD', 'Gå'],
     [KEYS.mouse, 'Titta'],

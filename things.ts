@@ -4,7 +4,9 @@
  * A form is an index into FORMS; -1 is the vätte itself.
  */
 import { FPS_ARENA, type FpsTuning } from '@voxelparty/sdk/core';
-import { KITCHEN_PROPS, roomOf, type Placed } from './kitchen';
+import { roomAt as roomOf } from './house';
+import type { Placed } from './kitchen';
+import { ALL_PROPS } from './props';
 import { buildModels, sizeOf, type ModelKey } from './models';
 import type { Ids } from './textures';
 
@@ -18,12 +20,15 @@ export interface FormDef {
   hp: number;
   /** Speed, as a share of a vätte's. */
   speed: number;
+  /** An ett-word ("inget paraply", not "ingen"). */
+  ett?: boolean;
 }
 
 /** Things you can be (ground props: nothing that hangs on a wall). */
 export const FORMS: readonly FormDef[] = [
+  // Köket och skafferiet.
   { key: 'cup', name: 'kaffekopp', some: 'kaffekoppar', the: 'kaffekopparna', hp: 1, speed: 1 },
-  { key: 'biscuits', name: 'kakfat', some: 'kakfat', the: 'kakfaten', hp: 1, speed: 0.95 },
+  { key: 'biscuits', name: 'kakfat', some: 'kakfat', the: 'kakfaten', hp: 1, speed: 0.95, ett: true },
   { key: 'coffeePot', name: 'kaffepanna', some: 'kaffepannor', the: 'kaffepannorna', hp: 1, speed: 0.85 },
   { key: 'breadBasket', name: 'brödkorg', some: 'brödkorgar', the: 'brödkorgarna', hp: 1, speed: 0.9 },
   { key: 'geranium', name: 'pelargon', some: 'pelargoner', the: 'pelargonerna', hp: 1, speed: 0.8 },
@@ -32,6 +37,53 @@ export const FORMS: readonly FormDef[] = [
   { key: 'jarLingon', name: 'syltburk', some: 'syltburkar', the: 'syltburkarna', hp: 1, speed: 0.9 },
   { key: 'sack', name: 'mjölpåse', some: 'mjölpåsar', the: 'mjölpåsarna', hp: 1, speed: 0.7 },
   { key: 'tin', name: 'pepparkaksburk', some: 'pepparkaksburkar', the: 'pepparkaksburkarna', hp: 1, speed: 0.85 },
+  { key: 'jarBlueberry', name: 'blåbärsburk', some: 'blåbärsburkar', the: 'blåbärsburkarna', hp: 1, speed: 0.9 },
+  // Vardagsrummet.
+  { key: 'rockingChair', name: 'gungstol', some: 'gungstolar', the: 'gungstolarna', hp: 3, speed: 0.5 },
+  { key: 'armchair', name: 'fåtölj', some: 'fåtöljer', the: 'fåtöljerna', hp: 3, speed: 0.45 },
+  { key: 'footstool', name: 'fotpall', some: 'fotpallar', the: 'fotpallarna', hp: 2, speed: 0.75 },
+  { key: 'tv', name: 'tjock-tv', some: 'tjock-tv-apparater', the: 'tjock-tv-apparaterna', hp: 3, speed: 0.4 },
+  { key: 'radio', name: 'radio', some: 'radioapparater', the: 'radioapparaterna', hp: 2, speed: 0.75 },
+  { key: 'floorLamp', name: 'golvlampa', some: 'golvlampor', the: 'golvlamporna', hp: 2, speed: 0.6 },
+  { key: 'cat', name: 'katt', some: 'katter', the: 'katterna', hp: 1, speed: 1.1 },
+  { key: 'palm', name: 'palm', some: 'palmer', the: 'palmerna', hp: 2, speed: 0.6 },
+  { key: 'bookStack', name: 'bokhög', some: 'bokhögar', the: 'bokhögarna', hp: 1, speed: 0.8 },
+  { key: 'doily', name: 'virkad duk', some: 'virkade dukar', the: 'de virkade dukarna', hp: 1, speed: 1 },
+  { key: 'album', name: 'fotoalbum', some: 'fotoalbum', the: 'fotoalbumen', hp: 1, speed: 0.9, ett: true },
+  { key: 'dalahorse', name: 'dalahäst', some: 'dalahästar', the: 'dalahästarna', hp: 1, speed: 1 },
+  { key: 'dalahorseBlue', name: 'blå dalahäst', some: 'blå dalahästar', the: 'de blå dalahästarna', hp: 1, speed: 1 },
+  // Hallen och farstun.
+  { key: 'boots', name: 'par stövlar', some: 'par stövlar', the: 'stövlarna', hp: 1, speed: 0.9, ett: true },
+  { key: 'umbrella', name: 'paraply', some: 'paraplyer', the: 'paraplyerna', hp: 1, speed: 1, ett: true },
+  { key: 'stool', name: 'pall', some: 'pallar', the: 'pallarna', hp: 2, speed: 0.75 },
+  { key: 'phone', name: 'telefon', some: 'telefoner', the: 'telefonerna', hp: 1, speed: 0.95 },
+  { key: 'hat', name: 'hatt', some: 'hattar', the: 'hattarna', hp: 1, speed: 1 },
+  { key: 'handbag', name: 'handväska', some: 'handväskor', the: 'handväskorna', hp: 1, speed: 0.95 },
+  // Sovrummet.
+  { key: 'pillow', name: 'kudde', some: 'kuddar', the: 'kuddarna', hp: 1, speed: 0.95 },
+  { key: 'alarmClock', name: 'väckarklocka', some: 'väckarklockor', the: 'väckarklockorna', hp: 1, speed: 1 },
+  { key: 'teeth', name: 'glas med löständer', some: 'glas med löständer', the: 'löständerna', hp: 1, speed: 1, ett: true },
+  { key: 'dresser', name: 'byrå', some: 'byråar', the: 'byråarna', hp: 4, speed: 0.35 },
+  { key: 'slippers', name: 'par tofflor', some: 'par tofflor', the: 'tofflorna', hp: 1, speed: 1.05, ett: true },
+  { key: 'hatbox', name: 'hattask', some: 'hattaskar', the: 'hattaskarna', hp: 2, speed: 0.8 },
+  { key: 'tableLamp', name: 'sänglampa', some: 'sänglampor', the: 'sänglamporna', hp: 1, speed: 0.9 },
+  // Badrummet.
+  { key: 'foldedTowel', name: 'handduk', some: 'handdukar', the: 'handdukarna', hp: 1, speed: 0.95 },
+  { key: 'soapDish', name: 'tvålkopp', some: 'tvålkoppar', the: 'tvålkopparna', hp: 1, speed: 1 },
+  { key: 'duck', name: 'badanka', some: 'badankor', the: 'badankorna', hp: 1, speed: 1.1 },
+  { key: 'laundryBasket', name: 'tvättkorg', some: 'tvättkorgar', the: 'tvättkorgarna', hp: 2, speed: 0.75 },
+  { key: 'rollDoll', name: 'toarullsdocka', some: 'toarullsdockor', the: 'toarullsdockorna', hp: 1, speed: 1 },
+  { key: 'chamberPot', name: 'potta', some: 'pottor', the: 'pottorna', hp: 1, speed: 0.9 },
+  // Syrummet.
+  { key: 'sewingMachine', name: 'symaskin', some: 'symaskiner', the: 'symaskinerna', hp: 2, speed: 0.6 },
+  { key: 'yarnRed', name: 'rött garnnystan', some: 'röda garnnystan', the: 'de röda garnnystanen', hp: 1, speed: 1.15, ett: true },
+  { key: 'yarnBlue', name: 'blått garnnystan', some: 'blå garnnystan', the: 'de blå garnnystanen', hp: 1, speed: 1.15, ett: true },
+  { key: 'yarnYellow', name: 'gult garnnystan', some: 'gula garnnystan', the: 'de gula garnnystanen', hp: 1, speed: 1.15, ett: true },
+  { key: 'chest', name: 'kista', some: 'kistor', the: 'kistorna', hp: 3, speed: 0.4 },
+  { key: 'dressForm', name: 'provdocka', some: 'provdockor', the: 'provdockorna', hp: 2, speed: 0.6 },
+  { key: 'fabricBolt', name: 'tygbal', some: 'tygbalar', the: 'tygbalarna', hp: 2, speed: 0.7 },
+  { key: 'sewingTin', name: 'knappburk', some: 'knappburkar', the: 'knappburkarna', hp: 1, speed: 0.85 },
+  { key: 'iron', name: 'strykjärn', some: 'strykjärn', the: 'strykjärnen', hp: 1, speed: 0.9, ett: true },
 ];
 export const VATTE = -1;
 export const formOf = (key: ModelKey) => FORMS.findIndex((f) => f.key === key);
@@ -70,7 +122,7 @@ export interface RealThing {
   h: number;
 }
 
-export const REAL_THINGS: readonly RealThing[] = KITCHEN_PROPS.flatMap((p) => {
+export const REAL_THINGS: readonly RealThing[] = ALL_PROPS.flatMap((p) => {
   if (!p.thing) return [];
   const m = MEASURE[p.key];
   const [w, h, d] = sizeOf(m);
@@ -82,7 +134,7 @@ export const REAL_THINGS: readonly RealThing[] = KITCHEN_PROPS.flatMap((p) => {
 });
 
 /** Which room a spot is in. */
-export const roomAt = (x: number, z: number) => (z > 5 ? 'Hallen' : roomOf(x));
+export const roomAt = (x: number, z: number) => roomOf(x, z);
 
 /**
  * Mormors inventarielista: what each room should hold of the things a vätte can be (PLAN.md: the
@@ -105,9 +157,9 @@ export const INVENTORY: { room: string; rows: { f: number; n: number }[] }[] = (
  */
 export function blendIn(f: number, x: number, y: number, z: number): { level: 0 | 1 | 2; why: string } {
   if (f < 0) return { level: 0, why: 'Göm dig som en sak!' };
-  const room = roomAt(x, z), { name, some, the } = FORMS[f];
+  const room = roomAt(x, z), { name, some, the, ett } = FORMS[f];
   const same = REAL_THINGS.filter((th) => th.f === f && roomAt(th.x, th.z) === room);
-  if (!same.length) return { level: 0, why: `Ingen ${name} hör hemma i ${room.toLowerCase()}!` };
+  if (!same.length) return { level: 0, why: `${ett ? 'Inget' : 'Ingen'} ${name} hör hemma i ${room.toLowerCase()}!` };
   const near = same.some((th) => Math.hypot(th.x - x, th.z - z) < 1.4 && Math.abs(th.y - y) < 0.3);
   return near ? { level: 2, why: `Du smälter in bland ${the}` } : { level: 1, why: `${room} har ${some}, men inte just här` };
 }

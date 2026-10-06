@@ -60,6 +60,49 @@ function tile(p: Px, r: Rng) {
   });
 }
 
+/** Vardagsrummets tapet: varmt beige med rosa medaljonger och tunna bruna ränder. */
+function medallion(p: Px, r: Rng) {
+  p.noise(pal('#e9dcc2', '#e5d7bc', '#ecdfc6'), r, 0.03);
+  const rose = hex('#cf9a94'), leaf = hex('#9fae84'), line = hex('#c9b38f');
+  for (let y = 0; y < S; y++) p.set(0, y, line);
+  for (const [cx, cy] of [[8, 4], [8, 12]] as const) {
+    for (const [dx, dy] of [[0, -1], [-1, 0], [1, 0], [0, 1]]) p.set(cx + dx, cy + dy, rose);
+    p.set(cx, cy, hex('#b97e78'));
+    p.set(cx - 2, cy + 1, leaf); p.set(cx + 2, cy - 1, leaf);
+  }
+}
+
+/** Sovrummets tapet: ljust gråblå med vita prickblommor (varm nog att inte bli blå i skymningen). */
+function bluePaper(p: Px, r: Rng) {
+  p.noise(pal('#d6d9d6', '#d2d5d2', '#dadcd9'), r, 0.03);
+  const petal = hex('#f4f6f2'), heart = hex('#e3c27a');
+  for (const [cx, cy] of [[4, 4], [12, 12], [12, 4], [4, 12]] as const) {
+    if ((cx + cy) % 16) { p.set(cx, cy, petal); continue; }
+    p.set(cx, cy, heart);
+    p.set(cx - 1, cy, petal); p.set(cx + 1, cy, petal); p.set(cx, cy - 1, petal); p.set(cx, cy + 1, petal);
+  }
+}
+
+/** Syrummets tapet: smörgul med gröna kvistar. */
+function yellowPaper(p: Px, r: Rng) {
+  p.noise(pal('#efe2b2', '#ebdeac', '#f2e6b8'), r, 0.03);
+  const leaf = hex('#93a874');
+  for (const [cx, cy] of [[3, 5], [11, 13]] as const) {
+    p.set(cx, cy, leaf); p.set(cx + 1, cy - 1, leaf); p.set(cx + 2, cy - 2, leaf); p.set(cx, cy - 2, leaf); p.set(cx + 2, cy, leaf);
+  }
+}
+
+/** Badrummets kakel: små ljust turkosa plattor med vita fogar. */
+function bathTile(p: Px, r: Rng) {
+  const t = hex('#cfe6e1'), g = hex('#e4efec');
+  p.each((x, y) => p.set(x, y, x % 4 === 0 || y % 4 === 0 ? g : shade(t, 0.97 + r() * 0.05)));
+}
+
+/** Badrumsgolvet: svartvitt schack i små rutor. */
+function bathFloor(p: Px, r: Rng) {
+  p.each((x, y) => p.set(x, y, shade(hex(((x >> 1) + (y >> 1)) & 1 ? '#8d9693' : '#ece6da'), 0.96 + r() * 0.06)));
+}
+
 /** Falurött panelträ med lodräta spår. */
 function falu(p: Px, r: Rng) {
   p.each((x, y) => {
@@ -115,6 +158,11 @@ export const TEXTURES: TexDef[] = [
   { name: 'ia_roof', paint: roof },
   { name: 'ia_lawn', paint: lawn },
   { name: 'ia_ceiling', paint: ceiling },
+  { name: 'ia_medallion', paint: medallion },
+  { name: 'ia_bluepaper', paint: bluePaper },
+  { name: 'ia_yellowpaper', paint: yellowPaper },
+  { name: 'ia_bathtile', paint: bathTile },
+  { name: 'ia_bathfloor', paint: bathFloor },
   // Near-flat colours for props and trim.
   { name: 'ia_white', paint: near('#f2ebdc', 0.03) },
   { name: 'ia_cream', paint: near('#e8dcc2', 0.03) },
@@ -159,6 +207,39 @@ export const TEXTURES: TexDef[] = [
   { name: 'ia_fence', paint: flat('#f0ece2', '#e8e4da') },
   { name: 'ia_pine_tree', paint: flat('#2f5a3e', '#2b553a') },
   { name: 'ia_trunk', paint: flat('#6a4a32', '#64462f') },
+  // The detail pass: shades and materials for finer props.
+  { name: 'ia_wood_light', paint: flat('#ddb57a', '#d7ae72') },
+  { name: 'ia_porc_shade', paint: flat('#e4ded2', '#dfd9cc') },
+  { name: 'ia_gold', paint: flat('#d9b452', '#d2ac4a') },
+  { name: 'ia_leaf_dark', paint: flat('#3b6b2e', '#37652b') },
+  { name: 'ia_wicker', paint: flat('#c99d62', '#c2965c') },
+  { name: 'ia_wicker_dark', paint: flat('#9a7244', '#936c40') },
+  { name: 'ia_kraft', paint: flat('#e6d6b3', '#e0cfab') },
+  { name: 'ia_soot', paint: flat('#1d1f22', '#1b1d20') },
+  { name: 'ia_steel_light', paint: flat('#d5dade', '#cfd4d8') },
+  { name: 'ia_straw', paint: flat('#e3c467', '#dcbc5f') },
+  { name: 'ia_berry', paint: flat('#3a3463', '#36305d') },
+  { name: 'ia_jam', paint: flat('#8e2630', '#88232d') },
+  { name: 'ia_plush', paint: flat('#b9797a', '#b37374') },
+  { name: 'ia_plush_dark', paint: flat('#94585c', '#8e5357') },
+  { name: 'ia_moss_velvet', paint: flat('#6d8566', '#677f60') },
+  { name: 'ia_mahogany', paint: flat('#7a3f2a', '#743b27') },
+  { name: 'ia_allmoge', paint: flat('#6f8ea6', '#6989a1') },
+  { name: 'ia_allmoge_red', paint: flat('#9c3b30', '#96372d') },
+  { name: 'ia_pink', paint: flat('#efb9c0', '#e9b2b9') },
+  { name: 'ia_lilac', paint: flat('#b7a4c8', '#b19ec2') },
+  { name: 'ia_screen', paint: flat('#3a4a4f', '#36454a') },
+  { name: 'ia_felt', paint: flat('#5d4c3e', '#57473a') },
+  { name: 'ia_rubber', paint: flat('#2c4a34', '#294530') },
+  { name: 'ia_quilt_blue', paint: flat('#8fb0c9', '#89aac3') },
+  { name: 'ia_ceramic', paint: flat('#f4f3ee', '#efeee9') },
+  { name: 'ia_tile_kakel', paint: flat('#e9e2cf', '#e3dcc9') },
+  { name: 'ia_kakel_blue', paint: flat('#5f7fa8', '#5a79a1') },
+  { name: 'ia_cat', paint: flat('#d9894a', '#d38445') },
+  { name: 'ia_cat_light', paint: flat('#f2d3a8', '#ecccA0') },
+  { name: 'ia_water', paint: flat('#9fcfd6', '#99c9d0') },
+  { name: 'ia_teeth', paint: flat('#fbf6e6', '#f6f0df') },
+  { name: 'ia_gum', paint: flat('#e88b97', '#e2858f') },
   // Glowing: the stove's fire, the lamp's shade and lit windows far away.
   { name: 'ia_ember', glow: 2, paint: flat('#ff9a3c', '#ffb85c') },
   { name: 'ia_lamp', glow: 1.4, paint: flat('#ffe2a8', '#ffd894') },
@@ -175,6 +256,14 @@ export const BLOCKS = {
   BREAD: 'ia_bread', COOKIE: 'ia_cookie', CHOC: 'ia_choc', COFFEE: 'ia_coffee', GLASS: 'ia_glass', GREY: 'ia_grey',
   FUR: 'ia_fur', SKIN: 'ia_skin', HAIR: 'ia_hair', HAIR_LIGHT: 'ia_hair_light', KNIT: 'ia_knit', KNIT_RED: 'ia_knit_red',
   DENIM: 'ia_denim', BOOT: 'ia_boot', MOSS: 'ia_moss', EYE: 'ia_eye', EYE_WHITE: 'ia_eye_white',
+  MEDALLION: 'ia_medallion', BLUEPAPER: 'ia_bluepaper', YELLOWPAPER: 'ia_yellowpaper', BATHTILE: 'ia_bathtile', BATHFLOOR: 'ia_bathfloor',
+  WOOD_LIGHT: 'ia_wood_light', PORC_SHADE: 'ia_porc_shade', GOLD: 'ia_gold', LEAF_DARK: 'ia_leaf_dark',
+  WICKER: 'ia_wicker', WICKER_DARK: 'ia_wicker_dark', KRAFT: 'ia_kraft', SOOT: 'ia_soot', STEEL_LIGHT: 'ia_steel_light',
+  STRAW: 'ia_straw', BERRY: 'ia_berry', JAM: 'ia_jam', PLUSH: 'ia_plush', PLUSH_DARK: 'ia_plush_dark',
+  MOSS_VELVET: 'ia_moss_velvet', MAHOGANY: 'ia_mahogany', ALLMOGE: 'ia_allmoge', ALLMOGE_RED: 'ia_allmoge_red',
+  PINK: 'ia_pink', LILAC: 'ia_lilac', SCREEN: 'ia_screen', FELT: 'ia_felt', RUBBER: 'ia_rubber', QUILT_BLUE: 'ia_quilt_blue',
+  CERAMIC: 'ia_ceramic', KAKEL: 'ia_tile_kakel', KAKEL_BLUE: 'ia_kakel_blue', CAT: 'ia_cat', CAT_LIGHT: 'ia_cat_light',
+  WATER: 'ia_water', TEETH: 'ia_teeth', GUM: 'ia_gum',
   ORANGE: 'ia_orange', DART: 'ia_dart', FENCE: 'ia_fence', PINE_TREE: 'ia_pine_tree', TRUNK: 'ia_trunk',
   EMBER: { top: 'ia_ember', light: { color: '#ff8a3a', reach: 20, strength: 0.9 } },
   LAMP: 'ia_lamp',
