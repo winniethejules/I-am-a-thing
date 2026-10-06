@@ -20,13 +20,14 @@ const ROOMS_GALLERY: [string, ModelKey[]][] = [
   ['Hallen och farstun', ['moraClock', 'hallBench', 'plantStand', 'shoes', 'phoneTable', 'shoeRack', 'umbrellaStand', 'runner', 'doormat', 'stool', 'boots', 'umbrella', 'phone', 'hat', 'handbag']],
   ['Sovrummet', ['bed', 'wardrobe', 'nightstand', 'dresser', 'pillow', 'hatbox', 'slippers', 'alarmClock', 'teeth', 'tableLamp']],
   ['Badrummet', ['scale', 'bathtub', 'washbasin', 'toilet', 'bathMat', 'laundryBasket', 'foldedTowel', 'soapDish', 'duck', 'rollDoll', 'chamberPot']],
+  ['Jordkällaren', ['cellarShelf', 'appleCrate', 'lantern']],
   ['Trädgården', ['gardenTable', 'woodpile', 'birdBath', 'currantBush', 'rake', 'gardenChair', 'wheelbarrow', 'rainBarrel', 'gnome', 'wateringCan', 'flowerPotYellow', 'flowerPotRed', 'log', 'kubb', 'kubbKing']],
   ['Syrummet', ['workTable', 'ironingBoard', 'yarnBasket', 'sewingMachine', 'chest', 'dressForm', 'fabricBolt', 'sewingTin', 'iron', 'yarnRed', 'yarnBlue', 'yarnYellow']],
 ];
 /** Pairs (boots, slippers): two pieces on purpose. */
 const PAIRS: ModelKey[] = ['boots', 'slippers', 'shoes'];
 const WALL_ROOMS: ModelKey[] = ['cuckooClock', 'portrait', 'laceCurtains', 'chandelier', 'hatRack', 'mirror', 'frontDoor', 'globeLamp', 'painting', 'mirrorCabinet', 'towelRail'];
-const GLOW_OF: Partial<Record<ModelKey, ModelKey>> = { lamp: 'lampGlow', bulb: 'bulbGlow', chandelier: 'chandelierGlow', globeLamp: 'globeGlow', floorLamp: 'floorLampGlow', tableLamp: 'tableLampGlow' };
+const GLOW_OF: Partial<Record<ModelKey, ModelKey>> = { lamp: 'lampGlow', bulb: 'bulbGlow', chandelier: 'chandelierGlow', globeLamp: 'globeGlow', floorLamp: 'floorLampGlow', tableLamp: 'tableLampGlow', lantern: 'lanternGlow' };
 
 export default (g: Gallery) => {
   const ids = useGameAssets(TEXTURES, BLOCKS);

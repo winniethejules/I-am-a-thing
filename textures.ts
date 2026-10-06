@@ -103,6 +103,23 @@ function bathFloor(p: Px, r: Rng) {
   p.each((x, y) => p.set(x, y, shade(hex(((x >> 1) + (y >> 1)) & 1 ? '#7f8680' : '#efe9dd'), 0.96 + r() * 0.06)));
 }
 
+/** Jordkällarens sten: gråa kullerstenar i murbruk. */
+function stone(p: Px, r: Rng) {
+  const mortar = hex('#8a857a');
+  p.each((x, y) => {
+    const row = Math.floor(y / 4), off = (row % 2) * 3, col = Math.floor((x + off) / 6);
+    const edge = y % 4 === 0 || (x + off) % 6 === 0;
+    const base = pal('#7d7f80', '#6f7173', '#8a8c8b', '#75736c')[(row * 7 + col * 3) % 4];
+    p.set(x, y, edge ? mortar : shade(base, 0.9 + r() * 0.15));
+  });
+}
+
+/** Jordgolv: trampad mörk jord med småsten. */
+function dirt(p: Px, r: Rng) {
+  p.noise(pal('#5a4632', '#523f2d', '#614c37', '#4d3b2a'), r, 0.05);
+  for (let i = 0; i < 6; i++) p.set(Math.floor(r() * S), Math.floor(r() * S), hex('#8a8478'));
+}
+
 /** Falurött panelträ med lodräta spår. */
 function falu(p: Px, r: Rng) {
   p.each((x, y) => {
@@ -163,6 +180,8 @@ export const TEXTURES: TexDef[] = [
   { name: 'ia_yellowpaper', paint: yellowPaper },
   { name: 'ia_bathtile', paint: bathTile },
   { name: 'ia_bathfloor', paint: bathFloor },
+  { name: 'ia_stone', paint: stone },
+  { name: 'ia_dirt', paint: dirt },
   // Near-flat colours for props and trim.
   { name: 'ia_white', paint: near('#f2ebdc', 0.03) },
   { name: 'ia_cream', paint: near('#e8dcc2', 0.03) },
@@ -263,7 +282,7 @@ export const BLOCKS = {
   MOSS_VELVET: 'ia_moss_velvet', MAHOGANY: 'ia_mahogany', ALLMOGE: 'ia_allmoge', ALLMOGE_RED: 'ia_allmoge_red',
   PINK: 'ia_pink', LILAC: 'ia_lilac', SCREEN: 'ia_screen', FELT: 'ia_felt', RUBBER: 'ia_rubber', QUILT_BLUE: 'ia_quilt_blue',
   CERAMIC: 'ia_ceramic', KAKEL: 'ia_tile_kakel', KAKEL_BLUE: 'ia_kakel_blue', CAT: 'ia_cat', CAT_LIGHT: 'ia_cat_light',
-  WATER: 'ia_water', TEETH: 'ia_teeth', GUM: 'ia_gum',
+  WATER: 'ia_water', TEETH: 'ia_teeth', GUM: 'ia_gum', STONE: 'ia_stone', DIRT: 'ia_dirt',
   ORANGE: 'ia_orange', DART: 'ia_dart', FENCE: 'ia_fence', PINE_TREE: 'ia_pine_tree', TRUNK: 'ia_trunk',
   EMBER: { top: 'ia_ember', light: { color: '#ff8a3a', reach: 20, strength: 0.9 } },
   LAMP: 'ia_lamp',

@@ -4,6 +4,7 @@
  * A form is an index into FORMS; -1 is the vätte itself.
  */
 import { FPS_ARENA, type FpsTuning } from '@voxelparty/sdk/core';
+import { CELLAR, TRENCH } from './cellar';
 import { roomAt as roomOf } from './house';
 import type { Placed } from './kitchen';
 import { ALL_PROPS } from './props';
@@ -91,6 +92,9 @@ export const FORMS: readonly FormDef[] = [
   { key: 'dressForm', name: 'provdocka', some: 'provdockor', the: 'provdockorna', hp: 2, speed: 0.6 },
   { key: 'fabricBolt', name: 'tygbal', some: 'tygbalar', the: 'tygbalarna', hp: 2, speed: 0.7 },
   { key: 'sewingTin', name: 'knappburk', some: 'knappburkar', the: 'knappburkarna', hp: 1, speed: 0.85 },
+  // Jordkällaren.
+  { key: 'appleCrate', name: 'äppellåda', some: 'äppellådor', the: 'äppellådorna', hp: 2, speed: 0.6 },
+  { key: 'lantern', name: 'lykta', some: 'lyktor', the: 'lyktorna', hp: 1, speed: 0.95 },
   // Trädgården.
   { key: 'gnome', name: 'trädgårdstomte', some: 'trädgårdstomtar', the: 'trädgårdstomtarna', hp: 2, speed: 0.75 },
   { key: 'wateringCan', name: 'vattenkanna', some: 'vattenkannor', the: 'vattenkannorna', hp: 1, speed: 0.9 },
@@ -153,7 +157,9 @@ export const REAL_THINGS: readonly RealThing[] = ALL_PROPS.flatMap((p) => {
 });
 
 /** Which room a spot is in. */
-export const roomAt = (x: number, z: number) => roomOf(x, z);
+/** The room a spot is in: the house's rooms, the root cellar (and its steps), or the garden. */
+export const roomAt = (x: number, z: number) =>
+  (x >= CELLAR.x0 && x <= CELLAR.x1 && z >= CELLAR.z0 && z <= CELLAR.z1) || (x >= TRENCH.x0 && x <= TRENCH.x1 && z >= TRENCH.z0 - 0.25 && z <= TRENCH.z1) ? 'Jordkällaren' : roomOf(x, z);
 
 /**
  * Mormors inventarielista: what each room should hold of the things a vätte can be (PLAN.md: the

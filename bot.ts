@@ -38,6 +38,7 @@ const LOOKS = [
   { x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }, { x: 0, y: 0, z: 8.8 }, { x: 3.0, y: 0, z: 8.9 }, { x: -4.6, y: 0, z: 11.6 }, { x: 8.2, y: 0, z: 11.3 },
   // The garden: the patio, the kubb lawn, the woodpile, the front path.
   { x: -2.5, y: -0.5, z: -4.0 }, { x: 8.0, y: -0.5, z: -5.0 }, { x: -10.5, y: -0.5, z: 3.0 }, { x: 3.0, y: -0.5, z: 14.0 }, { x: 13.0, y: -0.5, z: 6.0 },
+  { x: -9.6, y: -2.25, z: -7.0 },   // down in the root cellar
 ];
 /** How far a taunt carries, metres. */
 const EARSHOT = 9;

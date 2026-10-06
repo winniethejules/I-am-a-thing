@@ -86,4 +86,8 @@ export const PHOTOS: PhotoPoint[] = [
   { name: 'G2', pos: [-12.0, 1.1, -1.5], look: [-7.5, 0.3, 4.0], fov: 62, noKusin: true },
   /** Framsidan: from the road's side of the fence, the path to the front door. */
   { name: 'G3', pos: [3.0, 1.2, 18.5], look: [3.0, 0.9, 10.0], fov: 64, noKusin: true },
+  /** Jordkällaren: from the foot of the steps, the vault by lantern light. */
+  { name: 'J1', pos: [-9.5, -1.0, -5.9], look: [-9.9, -1.9, -8.6], fov: 70, noKusin: true },
+  /** Jordkällarens kulle: the mound and the steps down, from the lawn. */
+  { name: 'J2', pos: [-7.0, 0.9, -1.8], look: [-9.6, -0.8, -5.6], fov: 62, noKusin: true },
 ];

@@ -267,7 +267,7 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
   - **Syrummet:** trampsymaskin, arbetsbord, kistor från 1896, provdocka, tygbalar, garnnystan i tre färger, knappburk, strykbräda och strykjärn.
   - **Utanför:** gräs runt hela huset, grusgång till vägen, staket, brevlåda, busshållplats, björkar.
   - **Trädgården:** dörrar ut i hallens båda ändar med trappsteg, staket runt om, valmat tak med två skorstenar, uteplats med vita stolar, tomtar, vattenkannor, blomkrukor, skottkärra, vedtrave med klabbar, kubb på gräsmattan, regntunna, fågelbad, vinbärsbuskar, grusgång till vägen, brevlåda och busshållplats.
-- [x] **70 former att gömma sig som** (förut 10) och omkring 185 riktiga saker att förväxlas med, alla i mormors lista per rum (nu i fyra spalter, sex på telefon).
+- [x] **72 former att gömma sig som** (förut 10) och omkring 185 riktiga saker att förväxlas med, alla i mormors lista per rum (nu i fyra spalter, sex på telefon).
 - [x] **Gökuren slår** varje hel minut i sökfasen: ko-ko, en banderoll, och alla små riktiga saker i huset skramlar till. En vätte som står helt still under tiden är den enda saken som inte gör det.
 - [x] Telefonen visar knapparna för din roll: SKJUT och LISTA för kusinen, BLI SAK, LÅS och TAUNT för vätten.
 - [x] Kusin-CPU:n letar i hela huset och trädgården; testet är två rundor (huset är stort för en kusin).
@@ -275,7 +275,7 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
 - **Undantag i galleriet (avsiktligt):** röd och blå dalahäst, garnnystan i tre färger och blomkrukor i två färger är samma form i olika färger. Det är meningen: de ska kunna förväxlas, och listan räknar dem var för sig.
 - [ ] Radion (dansband i 20 s som döljer ljud i vardagsrummet).
 - [ ] Mormor och Misse som rör sig.
-- [ ] Jordkällaren (trappa ner från köket, mörk, ficklampa).
+- [x] **Jordkällaren:** en gräsklädd kulle i trädgårdens nordvästra hörn, stenfasad, sju trappsteg ner, ett stenvalv med jordgolv och bjälkar, upplyst av en lykta. Hylla med sylt och saft, äppellådor, potatissäckar, mjölkkanna. Fotopunkter J1 och J2.
 
 ### Fas 4: källaren, trädgården, kafferepet och easter eggs
 

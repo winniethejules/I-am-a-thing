@@ -182,7 +182,45 @@ function rake(k: Ids) {
   return prop(v, H);
 }
 
+/** En äppellåda: a slatted crate of red and yellow apples, a stencilled mark on the end. */
+function appleCrate(k: Ids) {
+  const v = new Volume(24, 12, 16);
+  for (let y = 0; y < 10; y++) if (y % 3 !== 2) box(v, 0, y, 0, 24, y + 1, 16, (x, yy, z) => (x === 0 || x === 23 || z === 0 || z === 15 ? (hash(x, yy, z, 131) < 0.2 ? k.WOOD : k.WOOD_LIGHT) : 0));
+  for (const x of [0, 23]) for (const z of [0, 15]) box(v, x, 0, z, x + 1, 10, z + 1, k.WOOD_DARK);
+  box(v, 1, 0, 1, 23, 1, 15, k.WOOD_LIGHT);
+  for (let i = 0; i < 20; i++) {
+    const x = 3 + (i % 5) * 4.5, z = 3 + Math.floor(i / 5) * 3.3 % 12, y = 8.5 + (i % 2);
+    blob(v, x, y, z, 2, 1.8, 2, hash(i, 0, 0, 132) < 0.7 ? k.RED : k.YELLOW);
+  }
+  for (let y = 3; y < 7; y++) dot(v, 23, y, 8, k.INK);
+  return prop(v, H);
+}
+
+/** En lykta: a tin storm lantern with a glass globe and a wire handle (the glow is its own mesh). */
+function lantern(k: Ids) {
+  const v = new Volume(10, 18, 10);
+  lathe(v, 5, 5, 0, 2, () => 4, k.STEEL);
+  for (const [x, z] of [[1, 5], [9, 5], [5, 1], [5, 9]]) box(v, x, 2, z, x + 1, 11, z + 1, k.STEEL);
+  lathe(v, 5, 5, 11, 13, (y) => (y === 11 ? 4 : 2.6), k.STEEL);
+  for (let i = 0; i <= 8; i++) { const a = Math.PI * (i / 8); dot(v, Math.floor(5 + Math.cos(a) * 4), Math.floor(13 + Math.sin(a) * 4), 5, k.STEEL); }
+  return prop(v, Q);
+}
+function lanternGlow(k: Ids) {
+  const v = new Volume(10, 18, 10);
+  lathe(v, 5, 5, 2, 11, (y) => 3 - Math.abs(y - 6.5) * 0.15, k.LAMP);
+  return prop(v, Q);
+}
+
+/** En källarhylla: rough planks on posts, low enough for the vault. */
+function cellarShelf(k: Ids) {
+  const v = new Volume(36, 44, 12);
+  for (const x of [0, 34]) box(v, x, 0, 0, x + 2, 44, 12, grain(k, 'y', k.WOOD_DEEP, 133));
+  for (const y of [2, 16, 30, 42]) box(v, 2, y, 0, 34, y + 2, 12, grain(k, 'x', k.WOOD_DARK, y));
+  return prop(v, H);
+}
+
 export const GARDEN_MODELS = {
+  appleCrate, lantern, lanternGlow, cellarShelf,
   gnome, wateringCan, flowerPotYellow: (k: Ids) => flowerPot(k, k.YELLOW), flowerPotRed: (k: Ids) => flowerPot(k, k.RED),
   wheelbarrow, woodpile, log, currantBush, kubb, kubbKing, rainBarrel, birdBath, gardenChair, gardenTable, rake,
 };

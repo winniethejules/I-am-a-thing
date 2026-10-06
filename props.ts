@@ -5,6 +5,7 @@
  * lista (things.ts). Positions are world metres; yaw turns a model's front (+z) to face
  * (sin yaw, cos yaw): 0 south, π north, π/2 east, −π/2 west. A wall piece's yaw points it into the room.
  */
+import { CELLAR } from './cellar';
 import { GROUND } from './garden';
 import { SILL } from './house';
 import { KITCHEN_PROPS, type Placed } from './kitchen';
@@ -232,8 +233,25 @@ export const GARDEN_PROPS: Placed[] = [
   t('kubbKing', 11, G, -5.35, 0.3),
 ];
 
+const C = CELLAR.y0;
+/** Jordkällaren: a low shelf of jam and saft, apple crates, potato sacks, a lantern on a crate. */
+export const CELLAR_PROPS: Placed[] = [
+  f('cellarShelf', -9.75, C, -8.55, 0),
+  ...[-10.15, -9.9, -9.65].map((x, i): Placed => t('jarLingon', x, C + 0.5625, -8.55, i)),
+  ...[-9.4, -9.15].map((x, i): Placed => t('jarBlueberry', x, C + 0.5625, -8.55, i + 1)),
+  ...[-10.15, -9.95, -9.75, -9.55].map((x, i): Placed => t('juiceBottle', x, C + 1.0, -8.55, i * 0.7)),
+  t('appleCrate', -10.6, C, -6.3, 0.2),
+  t('appleCrate', -10.6, C + 0.375, -6.3, -0.1),
+  t('appleCrate', -8.9, C, -7.6, W),
+  t('lantern', -8.9, C + 0.375, -7.6, 0.4),
+  p('lanternGlow', -8.9, C + 0.375, -7.6, 0.4),
+  t('potatoSack', -10.55, C, -7.6, 0.6),
+  t('potatoSack', -8.85, C, -6.55, 2.0),
+  t('milkCan', -10.7, C, -8.3, 0.3),
+];
+
 /** Everything in the house and garden, the kitchen and pantry first. */
-export const ALL_PROPS: Placed[] = [...KITCHEN_PROPS, ...LIVING_PROPS, ...HALL_PROPS, ...ENTRY_PROPS, ...BATH_PROPS, ...BEDROOM_PROPS, ...SEWING_PROPS, ...GARDEN_PROPS];
+export const ALL_PROPS: Placed[] = [...KITCHEN_PROPS, ...LIVING_PROPS, ...HALL_PROPS, ...ENTRY_PROPS, ...BATH_PROPS, ...BEDROOM_PROPS, ...SEWING_PROPS, ...GARDEN_PROPS, ...CELLAR_PROPS];
 
 /**
  * Spawn spots. `hall` ones are where the kusiner wait while the vättar hide: farstun, by the front

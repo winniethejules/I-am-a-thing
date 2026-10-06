@@ -4,16 +4,17 @@
  * CPUs' paths come from it. `gridText(arena)` prints it back as text, for tests and stuck bots.
  */
 import { NavGrid, VoxelGrid } from '@voxelparty/sdk/core';
+import { CELLAR_BOXES } from './cellar';
 import { GARDEN_SOLIDS, GROUND } from './garden';
 import { HOUSE } from './house';
 import { ALL_PROPS, SPAWNS } from './props';
 import { buildModels, sizeOf } from './models';
 import type { Ids } from './textures';
 
-/** Cells of a quarter metre, the house and its garden, from (-14.25, -1, -11) to (17.5, 3, 20): the CPUs' 0.5 m columns land on the doors' middles. */
+/** Cells of a quarter metre, the house, its garden and the root cellar, from (-14.25, -2.5, -11) to (17.5, 3, 20): the CPUs' 0.5 m columns land on the doors' middles. */
 export const CELL = 0.25;
-export const GX0 = -14.25, GY0 = -1, GZ0 = -11;
-export const NX = 127, NY = 16, NZ = 124;
+export const GX0 = -14.25, GY0 = -2.5, GZ0 = -11;
+export const NX = 127, NY = 22, NZ = 124;
 /** Below this you've fallen out of the world (the house has no holes: a safety net). */
 export const DEATH_Y = -10;
 
@@ -42,6 +43,11 @@ export class Arena extends VoxelGrid {
     // The ground everywhere, under the garden and the house; then the garden's fences and trunks.
     this.fill(GX0, GY0, GZ0, GX0 + NX * CELL, GROUND, GZ0 + NZ * CELL, M.WALL);
     for (const b of GARDEN_SOLIDS) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);
+    // The root cellar, dug into the ground: its vault and trench carved, its walls and steps solid.
+    for (const { b, m, solid } of CELLAR_BOXES) {
+      if (m === 'AIR') this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.AIR);
+      else if (solid !== false) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);
+    }
     for (const { b, m, solid, glass } of HOUSE) {
       if (m === 'AIR') this.fill(b[0], b[1], b[2], b[3], b[4], b[5], glass ? M.GLASS : M.AIR);
       else if (solid !== false) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);

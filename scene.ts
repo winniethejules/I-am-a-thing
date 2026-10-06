@@ -9,6 +9,7 @@ import {
   type ArenaStage, type BlockLight, type GameContext,
 } from '@voxelparty/sdk';
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
+import { CELLAR, CELLAR_AT, CELLAR_BOXES, CELLAR_SIZE, CV, TRENCH } from './cellar';
 import { BIRCHES, FENCE, LINE_POSTS } from './garden';
 import { HOUSE_AT, HOUSE_SIZE, HV, ROOMS, WINDOW_LIST, stampHouse, type Mat } from './house';
 import { STAGED, type Placed } from './kitchen';
@@ -20,7 +21,7 @@ import type { Ids } from './textures';
 const _m = new Matrix4(), _q = new Quaternion(), _tilt = new Quaternion(), _p = new Vector3(), _s = new Vector3(1, 1, 1);
 const _up = new Vector3(0, 1, 0), _x = new Vector3(1, 0, 0);
 /** The lamps' lit parts: shown while the lamps are on. */
-const GLOWS = ['lampGlow', 'bulbGlow', 'chandelierGlow', 'floorLampGlow', 'globeGlow', 'tableLampGlow'];
+const GLOWS = ['lampGlow', 'bulbGlow', 'chandelierGlow', 'floorLampGlow', 'globeGlow', 'tableLampGlow', 'lanternGlow'];
 /** How long a hit thing wobbles. */
 const WOBBLE_S = 0.5;
 
@@ -32,6 +33,7 @@ function geometry(m: Model): BufferGeometry {
 export class KitchenScene {
   readonly root = new Group();
   readonly light: BlockLight;
+  private cellarLight!: BlockLight;
   readonly kusin: Avatar;
   readonly vatte: Avatar;
   private readonly geos: BufferGeometry[] = [];
@@ -56,6 +58,7 @@ export class KitchenScene {
     this.root.add(hm);
     this.light = view.blockLight(house, { voxel: HV, at: { x: HOUSE_AT[0], y: HOUSE_AT[1], z: HOUSE_AT[2] } });
     this.addLights();
+    this.buildCellar();
 
     this.buildGarden();
     this.buildProps();
@@ -176,6 +179,13 @@ export class KitchenScene {
     fill(2.5, -0.25, FENCE.z0 - 0.25, 3.5, 0.25, FENCE.z0, k.WHITE);   // the gate
     fill(2.5, -0.25, FENCE.z1, 3.5, 0.25, FENCE.z1 + 0.25, k.WHITE);
     this.buildRoof(fill);
+    // Jordkällarens kulle: a grassy mound over the vault, the trench of steps cut open in front.
+    for (let x = CELLAR.x0 - 0.5; x < CELLAR.x1 + 0.5; x += 0.25) for (let z = CELLAR.z0 - 0.5; z < CELLAR.z1; z += 0.25) {
+      const dx = (x + 0.125 - (CELLAR.x0 + CELLAR.x1) / 2) / 1.9, dz = (z + 0.125 - (CELLAR.z0 + CELLAR.z1) / 2) / 2.1, d = dx * dx + dz * dz;
+      if (d < 1) fill(x, -0.5, z, x + 0.25, -0.5 + Math.round((1 - d) * 5) * 0.25, z + 0.25, k.LAWN);
+    }
+    fill(TRENCH.x0 - 0.25, -1, CELLAR.z1 - 0.25, TRENCH.x1 + 0.25, 3, TRENCH.z1, 0);
+    fill(CELLAR.x0 - 0.25, -1, CELLAR.z0 - 0.25, CELLAR.x1 + 0.25, -0.5, CELLAR.z1 + 0.25, 0);   // no lawn inside the vault's roof
     // The washing line's posts.
     for (const x of LINE_POSTS) {
       fill(x - 0.125, -0.5, -4.125, x + 0.125, 1.75, -3.875, k.WOOD_DARK);
@@ -261,6 +271,25 @@ export class KitchenScene {
     }
   }
 
+  /** Jordkällaren: its own volume under the mound, lit by one lantern (dimmer group 1, like the lamps). */
+  private buildCellar() {
+    const { engine } = this.ctx, ids = this.ids;
+    const vol = new Volume(...CELLAR_SIZE);
+    for (const { b, m } of CELLAR_BOXES) {
+      const r = (a: number, i: 0 | 1 | 2) => Math.round((a - CELLAR_AT[i]) / CV);
+      for (let y = r(b[1], 1); y < r(b[4], 1); y++) for (let z = r(b[2], 2); z < r(b[5], 2); z++) for (let x = r(b[0], 0); x < r(b[3], 0); x++)
+        if (x >= 0 && y >= 0 && z >= 0 && x < vol.sx && y < vol.sy && z < vol.sz) vol.set(x, y, z, m === 'AIR' ? 0 : ids[m as Exclude<Mat, 'AIR'>]);
+    }
+    const g = meshVolume(vol, { voxel: CV }).opaque!;
+    this.geos.push(g);
+    const mesh = new Mesh(g, engine.mats.solid);
+    mesh.position.set(...CELLAR_AT);
+    mesh.castShadow = mesh.receiveShadow = true;
+    this.root.add(mesh);
+    this.cellarLight = this.view.blockLight(vol, { voxel: CV, at: { x: CELLAR_AT[0], y: CELLAR_AT[1], z: CELLAR_AT[2] } });
+    this.cellarLight.add({ ...this.cellarLight.cell(-8.9, -1.55, -7.6), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });
+  }
+
   /**
    * The roof, seen from the garden: a hipped roof over the whole L of the house, each quarter-metre
    * column as high as it is far from the eaves, black roofing with a falu red ridge line, and two
@@ -312,6 +341,7 @@ export class KitchenScene {
     for (const k of ['exposure', 'vignette', 'saturation', 'contrast', 'shadows', 'highlights', 'split', 'tint']) delete g[k];
     Object.assign(this.view.grade, v.grade);
     this.light.dim(1, v.lamp);
+    this.cellarLight.dim(1, v.lamp);
     this.light.dim(2, v.stove);
     this.light.dim(3, v.day);
     this.light.dim(4, v.dusk);
