@@ -97,6 +97,8 @@ export const HALL_PROPS: Placed[] = [
 export const ENTRY_PROPS: Placed[] = [
   p('frontDoor', 3.0, 0, 10, N),
   p('frontDoor', 3.0, 0, 10.25, 0),   // the same door seen from the front path
+  p('lantern', 3.85, 1.55, 10.4, 0),   // the porch lantern, lit for the guests
+  p('lanternGlow', 3.85, 1.55, 10.4, 0),
   p('doormat', 3.0, 0, 9.55, 0),
   f('shoeRack', 1.92, 0, 8.9, E),
   p('hatRack', 4.25, 0.75, 8.9, W),

@@ -105,6 +105,7 @@ export class KitchenScene {
     L.add({ ...L.cell(-2.25, 0.85, 11.17), color: '#ffcf8a', reach: 16, strength: 0.6, group: 1 });     // the bedside lamp
     L.add({ ...L.cell(7.2, 1.8, 10.1), color: '#ffe2b0', reach: 38, strength: 0.7, group: 1 });         // the sewing room's lamp
     L.add({ ...L.cell(-8.9, -1.55, -7.6), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });      // the root cellar's lantern
+    L.add({ ...L.cell(3.85, 1.75, 10.6), color: '#ffc070', reach: 30, strength: 0.9, group: 1 });       // the porch lantern by the front door
     for (const [i, w] of WINDOW_LIST.entries()) {
       const mid = (w.a0 + w.a1) / 2, inside = w.out < 0 ? w.at + 0.6 : w.at - 0.35;
       const [x, z] = w.along === 'x' ? [mid, inside] : [inside, mid];
