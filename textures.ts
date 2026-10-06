@@ -100,7 +100,7 @@ function bathTile(p: Px, r: Rng) {
 
 /** Badrumsgolvet: svartvitt schack i små rutor. */
 function bathFloor(p: Px, r: Rng) {
-  p.each((x, y) => p.set(x, y, shade(hex(((x >> 1) + (y >> 1)) & 1 ? '#c4c6bd' : '#efe9dd'), 0.96 + r() * 0.06)));
+  p.each((x, y) => p.set(x, y, shade(hex(((x >> 1) + (y >> 1)) & 1 ? '#7f8680' : '#efe9dd'), 0.96 + r() * 0.06)));
 }
 
 /** Falurött panelträ med lodräta spår. */

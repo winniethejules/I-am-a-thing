@@ -17,14 +17,14 @@ const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'bulb', 'potholder', 'clo
 /** The rest of the house, room by room: furniture first, then what a vätte can be. */
 const ROOMS_GALLERY: [string, ModelKey[]][] = [
   ['Vardagsrummet', ['kakelugn', 'plasticSofa', 'coffeeTable', 'bookcase', 'sideTable', 'rya', 'armchair', 'rockingChair', 'tv', 'floorLamp', 'palm', 'footstool', 'radio', 'cat', 'bookStack', 'album', 'doily', 'dalahorse', 'dalahorseBlue']],
-  ['Hallen och farstun', ['phoneTable', 'shoeRack', 'umbrellaStand', 'runner', 'doormat', 'stool', 'boots', 'umbrella', 'phone', 'hat', 'handbag']],
+  ['Hallen och farstun', ['moraClock', 'hallBench', 'plantStand', 'shoes', 'phoneTable', 'shoeRack', 'umbrellaStand', 'runner', 'doormat', 'stool', 'boots', 'umbrella', 'phone', 'hat', 'handbag']],
   ['Sovrummet', ['bed', 'wardrobe', 'nightstand', 'dresser', 'pillow', 'hatbox', 'slippers', 'alarmClock', 'teeth', 'tableLamp']],
-  ['Badrummet', ['bathtub', 'washbasin', 'toilet', 'bathMat', 'laundryBasket', 'foldedTowel', 'soapDish', 'duck', 'rollDoll', 'chamberPot']],
+  ['Badrummet', ['scale', 'bathtub', 'washbasin', 'toilet', 'bathMat', 'laundryBasket', 'foldedTowel', 'soapDish', 'duck', 'rollDoll', 'chamberPot']],
   ['Trädgården', ['gardenTable', 'woodpile', 'birdBath', 'currantBush', 'rake', 'gardenChair', 'wheelbarrow', 'rainBarrel', 'gnome', 'wateringCan', 'flowerPotYellow', 'flowerPotRed', 'log', 'kubb', 'kubbKing']],
   ['Syrummet', ['workTable', 'ironingBoard', 'yarnBasket', 'sewingMachine', 'chest', 'dressForm', 'fabricBolt', 'sewingTin', 'iron', 'yarnRed', 'yarnBlue', 'yarnYellow']],
 ];
 /** Pairs (boots, slippers): two pieces on purpose. */
-const PAIRS: ModelKey[] = ['boots', 'slippers'];
+const PAIRS: ModelKey[] = ['boots', 'slippers', 'shoes'];
 const WALL_ROOMS: ModelKey[] = ['cuckooClock', 'portrait', 'laceCurtains', 'chandelier', 'hatRack', 'mirror', 'frontDoor', 'globeLamp', 'painting', 'mirrorCabinet', 'towelRail'];
 const GLOW_OF: Partial<Record<ModelKey, ModelKey>> = { lamp: 'lampGlow', bulb: 'bulbGlow', chandelier: 'chandelierGlow', globeLamp: 'globeGlow', floorLamp: 'floorLampGlow', tableLamp: 'tableLampGlow' };
 

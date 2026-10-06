@@ -224,7 +224,72 @@ function globeGlow(k: Ids) {
   return hang(v, 1 / 40);
 }
 
+/** Moraklockan: a tall painted long-case clock, curved like a woman's figure, a round face, a crown on top, a pendulum window. */
+function moraClock(k: Ids) {
+  const v = new Volume(18, 72, 12);
+  for (let y = 0; y < 66; y++) {
+    const w = y < 6 ? 8 : y < 50 ? 6.2 + 1.8 * Math.cos(((y - 6) / 44) * Math.PI * 2) * 0.5 + (y > 36 ? (y - 36) * 0.12 : 0) : 8.2;
+    box(v, Math.round(9 - w), y, 1, Math.round(9 + w), y + 1, 11, y < 2 ? k.WOOD_DEEP : k.ALLMOGE);
+  }
+  for (let y = 18; y < 40; y++) dot(v, 9, y, 11, y % 9 === 0 ? k.GOLD : k.CREAM);   // the painted stripe down the waist
+  for (const [y0, cx] of [[12, 9], [28, 9]] as const) for (const [dx, dy, c] of [[0, 0, k.ALLMOGE_RED], [-1, 0, k.RED], [1, 0, k.RED], [0, 1, k.WHITE], [0, -1, k.GREEN], [-2, -1, k.GREEN], [2, -1, k.GREEN]] as const) dot(v, cx + dx, y0 + dy, 11, c);
+  box(v, 6, 40, 11, 12, 48, 12, k.GLASS);                    // the pendulum window
+  blob(v, 9, 42.5, 11.5, 1.6, 1.6, 0.5, k.GOLD);
+  for (let y = 50; y < 66; y++) for (let x = 1; x < 17; x++) {
+    const d = Math.hypot(x + 0.5 - 9, y + 0.5 - 58);
+    if (d < 6.6) dot(v, x, y, 11, d > 5.8 ? k.GOLD : d < 0.8 ? k.BRASS : k.PORC);
+  }
+  for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; dot(v, Math.floor(9 + Math.sin(a) * 4.8), Math.floor(58 + Math.cos(a) * 4.8), 11, k.INK); }
+  line(v, [9, 58, 11.5], [9, 62, 11.5], k.INK);
+  line(v, [9, 58, 11.5], [12, 57, 11.5], k.INK);
+  for (let y = 66; y < 72; y++) { const w = 8 - (y - 66) * 1.2; if (w > 0) box(v, Math.round(9 - w), y, 1, Math.round(9 + w), y + 1, 11, y === 66 ? k.GOLD : k.ALLMOGE); }
+  return prop(v, H);
+}
+
+/** Hallbänken: a long painted bench with a lid seat and a cushion. */
+function hallBench(k: Ids) {
+  const v = new Volume(40, 28, 14);
+  box(v, 0, 0, 0, 40, 14, 13, k.ALLMOGE);
+  for (const [x0, x1] of [[2, 19], [21, 38]]) { box(v, x0, 2, 13, x1, 12, 14, k.ALLMOGE); box(v, x0 + 2, 4, 13, x1 - 2, 10, 14, k.CREAM); }
+  box(v, 0, 14, 0, 40, 15, 14, k.WOOD_DARK);
+  roundBox(v, 2, 15, 2, 38, 17, 13, 2, k.GINGHAM);
+  box(v, 0, 15, 0, 40, 28, 2, k.ALLMOGE);
+  box(v, 0, 26, 0, 40, 28, 3, k.WOOD_DARK);
+  return prop(v, H);
+}
+
+/** En blomsterpall: a turned plant stand with a pot of trailing ivy. */
+function plantStand(k: Ids) {
+  const v = new Volume(16, 44, 16);
+  lathe(v, 8, 8, 0, 2, () => 6, k.WOOD_DARK);
+  lathe(v, 8, 8, 2, 28, (y) => (y % 7 === 0 ? 2 : 1.2), k.WOOD_DARK);
+  lathe(v, 8, 8, 28, 30, () => 6.4, k.WOOD_DARK);
+  lathe(v, 8, 8, 30, 36, (y) => 3.6 + (y - 30) * 0.3, k.POT);
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    // A strand of ivy from the pot's rim, trailing down over the stand.
+    const at = (s: number): [number, number, number] => [8 + Math.cos(a + s * 0.08) * (3.6 + s * 0.35), 36 - s * 1.3, 8 + Math.sin(a + s * 0.08) * (3.6 + s * 0.35)];
+    for (let s = 0; s < 13; s++) line(v, at(s), at(s + 1), s % 3 === 0 ? k.LEAF : k.GREEN);
+  }
+  blob(v, 8, 38, 8, 4, 2.5, 4, speckle(k.GREEN, k.LEAF, 0.3, 75));
+  return prop(v, H);
+}
+
+/** Ett par skor: polished brown lace-ups. */
+function shoes(k: Ids) {
+  const v = new Volume(14, 7, 16);
+  for (const x0 of [0, 8]) {
+    roundBox(v, x0, 0, 0, x0 + 6, 1, 16, 2, k.SOOT);
+    roundBox(v, x0, 1, 0, x0 + 6, 4, 16, 2, k.MAHOGANY);
+    roundBox(v, x0, 4, 0, x0 + 6, 6, 7, 2, k.MAHOGANY);
+    for (let z = 6; z < 11; z += 2) { dot(v, x0 + 2, 4, z, k.CREAM); dot(v, x0 + 3, 4, z, k.CREAM); }
+    dot(v, x0 + 2, 3, 15, k.WOOD_LIGHT);
+  }
+  return prop(v, Q);
+}
+
 export const HALL_MODELS = {
+  moraClock, hallBench, plantStand, shoes,
   hatRack, boots, umbrella, umbrellaStand, stool, phone, phoneTable, mirror, runner, frontDoor, doormat, shoeRack,
   hat, handbag, globeLamp, globeGlow,
 };

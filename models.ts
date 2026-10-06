@@ -600,7 +600,7 @@ function coffeeGrinder(k: Ids) {
   box(v, 0, 10, 0, 14, 11, 14, k.WOOD_DEEP);
   lathe(v, 7, 7, 11, 15, (y) => 3.2 + (y - 11) * 0.7, k.BRASS, (y) => (y < 12 ? 0 : 2.2 + (y - 11) * 0.7));
   lathe(v, 7, 7, 11, 13, () => 1.4, k.COFFEE);
-  box(v, 6, 15, 6, 8, 18, 8, k.STEEL);
+  box(v, 6, 11, 6, 8, 18, 8, k.STEEL);
   line(v, [7, 17.5, 7], [12.5, 18.5, 7], k.STEEL);
   lathe(v, 12.5, 7.5, 18, 22, () => 1.1, k.WOOD_DEEP);
   return prop(v, S);
@@ -612,7 +612,7 @@ function milkCan(k: Ids) {
   lathe(v, 8, 8, 0, 26, (y) => (y < 16 ? 6.6 : y < 20 ? 6.6 - (y - 16) * 0.9 : 3.2), (x, y, z) => (y === 2 || y === 15 ? k.STEEL : hash(x, y, z, 111) < 0.05 ? k.GREY : k.STEEL_LIGHT));
   lathe(v, 8, 8, 26, 27, () => 3.8, k.STEEL);
   box(v, 6, 27, 7, 10, 28, 9, k.STEEL);
-  for (const x of [0, 15]) box(v, x, 18, 7, x + 1, 21, 9, k.STEEL);
+  for (const x of [0, 15]) box(v, x, 10, 7, x + 1, 13, 9, k.STEEL);
   return prop(v, Q);
 }
 

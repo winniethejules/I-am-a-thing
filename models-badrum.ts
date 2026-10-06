@@ -161,7 +161,21 @@ function bathMat(k: Ids) {
   return prop(v, H);
 }
 
+/** Badrumsvågen: an old white scale with a round dial and a ribbed rubber mat. */
+function scale(k: Ids) {
+  const v = new Volume(18, 5, 22);
+  roundBox(v, 0, 0, 0, 18, 3, 22, 3, k.CERAMIC);
+  for (let z = 7; z < 20; z++) for (let x = 2; x < 16; x++) if (z % 2) dot(v, x, 3, z, k.GREY);
+  for (let x = 4; x < 14; x++) for (let z = 1; z < 7; z++) {
+    const d = Math.hypot(x + 0.5 - 9, z + 0.5 - 4);
+    if (d < 3) dot(v, x, 3, z, d > 2.3 ? k.STEEL_LIGHT : d < 0.6 ? k.RED : k.PAPER);
+  }
+  line(v, [9, 3.5, 4], [10.5, 3.5, 2.6], k.RED);
+  return prop(v, Q);
+}
+
 export const BATH_MODELS = {
+  scale,
   bathtub, washbasin, toilet, mirrorCabinet, foldedTowel, soapDish, duck, laundryBasket, rollDoll, chamberPot, towelRail, bathMat,
 };
 export { angleOf };

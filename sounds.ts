@@ -168,6 +168,24 @@ export const SOUNDS = {
     reverb: 0.2,
     layers: [{ wave: 'sine', freq: 1568, steps: [0, -5], stepTime: 0.18, env: { a: 0.01, d: 0.4, s: 0 }, dur: 0.38 }],
   },
+  /** Gökuren: "ko-ko" twice, a wooden whistle with a little bellows breath. */
+  cuckoo: {
+    vol: 0.4,
+    reverb: 0.3,
+    layers: [
+      { wave: 'triangle', freq: 784, steps: [0, -4, -100, 0, -4], stepTime: 0.28, env: { a: 0.01, d: 0.2, s: 0.3, r: 0.08 }, dur: 1.3, vol: 0.8, filter: { type: 'lowpass', freq: 2400 } },
+      { wave: 'noise', env: { a: 0.02, d: 0.12, s: 0 }, vol: 0.12, filter: { type: 'bandpass', freq: 1200 } },
+    ],
+  },
+  /** Everything small in the house rattles on its shelf. */
+  rattle: {
+    vol: 0.22,
+    // Many little knocks: short noise bursts stepped quickly, like china and tins on a shelf.
+    layers: [
+      { wave: 'noise', steps: [0, 0, 0, 0, 0, 0, 0, 0], stepTime: 0.06, env: { a: 0.002, d: 0.03, s: 0 }, dur: 0.5, vol: 0.7, filter: { type: 'bandpass', freq: 3200 } },
+      { wave: 'triangle', freq: 2600, steps: [0, 3, -2, 5, 0, 4], stepTime: 0.07, env: { a: 0.001, d: 0.03, s: 0 }, dur: 0.45, vol: 0.25 },
+    ],
+  },
   /** A tick for the last seconds of a phase. */
   tick: {
     vol: 0.18,

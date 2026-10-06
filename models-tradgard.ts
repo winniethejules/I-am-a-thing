@@ -62,7 +62,7 @@ function wheelbarrow(k: Ids) {
     for (const x of [10, 11]) dot(v, x, Math.floor(6 + Math.sin(a) * 5.4), Math.floor(45 + Math.cos(a) * 5.4), k.IRON);
   }
   cylX(v, 6, 45, 4.6, 10, 12, k.WOOD);
-  cylX(v, 6, 45, 1, 9, 13, k.IRON);
+  cylX(v, 6, 45, 1, 2, 20, k.IRON);   // the axle, through the wheel to both handles
   for (const x of [2, 18]) {
     line(v, [x + 0.5, 6.5, 45], [x + 0.5, 15, 2], k.WOOD_DARK, 0.9);
     line(v, [x + 0.5, 12, 14], [x + 0.5, 0.5, 16], k.WOOD_DARK, 0.8);

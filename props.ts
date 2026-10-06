@@ -84,11 +84,18 @@ export const HALL_PROPS: Placed[] = [
   t('umbrella', 9.75, 0, 7.25, 0),
   t('handbag', -6.75, 0, 7.2, 0.5),
   t('bookStack', 9.6, 0, 5.6, 0.8),
+  t('moraClock', -2.0, 0, 7.3, N, { solid: true }),
+  f('hallBench', 6.5, 0, 5.47, 0),
+  t('plantStand', 4.2, 0, 5.5, 0.3),
+  t('plantStand', -6.65, 0, 7.15, 1.2),
+  t('shoes', 5.6, 0, 7.2, 0.3),
+  t('handbag', 6.9, 0.53, 5.5, 0.2),
 ];
 
 /** Farstun: the front door (closed: the kusiner start here), the mat, shoes, boots, umbrellas, coats on hooks. */
 export const ENTRY_PROPS: Placed[] = [
   p('frontDoor', 3.0, 0, 10, N),
+  p('frontDoor', 3.0, 0, 10.25, 0),   // the same door seen from the front path
   p('doormat', 3.0, 0, 9.55, 0),
   f('shoeRack', 1.92, 0, 8.9, E),
   p('hatRack', 4.25, 0.75, 8.9, W),
@@ -101,6 +108,8 @@ export const ENTRY_PROPS: Placed[] = [
   t('stool', 2.35, 0, 8.05, 0.9),
   t('hat', 2.35, 0.4375, 8.05, 0.2),
   t('handbag', 2.0, 0.375, 8.45, E),
+  t('shoes', 2.1, 0, 7.95, 0.2),
+  t('shoes', 3.3, 0, 9.6, 2.9),
 ];
 
 /** Badrummet: the clawfoot tub, the basin under its mirror cabinet, the toilet, towels, a duck in the bath. */
@@ -123,6 +132,7 @@ export const BATH_PROPS: Placed[] = [
   t('laundryBasket', -1.45, 0, 8.05, 0),
   t('rollDoll', 1.3, 0, 10.25, W),
   t('chamberPot', -0.05, 0, 10.25, 0.5),
+  t('scale', 0.75, 0, 9.95, W + 0.3),
 ];
 
 /** Sovrummet: the bed against the east wall between two nightstands, the dresser, the wardrobe with hat boxes on top. */

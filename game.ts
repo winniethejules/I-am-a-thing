@@ -20,7 +20,7 @@ import { GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL, dart, kusin, kusinLook, suctionGun
 import { Core, type Cue, type Pawn } from './core';
 import { PHOTOS, type LookName, type PhotoPoint } from './look';
 import { buildModels, type ModelKey } from './models';
-import { MAX_HP, WRONG, type Phase } from './rules';
+import { MAX_HP, SEEK_MS, WRONG, type Phase } from './rules';
 import { KitchenScene } from './scene';
 import { SOUNDS } from './sounds';
 import { BLOCKS, TEXTURES, type Ids } from './textures';
@@ -93,6 +93,8 @@ export class Shooter implements GameStage {
   private photoAt: PhotoPoint | null = null;
   private readonly shownFrags = new Map<string, string>();
   private lastTick = -1;
+  /** The last whole minute of the seeking the cuckoo clock struck. */
+  private cuckooMinute = 0;
   /** The role the touch buttons are set for. */
   private touchRole: 'k' | 'v' | null = null;
   /** Who won the round that just ended, for the board. */
@@ -478,6 +480,16 @@ export class Shooter implements GameStage {
     const st = me ? core.match.stats.get(me.pid) : undefined, playing = !!me && flow.live && core.alive(me);
     const left = Math.max(0, (core.match.until - link.now()) / 1000);
     // The last ten seconds of hiding (or seeking) tick.
+    // Gökuren slår every whole minute of the seeking: ko-ko, and every small real thing in the house
+    // rattles. (A vätte that stands quite still through it is the one thing that doesn't.)
+    const minute = flow.live && core.phase === 'seek' ? Math.floor((SEEK_MS - left * 1000) / 60_000) : 0;
+    if (minute > this.cuckooMinute) {
+      this.sfx.play(SOUNDS.cuckoo);
+      this.sfx.play(SOUNDS.rattle);
+      this.hud.center(`Gökuren slår ${minute}! <small>Allt smått skramlar</small>`);
+      for (const th of REAL_THINGS) if (th.h < 0.4 && th.y > -0.2) this.kitchen.wobble(th.p);
+    }
+    this.cuckooMinute = minute;
     if (flow.live && core.phase !== 'wait' && core.phase !== 'end' && left < 10.5 && Math.ceil(left) !== this.lastTick) {
       this.lastTick = Math.ceil(left);
       if (this.lastTick > 0) this.sfx.play(SOUNDS.tick);

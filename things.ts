@@ -63,6 +63,9 @@ export const FORMS: readonly FormDef[] = [
   { key: 'phone', name: 'telefon', some: 'telefoner', the: 'telefonerna', hp: 1, speed: 0.95 },
   { key: 'hat', name: 'hatt', some: 'hattar', the: 'hattarna', hp: 1, speed: 1 },
   { key: 'handbag', name: 'handväska', some: 'handväskor', the: 'handväskorna', hp: 1, speed: 0.95 },
+  { key: 'moraClock', name: 'moraklocka', some: 'moraklockor', the: 'moraklockorna', hp: 4, speed: 0.3 },
+  { key: 'plantStand', name: 'blomsterpall', some: 'blomsterpallar', the: 'blomsterpallarna', hp: 2, speed: 0.6 },
+  { key: 'shoes', name: 'par skor', some: 'par skor', the: 'skorna', hp: 1, speed: 1, ett: true },
   // Sovrummet.
   { key: 'pillow', name: 'kudde', some: 'kuddar', the: 'kuddarna', hp: 1, speed: 0.95 },
   { key: 'alarmClock', name: 'väckarklocka', some: 'väckarklockor', the: 'väckarklockorna', hp: 1, speed: 1 },
@@ -77,6 +80,7 @@ export const FORMS: readonly FormDef[] = [
   { key: 'duck', name: 'badanka', some: 'badankor', the: 'badankorna', hp: 1, speed: 1.1 },
   { key: 'laundryBasket', name: 'tvättkorg', some: 'tvättkorgar', the: 'tvättkorgarna', hp: 2, speed: 0.75 },
   { key: 'rollDoll', name: 'toarullsdocka', some: 'toarullsdockor', the: 'toarullsdockorna', hp: 1, speed: 1 },
+  { key: 'scale', name: 'badrumsvåg', some: 'badrumsvågar', the: 'badrumsvågarna', hp: 1, speed: 0.9 },
   { key: 'chamberPot', name: 'potta', some: 'pottor', the: 'pottorna', hp: 1, speed: 0.9 },
   // Syrummet.
   { key: 'sewingMachine', name: 'symaskin', some: 'symaskiner', the: 'symaskinerna', hp: 2, speed: 0.6 },
