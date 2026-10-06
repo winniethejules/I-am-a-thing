@@ -266,9 +266,16 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
   - **Sovrummet:** säng med lapptäcke och kurbitsmålad gavel, nattduksbord med väckarklocka och löständer i glas, målad byrå, garderob med hattaskar, tofflor, kuddar.
   - **Syrummet:** trampsymaskin, arbetsbord, kistor från 1896, provdocka, tygbalar, garnnystan i tre färger, knappburk, strykbräda och strykjärn.
   - **Utanför:** gräs runt hela huset, grusgång till vägen, staket, brevlåda, busshållplats, björkar.
-- [x] 52 former att gömma sig som (förut 10), alla med i mormors lista per rum.
-- [ ] Gökurens event och radion (från designdokumentet).
+  - **Trädgården:** dörrar ut i hallens båda ändar med trappsteg, staket runt om, valmat tak med två skorstenar, uteplats med vita stolar, tomtar, vattenkannor, blomkrukor, skottkärra, vedtrave med klabbar, kubb på gräsmattan, regntunna, fågelbad, vinbärsbuskar, grusgång till vägen, brevlåda och busshållplats.
+- [x] **70 former att gömma sig som** (förut 10) och omkring 185 riktiga saker att förväxlas med, alla i mormors lista per rum (nu i fyra spalter, sex på telefon).
+- [x] **Gökuren slår** varje hel minut i sökfasen: ko-ko, en banderoll, och alla små riktiga saker i huset skramlar till. En vätte som står helt still under tiden är den enda saken som inte gör det.
+- [x] Telefonen visar knapparna för din roll: SKJUT och LISTA för kusinen, BLI SAK, LÅS och TAUNT för vätten.
+- [x] Kusin-CPU:n letar i hela huset och trädgården; testet är två rundor (huset är stort för en kusin).
+- [x] Fotopunkter för varje rum och tre i trädgården (`look.ts`: V1, V2, H1, F1, B1, R1, Y1, G1–G3).
+- **Undantag i galleriet (avsiktligt):** röd och blå dalahäst, garnnystan i tre färger och blomkrukor i två färger är samma form i olika färger. Det är meningen: de ska kunna förväxlas, och listan räknar dem var för sig.
+- [ ] Radion (dansband i 20 s som döljer ljud i vardagsrummet).
 - [ ] Mormor och Misse som rör sig.
+- [ ] Jordkällaren (trappa ner från köket, mörk, ficklampa).
 
 ### Fas 4: källaren, trädgården, kafferepet och easter eggs
 
