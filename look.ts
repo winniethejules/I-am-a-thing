@@ -80,4 +80,10 @@ export const PHOTOS: PhotoPoint[] = [
   { name: 'R1', pos: [-3.5, 1.55, 7.9], look: [-5.5, 0.8, 11.8], fov: 66, noKusin: true },
   /** Syrummet: from its door, the work table, the sewing machine under the window, yarn everywhere. */
   { name: 'Y1', pos: [7.0, 1.5, 7.9], look: [6.5, 0.8, 12.0], fov: 66, noKusin: true },
+  /** Trädgården: from the kubb lawn, the house's north side with the patio, the roof and its chimneys. */
+  { name: 'G1', pos: [11.5, 1.2, -8.5], look: [-1.5, 0.6, -0.5], fov: 62, noKusin: true },
+  /** Trädgården: the west side, the woodpile with its logs, the door out of the hall. */
+  { name: 'G2', pos: [-12.0, 1.1, -1.5], look: [-7.5, 0.3, 4.0], fov: 62, noKusin: true },
+  /** Framsidan: from the road's side of the fence, the path to the front door. */
+  { name: 'G3', pos: [3.0, 1.2, 18.5], look: [3.0, 0.9, 10.0], fov: 64, noKusin: true },
 ];

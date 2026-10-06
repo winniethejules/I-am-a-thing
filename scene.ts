@@ -9,7 +9,8 @@ import {
   type ArenaStage, type BlockLight, type GameContext,
 } from '@voxelparty/sdk';
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
-import { HOUSE_AT, HOUSE_SIZE, HV, WINDOW_LIST, stampHouse, type Mat } from './house';
+import { BIRCHES, FENCE, LINE_POSTS } from './garden';
+import { HOUSE_AT, HOUSE_SIZE, HV, ROOMS, WINDOW_LIST, stampHouse, type Mat } from './house';
 import { STAGED, type Placed } from './kitchen';
 import { ALL_PROPS } from './props';
 import { CHOSEN, LOOKS, type LookName } from './look';
@@ -97,11 +98,13 @@ export class KitchenScene {
     L.add({ ...L.cell(-4.5, 1.8, 10.1), color: '#ffcf8a', reach: 36, strength: 0.6, group: 1 });        // the bedroom's lamp
     L.add({ ...L.cell(-2.25, 0.85, 11.17), color: '#ffcf8a', reach: 16, strength: 0.6, group: 1 });     // the bedside lamp
     L.add({ ...L.cell(7.2, 1.8, 10.1), color: '#ffe2b0', reach: 38, strength: 0.7, group: 1 });         // the sewing room's lamp
-    for (const w of WINDOW_LIST) {
+    for (const [i, w] of WINDOW_LIST.entries()) {
       const mid = (w.a0 + w.a1) / 2, inside = w.out < 0 ? w.at + 0.6 : w.at - 0.35;
       const [x, z] = w.along === 'x' ? [mid, inside] : [inside, mid];
-      L.add({ ...L.cell(x, 1.5, z), color: '#eaf2ff', reach: 44, strength: 0.55, group: 3 });
-      L.add({ ...L.cell(x, 1.5, z), color: '#5b7cff', reach: 44, strength: 0.5, group: 4 });
+      // The kitchen's two windows set the approved look; elsewhere the dusk is a hint, so the lamps keep the rooms warm.
+      const k = i < 2 ? 1 : 0.45;
+      L.add({ ...L.cell(x, 1.5, z), color: '#eaf2ff', reach: 44, strength: 0.55 * k, group: 3 });
+      L.add({ ...L.cell(x, 1.5, z), color: '#5b7cff', reach: 44 * (i < 2 ? 1 : 0.7), strength: 0.5 * k, group: 4 });
     }
   }
 
@@ -159,22 +162,27 @@ export class KitchenScene {
       if (Math.abs(x - 3) < 0.8 && z > -10.5) continue;
       fill(x, -0.5, z, x + 0.25, -0.25, z + 0.25, rand() < 0.7 ? B.TALL_GRASS : B.FLOWER_YELLOW);
     }
-    // The picket fence, a gate gap on the path.
-    for (let x = -20; x < 26; x += 0.5) {
-      if (x >= 2.5 && x < 3.5) continue;
-      fill(x, -0.5, -10.25, x + 0.25, 0.5, -10, k.FENCE);
+    // The picket fence all round the garden, a shut gate where the path meets it.
+    for (let x = FENCE.x0; x < FENCE.x1; x += 0.5) fill(x, -0.5, FENCE.z0, x + 0.25, 0.5, FENCE.z0 + 0.25, k.FENCE);
+    for (let z = FENCE.z0; z < FENCE.z1; z += 0.5) {
+      fill(FENCE.x0, -0.5, z, FENCE.x0 + 0.25, 0.5, z + 0.25, k.FENCE);
+      fill(FENCE.x1 - 0.25, -0.5, z, FENCE.x1, 0.5, z + 0.25, k.FENCE);
     }
     for (const y of [-0.25, 0.25]) {
-      fill(-20, y, -10.5, 2.5, y + 0.25, -10.25, k.FENCE);
-      fill(3.5, y, -10.5, 26, y + 0.25, -10.25, k.FENCE);
+      fill(FENCE.x0, y, FENCE.z0 - 0.25, FENCE.x1, y + 0.25, FENCE.z0, k.FENCE);
+      fill(FENCE.x0 - 0.25, y, FENCE.z0, FENCE.x0, y + 0.25, FENCE.z1, k.FENCE);
+      fill(FENCE.x1, y, FENCE.z0, FENCE.x1 + 0.25, y + 0.25, FENCE.z1, k.FENCE);
     }
+    fill(2.5, -0.25, FENCE.z0 - 0.25, 3.5, 0.25, FENCE.z0, k.WHITE);   // the gate
+    fill(2.5, -0.25, FENCE.z1, 3.5, 0.25, FENCE.z1 + 0.25, k.WHITE);
+    this.buildRoof(fill);
     // The washing line's posts.
-    for (const x of [0.75, 5.25]) {
+    for (const x of LINE_POSTS) {
       fill(x - 0.125, -0.5, -4.125, x + 0.125, 1.75, -3.875, k.WOOD_DARK);
       fill(x - 0.5, 1.75, -4.125, x + 0.5, 2.0, -3.875, k.WOOD_DARK);
     }
     // Birches.
-    for (const [x, z, h] of [[-1.5, -6, 6], [8.5, -8, 7], [11, -5, 5.5], [-6, -7.5, 6.5]]) {
+    for (const [x, z, h] of BIRCHES.slice(0, 4)) {
       fill(x, -0.5, z, x + 0.25, h, z + 0.25, k.BIRCH);
       for (let i = 0; i < 90; i++) {
         const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 1.7, y = h - 2.4 + rand() * 3;
@@ -189,9 +197,9 @@ export class KitchenScene {
     fill(2, -0.5, 10.25, 4, -0.25, 10.75, k.GREY);   // the front step
     for (let x = -20; x < 26; x += 0.25) {
       if (x > -7.5 && x < 10.5 && rand() < 0.4) fill(x, -0.5, 12.75, x + 0.25, -0.25, 13, [B.FLOWER_RED, B.FLOWER_YELLOW, B.FLOWER_WHITE, B.TALL_GRASS][Math.floor(rand() * 4)]);
-      if (x % 0.5 === 0 && (x < 2.5 || x >= 3.5)) fill(x, -0.5, 19, x + 0.25, 0.5, 19.25, k.FENCE);
+      if (x % 0.5 === 0 && x >= FENCE.x0 && x < FENCE.x1) fill(x, -0.5, FENCE.z1 - 0.25, x + 0.25, 0.5, FENCE.z1, k.FENCE);
     }
-    for (const y of [-0.25, 0.25]) { fill(-20, y, 19.25, 2.5, y + 0.25, 19.5, k.FENCE); fill(3.5, y, 19.25, 26, y + 0.25, 19.5, k.FENCE); }
+    for (const y of [-0.25, 0.25]) fill(FENCE.x0, y, FENCE.z1, FENCE.x1, y + 0.25, FENCE.z1 + 0.25, k.FENCE);
     fill(4.25, -0.5, 19.5, 4.5, 0.75, 19.75, k.WOOD_DARK);
     fill(4.0, 0.75, 19.5, 4.75, 1.25, 20.0, k.FALU);             // the mailbox
     fill(9, -0.5, 22.5, 9.25, 2.0, 22.75, k.GREY);                // the bus stop's sign
@@ -201,7 +209,7 @@ export class KitchenScene {
       if (Math.abs(x - 3) < 0.8) continue;
       fill(x, -0.5, z, x + 0.25, -0.25, z + 0.25, rand() < 0.7 ? B.TALL_GRASS : B.FLOWER_WHITE);
     }
-    for (const [x, z, h] of [[-10, 15, 6], [13, 16, 7], [-12, 4, 6.5], [14, 8, 5.5], [-9.5, 10, 7]]) {
+    for (const [x, z, h] of BIRCHES.slice(4)) {
       fill(x, -0.5, z, x + 0.25, h, z + 0.25, k.BIRCH);
       for (let i = 0; i < 90; i++) {
         const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * 1.7, y = h - 2.4 + rand() * 3;
@@ -250,6 +258,48 @@ export class KitchenScene {
       m.castShadow = g !== data.cross;
       m.receiveShadow = true;
       this.root.add(m);
+    }
+  }
+
+  /**
+   * The roof, seen from the garden: a hipped roof over the whole L of the house, each quarter-metre
+   * column as high as it is far from the eaves, black roofing with a falu red ridge line, and two
+   * chimneys (the stove's and the kakelugn's).
+   */
+  private buildRoof(fill: (x0: number, y0: number, z0: number, x1: number, y1: number, z1: number, id: number) => void) {
+    const k = this.ids, C = 0.25, x0 = -8, z0 = -1, nx = 76, nz = 58;
+    const inHouse = (x: number, z: number) => ROOMS.some((r) => x >= r.x0 - 0.25 && x < r.x1 + 0.25 && z >= r.z0 - 0.25 && z < r.z1 + 0.25);
+    // Distance (in cells) from every roofed cell to the nearest unroofed one: a breadth-first fill from outside.
+    const dist = new Int16Array(nx * nz).fill(-1), queue: number[] = [];
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      if (!inHouse(x0 + (i + 0.5) * C, z0 + (j + 0.5) * C)) { dist[j * nx + i] = 0; queue.push(j * nx + i); }
+    }
+    for (let q = 0; q < queue.length; q++) {
+      const c = queue[q], i = c % nx, j = (c - i) / nx;
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const ii = i + di, jj = j + dj;
+        if (ii < 0 || jj < 0 || ii >= nx || jj >= nz || dist[jj * nx + ii] >= 0) continue;
+        dist[jj * nx + ii] = dist[c] + 1;
+        queue.push(jj * nx + ii);
+      }
+    }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      const d = dist[j * nx + i], x = x0 + i * C, z = z0 + j * C;
+      if (d <= 0) continue;
+      const top = 2.75 + Math.round(d * 0.55) * C;
+      fill(x, 2.75, z, x + C, top, z + C, k.ROOF);
+      const peak = [[1, 0], [-1, 0], [0, 1], [0, -1]].every(([di, dj]) => (dist[(j + dj) * nx + i + di] ?? 0) <= d);
+      if (peak && d > 3) fill(x, top - C, z, x + C, top, z + C, k.FALU_FLAT);
+    }
+    // The eaves: a lip all round, a quarter metre out.
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      if (dist[j * nx + i] !== 0) continue;
+      const near = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([di, dj]) => (dist[(j + dj) * nx + i + di] ?? 0) === 1);
+      if (near) fill(x0 + i * C, 2.75, z0 + j * C, x0 + (i + 1) * C, 3.0, z0 + (j + 1) * C, k.ROOF);
+    }
+    for (const [cx, cz] of [[0.5, 2.0], [-0.8, 0.6]]) {
+      fill(cx - 0.25, 2.75, cz - 0.25, cx + 0.25, 5.4, cz + 0.25, k.FALU_FLAT);
+      fill(cx - 0.375, 5.4, cz - 0.375, cx + 0.375, 5.65, cz + 0.375, k.GREY);
     }
   }
 

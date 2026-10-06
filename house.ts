@@ -35,8 +35,8 @@ export interface HouseBox {
 /** The house volume's voxel: 12.5 cm. */
 export const HV = 1 / 8;
 /** The house volume's low corner in the world, and its size in voxels. */
-export const HOUSE_AT: [number, number, number] = [-7.5, -0.5, -0.5];
-export const HOUSE_SIZE: [number, number, number] = [144, 28, 108];
+export const HOUSE_AT: [number, number, number] = [-8, -0.5, -0.5];
+export const HOUSE_SIZE: [number, number, number] = [152, 28, 108];
 /** Ceiling height everywhere. */
 export const CEIL = 2.5;
 
@@ -62,9 +62,17 @@ export const ROOMS: readonly Room[] = [
   { name: 'Syrummet', x0: 4.5, x1: 10, z0: 7.75, z1: 12.5, floor: 'PINE', paper: 'YELLOWPAPER' },
 ];
 export const room = (name: string) => ROOMS.find((r) => r.name === name)!;
-/** The room a spot is in (the hall when it's in none: a doorway). */
-export const roomAt = (x: number, z: number) =>
-  (ROOMS.find((r) => x >= r.x0 - 0.05 && x <= r.x1 + 0.05 && z >= r.z0 - 0.05 && z <= r.z1 + 0.05) ?? ROOMS[3]).name;
+/** Everything outside the house. */
+export const GARDEN = 'Trädgården';
+/** The room a spot is in: a doorway counts as the nearest room, anywhere outside the walls is the garden. */
+export function roomAt(x: number, z: number) {
+  let best = GARDEN, bestD = 0.2;
+  for (const r of ROOMS) {
+    const d = Math.hypot(Math.max(r.x0 - x, 0, x - r.x1), Math.max(r.z0 - z, 0, z - r.z1));
+    if (d <= bestD) [best, bestD] = [r.name, d - 1e-6];
+  }
+  return best;
+}
 
 /** The kitchen's inside (the look slice's room). */
 export const KITCHEN = { x0: 0, x1: 6, z0: 0, z1: 5, h: CEIL };
@@ -95,6 +103,8 @@ export const DOORS: readonly Opening[] = [
   { along: 'x', at: 7.5, a0: -0.5, a1: 0.5, h: DOOR.h },       // hallen ↔ badrummet
   { along: 'x', at: 7.5, a0: -4, a1: -3, h: DOOR.h },          // hallen ↔ sovrummet
   { along: 'x', at: 7.5, a0: 6.5, a1: 7.5, h: DOOR.h },        // hallen ↔ syrummet
+  { along: 'z', at: -7.25, a0: 5.75, a1: 6.75, h: DOOR.h },    // hallen → trädgården, west
+  { along: 'z', at: 10, a0: 5.75, a1: 6.75, h: DOOR.h },       // hallen → trädgården, east
 ];
 
 /** A window: in a wall like a door, its sill and top heights; `out` is the side the garden is on (−1 or +1). */
@@ -107,8 +117,6 @@ export const WINDOW_LIST: readonly Window[] = [
   { along: 'x', at: -0.25, a0: 3.625, a1: 4.75, h: WIN_TOP, sill: SILL, out: -1 },
   { along: 'x', at: -0.25, a0: -6, a1: -4.875, h: WIN_TOP, sill: SILL, out: -1 },      // the living room, north
   { along: 'x', at: -0.25, a0: -3.125, a1: -2, h: WIN_TOP, sill: SILL, out: -1 },
-  { along: 'z', at: -7.25, a0: 5.75, a1: 6.875, h: WIN_TOP, sill: SILL, out: -1 },     // the hall's west end
-  { along: 'z', at: 10, a0: 5.75, a1: 6.875, h: WIN_TOP, sill: SILL, out: 1 },         // the hall's east end
   { along: 'x', at: 12.5, a0: -6.25, a1: -5.125, h: WIN_TOP, sill: SILL, out: 1 },     // the bedroom, south
   { along: 'x', at: 12.5, a0: -3.875, a1: -2.75, h: WIN_TOP, sill: SILL, out: 1 },
   { along: 'z', at: -7.25, a0: 9.5, a1: 10.625, h: WIN_TOP, sill: SILL, out: -1 },     // the bedroom, west
@@ -197,6 +205,9 @@ function shell(): HouseBox[] {
     const s0 = w.out < 0 ? inner - T : inner - W, s1 = w.out < 0 ? inner + W : inner + T;
     add(w.along === 'x' ? [w.a0 - T, w.sill - T, s0, w.a1 + T, w.sill, s1] : [s0, w.sill - T, w.a0 - T, s1, w.sill, w.a1 + T], 'WHITE', false);
   }
+  // Steps down to the garden from the hall's two doors (the ground is half a metre below the floors).
+  add([-7.75, -0.5, 5.5, -7.25, -0.25, 7.0], 'GREY');
+  add([10.25, -0.5, 5.5, 10.75, -0.25, 7.0], 'GREY');
   // Corner boards: white knutar where the outside walls meet, as on every falu red house.
   for (const [x, z] of [[-7.25, -0.25], [6, -0.25], [-7.25, 12.5], [-2, 12.5], [4.25, 12.5], [10, 12.5], [10, 5], [8, 3.25], [6, 3.25]] as const)
     add([x, 0, z, x + W, CEIL, z + W], 'WHITE');

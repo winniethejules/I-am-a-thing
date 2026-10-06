@@ -70,6 +70,8 @@ interface Dart {
 export class Shooter implements GameStage {
   /** What the engine draws: the arena stage's scene, through its camera. */
   readonly view: ArenaStage;
+  /** The forms, for vp shot scripts that stage a vätte as something (qa/*.ts). */
+  readonly FORMS = FORMS;
   private readonly core: Core;
   private readonly fp: FpsCamera;
   private readonly gun = new Group();
@@ -710,13 +712,16 @@ html.vp-touching .ia .blind small { max-width: 320px; }
 .ia .meter i { display: inline-block; width: 14px; height: 14px; border: 2px solid #1d2340; border-radius: 4px; background: #e8dcc2; }
 .ia .meter i.on.l0 { background: #ff5a36; } .ia .meter i.on.l1 { background: #f2c94c; } .ia .meter i.on.l2 { background: #7ee081; }
 .ia .list { position: absolute; left: 50%; top: 9%; transform: translateX(-50%) rotate(-1deg); width: min(860px, 94vw); max-height: 84vh; overflow: hidden; padding: 14px 20px 16px;
-  background: repeating-linear-gradient(#fbf6e6 0 20px, #cfe0f0 20px 21px); border: 3px solid #1d2340; border-radius: 6px; color: #2a3a6a;
-  text-shadow: none; box-shadow: 0 6px 0 #1d2340; font: 700 italic 14px/21px Nunito, sans-serif; }
+  background: repeating-linear-gradient(#fbf6e6 0 17px, #cfe0f0 17px 18px); border: 3px solid #1d2340; border-radius: 6px; color: #2a3a6a;
+  text-shadow: none; box-shadow: 0 6px 0 #1d2340; font: 700 italic 13px/18px Nunito, sans-serif; }
 .ia .list h3 { margin: 0 0 4px; font: 900 18px Nunito, sans-serif; color: #a8322a; }
-.ia .list .room { margin-top: 6px; font-weight: 900; text-decoration: underline; }
-.ia .list .cols { columns: 3; column-gap: 22px; }
+.ia .list .room { margin-top: 4px; font-weight: 900; text-decoration: underline; }
+.ia .list .cols { columns: 4; column-gap: 18px; }
 .ia .list .block { break-inside: avoid; }
-html.vp-touching .ia .list .cols { columns: 4; }
+html.vp-touching .ia .list { top: 2%; max-height: 96vh; padding: 6px 10px; font-size: 10px; line-height: 13px; background: #fbf6e6; }
+html.vp-touching .ia .list h3 { font-size: 12px; margin: 0; }
+html.vp-touching .ia .list .room { margin-top: 2px; }
+html.vp-touching .ia .list .cols { columns: 6; column-gap: 10px; }
 .ia .board { position: absolute; left: 50%; top: 40%; transform: translateX(-50%); min-width: 320px; padding: 12px 16px; border: 3px solid #1d2340;
   border-radius: 14px; background: rgba(255,252,245,.92); color: #1d2340; text-shadow: none; box-shadow: 0 5px 0 #1d2340; }
 .ia .board .row { display: flex; gap: 10px; padding: 3px 0; font-size: 16px; }

@@ -24,7 +24,7 @@ export interface FormDef {
   ett?: boolean;
 }
 
-/** Things you can be (ground props: nothing that hangs on a wall). */
+/** Things you can be (ground props: nothing that hangs on a wall), room by room. */
 export const FORMS: readonly FormDef[] = [
   // Köket och skafferiet.
   { key: 'cup', name: 'kaffekopp', some: 'kaffekoppar', the: 'kaffekopparna', hp: 1, speed: 1 },
@@ -38,6 +38,10 @@ export const FORMS: readonly FormDef[] = [
   { key: 'sack', name: 'mjölpåse', some: 'mjölpåsar', the: 'mjölpåsarna', hp: 1, speed: 0.7 },
   { key: 'tin', name: 'pepparkaksburk', some: 'pepparkaksburkar', the: 'pepparkaksburkarna', hp: 1, speed: 0.85 },
   { key: 'jarBlueberry', name: 'blåbärsburk', some: 'blåbärsburkar', the: 'blåbärsburkarna', hp: 1, speed: 0.9 },
+  { key: 'coffeeGrinder', name: 'kaffekvarn', some: 'kaffekvarnar', the: 'kaffekvarnarna', hp: 1, speed: 0.9 },
+  { key: 'milkCan', name: 'mjölkkanna', some: 'mjölkkannor', the: 'mjölkkannorna', hp: 2, speed: 0.7 },
+  { key: 'juiceBottle', name: 'saftflaska', some: 'saftflaskor', the: 'saftflaskorna', hp: 1, speed: 0.95 },
+  { key: 'potatoSack', name: 'potatissäck', some: 'potatissäckar', the: 'potatissäckarna', hp: 2, speed: 0.55 },
   // Vardagsrummet.
   { key: 'rockingChair', name: 'gungstol', some: 'gungstolar', the: 'gungstolarna', hp: 3, speed: 0.5 },
   { key: 'armchair', name: 'fåtölj', some: 'fåtöljer', the: 'fåtöljerna', hp: 3, speed: 0.45 },
@@ -83,6 +87,17 @@ export const FORMS: readonly FormDef[] = [
   { key: 'dressForm', name: 'provdocka', some: 'provdockor', the: 'provdockorna', hp: 2, speed: 0.6 },
   { key: 'fabricBolt', name: 'tygbal', some: 'tygbalar', the: 'tygbalarna', hp: 2, speed: 0.7 },
   { key: 'sewingTin', name: 'knappburk', some: 'knappburkar', the: 'knappburkarna', hp: 1, speed: 0.85 },
+  // Trädgården.
+  { key: 'gnome', name: 'trädgårdstomte', some: 'trädgårdstomtar', the: 'trädgårdstomtarna', hp: 2, speed: 0.75 },
+  { key: 'wateringCan', name: 'vattenkanna', some: 'vattenkannor', the: 'vattenkannorna', hp: 1, speed: 0.9 },
+  { key: 'flowerPotYellow', name: 'gul blomkruka', some: 'gula blomkrukor', the: 'de gula blomkrukorna', hp: 1, speed: 0.85 },
+  { key: 'flowerPotRed', name: 'röd blomkruka', some: 'röda blomkrukor', the: 'de röda blomkrukorna', hp: 1, speed: 0.85 },
+  { key: 'wheelbarrow', name: 'skottkärra', some: 'skottkärror', the: 'skottkärrorna', hp: 3, speed: 0.45 },
+  { key: 'log', name: 'vedklabbe', some: 'vedklabbar', the: 'vedklabbarna', hp: 1, speed: 0.9 },
+  { key: 'kubb', name: 'kubbpinne', some: 'kubbpinnar', the: 'kubbpinnarna', hp: 1, speed: 1 },
+  { key: 'kubbKing', name: 'kubbkung', some: 'kubbkungar', the: 'kubbkungarna', hp: 1, speed: 0.95 },
+  { key: 'rainBarrel', name: 'regntunna', some: 'regntunnor', the: 'regntunnorna', hp: 3, speed: 0.4 },
+  { key: 'gardenChair', name: 'trädgårdsstol', some: 'trädgårdsstolar', the: 'trädgårdsstolarna', hp: 2, speed: 0.6 },
   { key: 'iron', name: 'strykjärn', some: 'strykjärn', the: 'strykjärnen', hp: 1, speed: 0.9, ett: true },
 ];
 export const VATTE = -1;

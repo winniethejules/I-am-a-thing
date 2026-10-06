@@ -12,7 +12,7 @@ import { BLOCKS, TEXTURES } from './textures';
 
 const FURNITURE: ModelKey[] = ['table', 'chair', 'sofa', 'stove', 'counter', 'fridge', 'vitrine'];
 const FURNITURE_PANTRY: ModelKey[] = ['shelf', 'broom'];
-const THINGS: ModelKey[] = ['cup', 'biscuits', 'coffeePot', 'breadBasket', 'logBasket', 'geranium', 'crossword', 'cloth', 'ragRug', 'jarLingon', 'jarBlueberry', 'sack', 'tin'];
+const THINGS: ModelKey[] = ['coffeeGrinder', 'milkCan', 'juiceBottle', 'potatoSack', 'cup', 'biscuits', 'coffeePot', 'breadBasket', 'logBasket', 'geranium', 'crossword', 'cloth', 'ragRug', 'jarLingon', 'jarBlueberry', 'sack', 'tin'];
 const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'bulb', 'potholder', 'clock', 'sampler', 'note', 'bloomers', 'towel'];
 /** The rest of the house, room by room: furniture first, then what a vätte can be. */
 const ROOMS_GALLERY: [string, ModelKey[]][] = [
@@ -20,6 +20,7 @@ const ROOMS_GALLERY: [string, ModelKey[]][] = [
   ['Hallen och farstun', ['phoneTable', 'shoeRack', 'umbrellaStand', 'runner', 'doormat', 'stool', 'boots', 'umbrella', 'phone', 'hat', 'handbag']],
   ['Sovrummet', ['bed', 'wardrobe', 'nightstand', 'dresser', 'pillow', 'hatbox', 'slippers', 'alarmClock', 'teeth', 'tableLamp']],
   ['Badrummet', ['bathtub', 'washbasin', 'toilet', 'bathMat', 'laundryBasket', 'foldedTowel', 'soapDish', 'duck', 'rollDoll', 'chamberPot']],
+  ['Trädgården', ['gardenTable', 'woodpile', 'birdBath', 'currantBush', 'rake', 'gardenChair', 'wheelbarrow', 'rainBarrel', 'gnome', 'wateringCan', 'flowerPotYellow', 'flowerPotRed', 'log', 'kubb', 'kubbKing']],
   ['Syrummet', ['workTable', 'ironingBoard', 'yarnBasket', 'sewingMachine', 'chest', 'dressForm', 'fabricBolt', 'sewingTin', 'iron', 'yarnRed', 'yarnBlue', 'yarnYellow']],
 ];
 /** Pairs (boots, slippers): two pieces on purpose. */

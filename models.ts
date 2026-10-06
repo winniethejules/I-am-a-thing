@@ -18,6 +18,7 @@ import { HALL_MODELS } from './models-hall';
 import { BEDROOM_MODELS } from './models-sovrum';
 import { BATH_MODELS } from './models-badrum';
 import { SEWING_MODELS } from './models-syrum';
+import { GARDEN_MODELS } from './models-tradgard';
 import type { Ids } from './textures';
 
 export { box, type Model } from './kit';
@@ -589,6 +590,61 @@ function broom(k: Ids) {
   return { vol: v, voxel: Q, origin: [9, 0, 3] as [number, number, number], ground: true };
 }
 
+/** Kaffekvarnen: a dovetailed wooden box with a little drawer, a brass bowl on top and a crank with a wooden knob. */
+function coffeeGrinder(k: Ids) {
+  const v = new Volume(14, 22, 14), g = grain(k, 'y', k.WOOD_DARK, 110);
+  box(v, 1, 0, 1, 13, 11, 13, g);
+  for (let y = 0; y < 11; y += 2) { dot(v, 1, y, 1, k.WOOD_LIGHT); dot(v, 12, y + 1, 12, k.WOOD_LIGHT); }
+  box(v, 4, 2, 13, 10, 5, 14, k.WOOD);
+  dot(v, 7, 3, 13, k.BRASS);
+  box(v, 0, 10, 0, 14, 11, 14, k.WOOD_DEEP);
+  lathe(v, 7, 7, 11, 15, (y) => 3.2 + (y - 11) * 0.7, k.BRASS, (y) => (y < 12 ? 0 : 2.2 + (y - 11) * 0.7));
+  lathe(v, 7, 7, 11, 13, () => 1.4, k.COFFEE);
+  box(v, 6, 15, 6, 8, 18, 8, k.STEEL);
+  line(v, [7, 17.5, 7], [12.5, 18.5, 7], k.STEEL);
+  lathe(v, 12.5, 7.5, 18, 22, () => 1.1, k.WOOD_DEEP);
+  return prop(v, S);
+}
+
+/** En mjölkkanna: a dented aluminium churn, a lid with a handle, two side handles. */
+function milkCan(k: Ids) {
+  const v = new Volume(16, 28, 16);
+  lathe(v, 8, 8, 0, 26, (y) => (y < 16 ? 6.6 : y < 20 ? 6.6 - (y - 16) * 0.9 : 3.2), (x, y, z) => (y === 2 || y === 15 ? k.STEEL : hash(x, y, z, 111) < 0.05 ? k.GREY : k.STEEL_LIGHT));
+  lathe(v, 8, 8, 26, 27, () => 3.8, k.STEEL);
+  box(v, 6, 27, 7, 10, 28, 9, k.STEEL);
+  for (const x of [0, 15]) box(v, x, 18, 7, x + 1, 21, 9, k.STEEL);
+  return prop(v, Q);
+}
+
+/** En saftflaska: a glass bottle of red currant saft with a porcelain swing stopper and a handwritten label. */
+function juiceBottle(k: Ids) {
+  const v = new Volume(8, 22, 8);
+  lathe(v, 4, 4, 0, 18, (y) => (y < 11 ? 3.4 : y < 15 ? 3.4 - (y - 11) * 0.6 : 1.4), (x, y, z) => {
+    const a = angleOf(x, z, 4, 4);
+    if (y > 12) return k.GLASS;
+    if (y >= 4 && y <= 8 && a > 0.8 && a < 2.4) return y === 6 && hash(x, y, z) < 0.5 ? k.INK : k.PAPER;
+    return Math.abs(a - 4) < 0.25 ? k.GLASS : k.JAM;
+  });
+  lathe(v, 4, 4, 18, 20, () => 1.5, k.PORC);
+  box(v, 2, 18, 3, 6, 19, 5, k.STEEL);
+  dot(v, 4, 20, 4, k.RED);
+  return prop(v, S);
+}
+
+/** En potatissäck: rough jute, bulging with potatoes, tied with string, a few potatoes rolled out. */
+function potatoSack(k: Ids) {
+  const v = new Volume(20, 24, 18);
+  const jute = (x: number, y: number, z: number) => ((x + y + z) % 2 ? k.KRAFT : k.WICKER);
+  for (let y = 0; y < 18; y++) {
+    const r = y < 3 ? 6 + y : y < 13 ? 8.6 : 8.6 - (y - 13) * 1.2;
+    lathe(v, 10, 9, y, y + 1, () => r, jute);
+  }
+  lathe(v, 10, 9, 18, 19, () => 2.2, k.STRAW);
+  lathe(v, 10, 9, 19, 23, (y) => 2.4 + (y - 19) * 0.8, jute);
+  for (const [x, z] of [[2, 15], [17, 16], [4, 2]]) blob(v, x, 1, z, 1.6, 1.2, 1.3, k.COOKIE);
+  return prop(v, Q);
+}
+
 // ------------------------------------------------------------ the garden's small things
 
 /** Mormors mammelucker: long white bloomers with lace and red ribbons, pegged on the line. */
@@ -619,9 +675,10 @@ const KITCHEN_MODELS = {
   cup, biscuits, coffeePot, breadBasket, logBasket, geranium, crossword, ragRug, potholder, clock,
   sampler, note, bloomers, towel,
   shelf, jarLingon, jarBlueberry, sack, tin, bulb, bulbGlow, broom,
+  coffeeGrinder, milkCan, juiceBottle, potatoSack,
 };
 
-export const MODELS = { ...KITCHEN_MODELS, ...LIVING_MODELS, ...HALL_MODELS, ...BEDROOM_MODELS, ...BATH_MODELS, ...SEWING_MODELS };
+export const MODELS = { ...KITCHEN_MODELS, ...LIVING_MODELS, ...HALL_MODELS, ...BEDROOM_MODELS, ...BATH_MODELS, ...SEWING_MODELS, ...GARDEN_MODELS };
 export type ModelKey = keyof typeof MODELS;
 
 /** Every model, built once. */

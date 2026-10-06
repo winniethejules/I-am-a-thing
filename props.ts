@@ -5,6 +5,7 @@
  * lista (things.ts). Positions are world metres; yaw turns a model's front (+z) to face
  * (sin yaw, cos yaw): 0 south, π north, π/2 east, −π/2 west. A wall piece's yaw points it into the room.
  */
+import { GROUND } from './garden';
 import { SILL } from './house';
 import { KITCHEN_PROPS, type Placed } from './kitchen';
 
@@ -192,14 +193,44 @@ export const SEWING_PROPS: Placed[] = [
   t('geranium', 9.88, SILL, 9.9, 0.5),
 ];
 
-/** Everything in the house, the kitchen and pantry first. */
-export const ALL_PROPS: Placed[] = [...KITCHEN_PROPS, ...LIVING_PROPS, ...HALL_PROPS, ...ENTRY_PROPS, ...BATH_PROPS, ...BEDROOM_PROPS, ...SEWING_PROPS];
+const G = GROUND;
+/** Trädgården: the patio north of the living room, gnomes, pots along the walls, the woodpile, kubb on the lawn, the currant bushes. */
+export const GARDEN_PROPS: Placed[] = [
+  f('gardenTable', -4.0, G, -2.5, 0),
+  f('woodpile', -7.55, G, 2.5, W),
+  f('birdBath', 2.0, G, -6.0, 0),
+  ...[[-11, -4], [-9.5, -5.6], [14, -2], [14.6, 0.6], [-11.5, 13], [15, 12]].map(([x, z]) => f('currantBush', x, G, z, x)),
+  p('rake', -7.45, G, 4.2, W),
+  t('gardenChair', -4.9, G, -2.3, E, { solid: true }),
+  t('gardenChair', -3.1, G, -2.7, W, { solid: true }),
+  t('gardenChair', -4.0, G, -1.55, N, { solid: true }),
+  t('wheelbarrow', 9.5, G, -3.0, 0.6, { solid: true }),
+  t('rainBarrel', 8.65, G, 3.0, 0.2, { solid: true }),
+  ...[[-1.0, -1.0, 2.6], [1.8, -2.2, 0.4], [6.8, -1.5, -0.5], [-8.6, -3.0, 1.2], [12, -6, 2.0], [4.6, 14.5, 3.6], [-6.0, 13.6, 2.8]].map(([x, z, yaw]) => t('gnome', x, G, z, yaw)),
+  t('wateringCan', 0.3, G, -0.85, 0.3),
+  t('wateringCan', 9.2, G, 4.4, 1.9),
+  t('wateringCan', -3.4, G, 13.4, 0.8),
+  t('flowerPotRed', -6.5, G, -0.6, 0.2),
+  t('flowerPotYellow', -2.6, G, -0.55, 1.1),
+  t('flowerPotRed', 5.5, G, -0.6, 2.0),
+  t('flowerPotYellow', 6.6, G, 0.5, 0.7),
+  t('flowerPotYellow', 2.1, G, 11.0, 0.4),
+  t('flowerPotRed', 3.9, G, 11.0, 1.5),
+  t('flowerPotRed', -7.7, G, 7.4, 0.9),
+  ...[[-8.4, 1.2], [-8.6, 3.9], [-9.0, 2.6], [-8.2, 0.4], [-8.8, 4.6], [-9.3, 1.8], [-8.0, 3.3], [-9.6, 3.2]].map(([x, z], i) => t('log', x, G, z, i * 0.9)),
+  ...[9.5, 10.25, 11, 11.75, 12.5].flatMap((x) => [t('kubb', x, G, -7.5, 0), t('kubb', x, G, -3.2, 0.1)]),
+  t('kubbKing', 11, G, -5.35, 0.3),
+];
+
+/** Everything in the house and garden, the kitchen and pantry first. */
+export const ALL_PROPS: Placed[] = [...KITCHEN_PROPS, ...LIVING_PROPS, ...HALL_PROPS, ...ENTRY_PROPS, ...BATH_PROPS, ...BEDROOM_PROPS, ...SEWING_PROPS, ...GARDEN_PROPS];
 
 /**
  * Spawn spots. `hall` ones are where the kusiner wait while the vättar hide: farstun, by the front
  * door (they've just come in from the bus). The rest spread the vättar through the house.
  */
-export const SPAWNS: { x: number; z: number; hall: boolean }[] = [
+export const SPAWNS: { x: number; y?: number; z: number; hall: boolean }[] = [
+  { x: -4.0, y: GROUND, z: -4.5, hall: false }, { x: 7.0, y: GROUND, z: -5.0, hall: false }, { x: -10.5, y: GROUND, z: 2.0, hall: false },
   { x: 3, z: 3.4, hall: false }, { x: 1.9, z: 4.1, hall: false }, { x: 3.55, z: 3.6, hall: false }, { x: 4.6, z: 2.9, hall: false },
   { x: -2.6, z: 3.4, hall: false }, { x: -3.2, z: 1.3, hall: false }, { x: -1.0, z: 6.4, hall: false }, { x: 5.5, z: 6.4, hall: false },
   { x: -4.5, z: 9.0, hall: false }, { x: 7.0, z: 8.6, hall: false }, { x: -5.0, z: 6.4, hall: false }, { x: 8.5, z: 10.3, hall: false },

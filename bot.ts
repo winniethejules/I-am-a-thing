@@ -34,7 +34,11 @@ export const IDLE: Readonly<Intent> = { fwd: 0, side: 0, jump: false, dyaw: 0, d
 /** How fast it can turn, radians a second. */
 const TURN = 6;
 /** Where a kusin stands to look round the small rooms: the pantry, the bathroom, farstun, the bedroom's far end. */
-const LOOKS = [{ x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }, { x: 0, y: 0, z: 8.8 }, { x: 3.0, y: 0, z: 8.9 }, { x: -4.6, y: 0, z: 11.6 }, { x: 8.2, y: 0, z: 11.3 }];
+const LOOKS = [
+  { x: 5.7, y: 0, z: 4.35 }, { x: 7.1, y: 0, z: 4.25 }, { x: 0, y: 0, z: 8.8 }, { x: 3.0, y: 0, z: 8.9 }, { x: -4.6, y: 0, z: 11.6 }, { x: 8.2, y: 0, z: 11.3 },
+  // The garden: the patio, the kubb lawn, the woodpile, the front path.
+  { x: -2.5, y: -0.5, z: -4.0 }, { x: 8.0, y: -0.5, z: -5.0 }, { x: -10.5, y: -0.5, z: 3.0 }, { x: 3.0, y: -0.5, z: 14.0 }, { x: 13.0, y: -0.5, z: 6.0 },
+];
 /** How far a taunt carries, metres. */
 const EARSHOT = 9;
 
@@ -71,7 +75,7 @@ export class Bot {
   private leadT = 0;
 
   // The vätte.
-  private plan: { f: number; x: number; z: number } | null = null;
+  private plan: { f: number; x: number; z: number; y?: number } | null = null;
   private lastHits = 0;
   private hidT = 0;
   private nearT = 0;
@@ -267,7 +271,7 @@ export class Bot {
       // a while, it settles for where it stands.
       let sx: number, sz: number;
       if (d > 0.9) {
-        if ((this.follow.idle || this.think.tick(dt)) && !this.follow.goTo(b, p.x, 0, p.z)) {
+        if ((this.follow.idle || this.think.tick(dt)) && !this.follow.goTo(b, p.x, p.y ?? 0, p.z)) {
           this.plan = null;   // no way there from here: think again
           return o;
         }
@@ -299,9 +303,9 @@ export class Bot {
    * A hiding plan: a form a real thing on the floor has, and a spot beside one of them. Now and
    * then (a sloppier vätte more often) a spot in the open instead, the mistake kusiner live for.
    */
-  private choose(me: Pawn, w: World): { f: number; x: number; z: number } {
+  private choose(me: Pawn, w: World): { f: number; x: number; z: number; y?: number } {
     // A kind first (six chairs mustn't make everyone a chair), then one of that kind to stand by.
-    const floor = REAL_THINGS.filter((th) => th.f >= 0 && th.y < 0.05);
+    const floor = REAL_THINGS.filter((th) => th.f >= 0 && th.y < 0.05);   // on a floor or the lawn
     const kinds = [...new Set(floor.map((th) => th.f))];
     const open = this.rand() < 0.15 / this.skill;
     for (let tries = 0; tries < 24; tries++) {
@@ -311,12 +315,12 @@ export class Bot {
       const { r, h } = formBox(th.f), m = moveOf(false, th.f), rr = Math.min(r, m.radius);
       const a = this.rand() * Math.PI * 2, gap = open ? 1.5 + this.rand() * 1.5 : th.r + r + 0.08;
       const x = th.x + Math.sin(a) * gap, z = th.z + Math.cos(a) * gap;
-      if (w.arena.boxHits(x - rr, 0.02, z - rr, x + rr, h, z + rr)) continue;
-      const node = w.arena.nav.nodes[w.arena.nav.nearest(x, 0, z)];
+      if (w.arena.boxHits(x - rr, th.y + 0.02, z - rr, x + rr, th.y + h, z + rr)) continue;
+      const node = w.arena.nav.nodes[w.arena.nav.nearest(x, th.y, z)];
       if (!node || Math.hypot(node.x - x, node.z - z) > 0.6) continue;
       // A spot it can't walk to (boxed in by the table and the wall) is no spot at all.
-      if (!this.follow.goTo(me.body, x, 0, z)) continue;
-      return { f: th.f, x, z };
+      if (!this.follow.goTo(me.body, x, th.y, z)) continue;
+      return { f: th.f, x, z, y: th.y };
     }
     // Nowhere good: be a cup in the corner by the door. (It happens.)
     return { f: 0, x: 4.0 + this.rand() * 0.6, z: 4.6 };
