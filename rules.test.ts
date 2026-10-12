@@ -150,6 +150,44 @@ describe('matches', () => {
   });
 });
 
+describe('forced shift (settings)', () => {
+  test('with the shift on, CPU vättar turn into something new by themselves, and keep it', () => {
+    const room = new FakeRoom({ mg: { id: 'test' }, seed: 7, players: ['c0', 'c1', 'c2'].map((id) => ({ id, cpu: true })), clients: [null] });
+    const core = new Core(room.links[0], new FakeFlow(room.links[0]), () => IDLE, () => ({ shift: 30 }));
+    const checks: { pid: string; to: number; at: number }[] = [], kept: boolean[] = [];
+    let forced = 0;
+    room.run((dt) => {
+      core.update(dt);
+      for (const c of core.cues.splice(0)) if (c.k === 'forced') {
+        forced++;
+        checks.push({ pid: c.pid, to: c.to, at: room.now + 2000 });
+      }
+      // Two seconds after a forced change the CPU is still the thing it was turned into (it doesn't change back).
+      for (const c of checks.filter((x) => room.now >= x.at)) {
+        const p = core.pawns.get(c.pid)!;
+        if (p.alive && core.role(p) === 'v') kept.push(p.form === c.to);
+        checks.splice(checks.indexOf(c), 1);
+      }
+    }, { until: room.now + HIDE_MS + 70_000 });
+    console.log(`forced shift 30 s: ${forced} forced, ${kept.filter(Boolean).length} of ${kept.length} kept their new form`);
+    expect(forced).toBeGreaterThanOrEqual(2);
+    expect(kept.filter(Boolean).length).toBeGreaterThanOrEqual(Math.ceil(kept.length * 0.75));
+    core.dispose();
+  });
+
+  test('with the shift off, nobody is forced', () => {
+    const room = new FakeRoom({ mg: { id: 'test' }, seed: 7, players: ['c0', 'c1'].map((id) => ({ id, cpu: true })), clients: [null] });
+    const core = new Core(room.links[0], new FakeFlow(room.links[0]), () => IDLE);
+    let forced = 0;
+    room.run((dt) => {
+      core.update(dt);
+      for (const c of core.cues.splice(0)) if (c.k === 'forced') forced++;
+    }, { until: room.now + HIDE_MS + 40_000 });
+    expect(forced).toBe(0);
+    core.dispose();
+  });
+});
+
 describe('netcode, in a session', () => {
   test('joins, leaves, the host leaving and reloads: everyone agrees, and nobody is stuck dead or invisible', () => {
     const room = new FakeRoom({ mg: { id: 'test' }, seed: 7, players: [{ id: 'p0' }, { id: 'p1' }], clients: ['p0', 'p1'], latency: 80 });

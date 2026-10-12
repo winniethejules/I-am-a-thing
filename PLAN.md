@@ -282,8 +282,11 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
 - [x] Radion: dansband i 20 s från 2:10 i sökfasen, med egen låt. Musiken byter tillfälligt.
 - [x] Mormor går sin runda genom hallen och köket och stannar 5–10 s vid varje punkt. Hon är bara synlig, hindrar ingen och städar inte än.
 - [x] Misse sover i fåtöljen. Hon vaknar när en vätte som rör sig kommer inom 3 m, och sätter sig bredvid den som en ledtråd.
+- [x] Dörrarna är 1,4 m breda, så kroppen kommer igenom alla (test för varje dörr). Källartrappan har tre steg på 0,5 m som kusinen kan gå nedför (test).
+- [x] Titta på: den som är ute följer någon som lever i tredje person. F eller NÄSTA byter vem.
+- [x] **Inställningar (O):** ledaren väljer *Tvingad förvandling*: av, var 30:e sekund eller varje minut. När det är på blir varje vätte en slumpad ny sak av sig själv, där den står, och måste passa in. Det gäller också en vätte som ännu inte förvandlat sig. CPU-vättar behåller den nya saken och letar upp ett ställe där den passar (test). Synkas med SDK:ns `Setup`, så alla ser samma val.
 - [ ] Balans: CPU-kusinen hittar 1–2 av 9 vättar per tre rundor i det stora huset. Testet kräver nu en fångst. Höjs när vi speltestat.
-- [x] **Jordkällaren:** en gräsklädd kulle i trädgårdens nordvästra hörn, stenfasad, sju trappsteg ner, ett stenvalv med jordgolv och bjälkar, upplyst av en lykta. Hylla med sylt och saft, äppellådor, potatissäckar, mjölkkanna. Fotopunkter J1 och J2.
+- [x] **Jordkällaren:** en gräsklädd kulle i trädgårdens nordvästra hörn, stenfasad, tre trappsteg ner, ett stenvalv med jordgolv och bjälkar, upplyst av en lykta. Hylla med sylt och saft, äppellådor, potatissäckar, mjölkkanna. Fotopunkter J1 och J2.
 
 ### Fas 4: källaren, trädgården, kafferepet och easter eggs
 

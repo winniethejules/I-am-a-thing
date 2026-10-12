@@ -20,6 +20,7 @@ export default defineGame({
     ['Q', 'Taunt (vätte)'],
     ['TAB', 'Inventarielistan (kusin)'],
     ['F', 'Titta på nästa (när du är ute)'],
+    ['O', 'Inställningar: tvingad förvandling'],
     ['SPACE', 'Hoppa'],
   ],
   buttons: {

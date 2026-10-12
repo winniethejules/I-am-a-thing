@@ -38,7 +38,7 @@ export default (g: Gallery) => {
     return new Mesh(meshVolume(m.vol, { voxel: m.voxel, origin: m.origin }).opaque!, mat);
   };
   // Every key in MODELS is in one group below.
-  const listed = new Set<ModelKey>([...FURNITURE, ...FURNITURE_PANTRY, ...THINGS, ...WALL, ...ROOMS_GALLERY.flatMap(([, keys]) => keys), ...WALL_ROOMS, ...(Object.values(GLOW_OF) as ModelKey[])]);   // the glows are the lamps' 'tänd' variants
+  const listed = new Set<ModelKey>([...FURNITURE, ...FURNITURE_PANTRY, ...THINGS, ...WALL, ...ROOMS_GALLERY.flatMap(([, keys]) => keys), ...WALL_ROOMS, ...(Object.values(GLOW_OF) as ModelKey[]), 'mormor', 'cat']);   // the glows are the lamps' 'tänd' variants
   for (const key of Object.keys(MODELS) as ModelKey[]) if (!listed.has(key)) throw new Error(`gallery.ts: ${key} isn't in a group`);
 
   g.group('Möbler i köket', { scale: 'shared', ghost: false });

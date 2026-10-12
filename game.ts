@@ -12,11 +12,12 @@
  */
 import { BufferGeometry, Group, InstancedMesh, Matrix4, Mesh, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import {
-  Avatar, FpsCamera, Popups, Sfx, Vfx, arenaStage, blockGeometry, esc, meshVolume, readIntent, useGameAssets, type Volume,
+  Avatar, FpsCamera, Menu, Popups, Sfx, Vfx, arenaStage, blockGeometry, esc, meshVolume, readIntent, useGameAssets, type Volume,
   type ArenaStage, type FpsIntent, type GameContext, type GameStage, type LinkPlayer,
 } from '@voxelparty/sdk';
 import { NO_FORM, type Intent } from './bot';
 import { GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL, dart, kusin, kusinLook, suctionGun, suctionGunFp, vatte, vatteLook } from './characters';
+import { Setup } from '@voxelparty/sdk/core';
 import { Core, type Cue, type Pawn } from './core';
 import { PHOTOS, type LookName, type PhotoPoint } from './look';
 import { buildModels, type ModelKey } from './models';
@@ -26,6 +27,7 @@ import { MAX_HP, SEEK_MS, WRONG, type Phase } from './rules';
 const RADIO_AT_MS = 130_000, RADIO_MS = 20_000;
 import { KitchenScene } from './scene';
 import { MUSIC, RADIO, SOUNDS } from './sounds';
+import { OPTIONS, SETTINGS } from './settings';
 import { BLOCKS, TEXTURES, type Ids } from './textures';
 import { FORMS, INVENTORY, KUSIN_MOVE, REAL_THINGS, VATTE, blendIn, formBox } from './things';
 import { EFFECTS } from './vfx';
@@ -115,6 +117,11 @@ export class Shooter implements GameStage {
   private orbitPitch = -0.2;
   private readonly deathAt = new Vector3();
   private killer = '';
+  /** The match settings, synced: the leader changes them (O), everyone plays by them. */
+  private readonly setup: Setup<typeof OPTIONS, Record<string, never>>;
+  private readonly settingsMenu: Menu;
+  /** Our own vätte was just forced into something new: the poff that follows says so. */
+  private forcedNow = false;
 
   constructor(private readonly ctx: GameContext) {
     const { engine, link, flow } = ctx;
@@ -137,7 +144,9 @@ export class Shooter implements GameStage {
     this.formVols = FORMS.map((f) => models[f.key].vol);
     this.formVoxel = FORMS.map((f) => models[f.key].voxel);
 
-    this.core = new Core(link, flow, () => this.intent());
+    this.setup = new Setup(link, SETTINGS);
+    this.settingsMenu = this.buildSettings();
+    this.core = new Core(link, flow, () => this.intent(), () => ({ shift: this.setup.options.shift }));
     const dg = meshVolume(dart(this.ids), { voxel: 1 / 32, origin: [1.5, 1.5, 8] }).opaque!;
     this.dartMesh = new InstancedMesh(dg, engine.mats.actor, DART_CAP);
     this.dartMesh.count = 0;
@@ -150,17 +159,46 @@ export class Shooter implements GameStage {
     this.sfx = new Sfx({ you: -1, ears: () => this.view.camera, live: () => flow.live });
   }
 
+  /** O: the match settings. The leader picks, everyone else sees what's on. */
+  private buildSettings(): Menu {
+    const spec = OPTIONS.shift;
+    const menu = new Menu({ title: 'Inställningar', key: 'KeyO', keyWhen: () => this.ctx.flow.live });
+    const row = menu.choice('shift', {
+      label: spec.label, hint: spec.hint, value: this.setup.options.shift,
+      choices: spec.choices.map((c) => ({ value: c.value, label: c.label })),
+      onChange: (v) => this.setup.set('shift', v as typeof spec.default),
+    });
+    const who = menu.text('who', { text: '', tone: 'muted' });
+    menu.button('done', { text: 'Klar', tone: 'go', onClick: () => menu.close() });
+    const sync = () => {
+      const lead = this.setup.leader, name = lead ? this.name(lead) : '';
+      row.update({ value: this.setup.options.shift, readOnly: !this.setup.canEdit && !this.ctx.link.isHost });
+      who.update({ text: this.setup.canEdit || this.ctx.link.isHost ? 'Du bestämmer. Det gäller alla direkt.' : `${name} bestämmer.` });
+    };
+    menu.onOpen(sync);
+    this.setup.onChange(() => {
+      sync();
+      const v = this.setup.options.shift, c = spec.choices.find((x) => x.value === v);
+      if (this.ctx.flow.live && this.shiftShown !== v) this.hud.feed(`Tvingad förvandling: <b>${c?.label ?? 'Av'}</b>`);
+      this.shiftShown = v;
+    });
+    return menu;
+  }
+  private shiftShown = 0;
+
   onPlayers(_players: readonly LinkPlayer[], joined: readonly LinkPlayer[]) {
     for (const p of joined) this.hud.feed(`<b>${esc(p.name)}</b> kom in`);
   }
 
   update(dt: number, t: number) {
+    this.setup.update();
     this.core.update(dt);
     this.cues();
     this.draw(dt, t);
   }
 
   dispose() {
+    this.settingsMenu.dispose();
     this.core.dispose();
     this.hud.dispose();
     this.vfx.dispose();
@@ -278,9 +316,19 @@ export class Shooter implements GameStage {
           this.sfx.at3d(SOUNDS.poff, p.body.x, p.body.y + h * 0.5, p.body.z, { vol: mine ? 1 : 0.8 });
           const rig = this.rigs.get(c.pid);
           if (rig) this.ctx.tween.from(rig.av.char.root.scale, { x: 0.35, y: 1.6, z: 0.35 }, { time: 0.32, ease: 'outBack' });
-          if (mine && c.to >= 0) this.hud.center(`Du är en <b>${FORMS[c.to].name}</b>`);
+          if (mine && this.forcedNow) this.hud.center(`Poff! Du blev en <b>${FORMS[c.to].name}</b> av dig själv. <small>Passa in!</small>`);
+          else if (mine && c.to >= 0) this.hud.center(`Du är en <b>${FORMS[c.to].name}</b>`);
+          if (mine) this.forcedNow = false;
           break;
         }
+        case 'forced':
+          // The forced shift (settings): the poff comes right after, with its own message.
+          if (mine) {
+            this.forcedNow = true;
+            this.sfx.play(SOUNDS.cuckoo, { vol: 0.7 });
+          }
+          if (p) this.sfx.at3d(SOUNDS.tauntGiggle, p.body.x, p.body.y + 0.3, p.body.z, { vol: mine ? 0.6 : 0.9, near: 4, reach: 14 });
+          break;
         case 'lock': {
           const rig = this.rigs.get(c.pid);
           if (mine) {

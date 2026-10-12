@@ -80,6 +80,8 @@ export class Bot {
   private lastHits = 0;
   private hidT = 0;
   private nearT = 0;
+  /** The form it last saw itself in: a change it didn't ask for is the forced shift (settings.ts). */
+  private seenForm = -1;
 
   /** `skill` scales reaction, aim, turning and nerve (0.7 sloppy .. 1.2 sharp). */
   constructor(private readonly rand: Rng, readonly skill: number, w: World) {
@@ -256,6 +258,11 @@ export class Bot {
       if (me.locked) o.lock = true;
       this.plan = null;
     }
+    if (me.form !== this.seenForm) {
+      // Forced into something else: keep it, and find a spot where it fits in.
+      if (this.plan && me.form >= 0 && me.form !== this.plan.f) this.plan = this.choose(me, w, me.form);
+      this.seenForm = me.form;
+    }
     if (!this.plan) this.plan = this.choose(me, w);
     const p = this.plan;
     const d = Math.hypot(p.x - b.x, p.z - b.z);
@@ -304,10 +311,12 @@ export class Bot {
    * A hiding plan: a form a real thing on the floor has, and a spot beside one of them. Now and
    * then (a sloppier vätte more often) a spot in the open instead, the mistake kusiner live for.
    */
-  private choose(me: Pawn, w: World): { f: number; x: number; z: number; y?: number } {
+  private choose(me: Pawn, w: World, kind?: number): { f: number; x: number; z: number; y?: number } {
     // A kind first (six chairs mustn't make everyone a chair), then one of that kind to stand by.
     const floor = REAL_THINGS.filter((th) => th.f >= 0 && th.y < 0.05);   // on a floor or the lawn
-    const kinds = [...new Set(floor.map((th) => th.f))];
+    const kinds = kind === undefined ? [...new Set(floor.map((th) => th.f))] : [kind];
+    // Forced into a kind nothing on the floor is: stay put and hope (it can't change back on its own).
+    if (kind !== undefined && !floor.some((th) => th.f === kind)) return { f: kind, x: me.body.x, z: me.body.z };
     const open = this.rand() < 0.15 / this.skill;
     for (let tries = 0; tries < 24; tries++) {
       const f = kinds[Math.floor(this.rand() * kinds.length)];
@@ -323,6 +332,8 @@ export class Bot {
       if (!this.follow.goTo(me.body, x, th.y, z)) continue;
       return { f: th.f, x, z, y: th.y };
     }
+    // Forced and nowhere good: stay as it is, where it is.
+    if (kind !== undefined) return { f: kind, x: me.body.x, z: me.body.z };
     // Nowhere good: be a cup in the corner by the door. (It happens.)
     return { f: 0, x: 4.0 + this.rand() * 0.6, z: 4.6 };
   }

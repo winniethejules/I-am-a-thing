@@ -20,6 +20,7 @@ import {
 } from '@voxelparty/sdk/core';
 import { Bot, IDLE, NO_FORM, type Intent } from './bot';
 import { Arena, DEATH_Y } from './map';
+import type { MatchRules } from './settings';
 import { FIRE_MS, FireRate, Match, RANGE, SPREAD, isEv, isSnap, type Ev, type Phase, type Role, type Snap } from './rules';
 import { FORMS, KUSIN_MOVE, REAL_THINGS, VATTE, formBox, formHp, moveOf } from './things';
 
@@ -43,6 +44,8 @@ export type Cue =
   | { k: 'wrong'; a: string; t: number; hp: number }
   | { k: 'frag'; v: string; a: string }
   | { k: 'poff'; pid: string; from: number; to: number }
+  /** The match's setting turned a vätte into something new, whether it liked it or not. */
+  | { k: 'forced'; pid: string; to: number }
   | { k: 'lock'; pid: string; on: boolean }
   | { k: 'taunt'; pid: string }
   | { k: 'role'; pid: string; r: Role }
@@ -80,6 +83,8 @@ export class Pawn {
   /** A vätte locked still (it can look round, not move). */
   locked = false;
   tauntCool = 0;
+  /** When it last changed form (link ms, this client's own bodies only): the forced shift counts from here. */
+  formAt = 0;
   /** When it last taunted (ms, this client's clock): a kusin within earshot hears where. */
   tauntAt = -Infinity;
   /** This frame's step-ups and landing speed, for the camera. */
@@ -142,6 +147,8 @@ export class Core implements World {
     private readonly frame: GameFrame,
     /** This player's intent for the frame (game.ts reads the mouse and keys); null: your CPU plays for you (autopilot). */
     private readonly intent: () => Intent | null,
+    /** The match's settings (settings.ts), as the leader set them. */
+    private readonly rules: () => MatchRules = () => ({ shift: 0 }),
   ) {
     this.seats = new Seats(link);
     this.moves = new PlayerSync<Net, Shot>(link, { angles: ['yw'] });
@@ -297,6 +304,14 @@ export class Core implements World {
     // While the vättar hide, the kusiner wait in the hall with their eyes shut: they can look about, not move or shoot.
     const waiting = kusin && this.match.phase === 'hide';
     p.tauntCool -= dt;
+    if (!kusin && this.shiftDue(p)) {
+      // Forced: something new, at random, wherever it stands. Now it has to fit in.
+      const to = this.randomForm(p);
+      if (this.fits(p, to)) {
+        it.become = to;
+        this.cues.push({ k: 'forced', pid: p.pid, to });
+      }
+    }
     if (!kusin) this.hide(p, i, it);
     // A locked vätte stays exactly as it is: the look is the camera's (game.ts), not the body's.
     if (!p.locked) turn(b, it.dyaw, it.dpitch);
@@ -323,11 +338,26 @@ export class Core implements World {
     }
   }
 
+  /** The forced shift (settings.ts): this vätte has been the same thing for as long as the match allows. */
+  private shiftDue(p: Pawn) {
+    const shift = this.rules().shift;
+    const playing = this.match.phase === 'hide' || this.match.phase === 'seek';
+    return shift > 0 && playing && p.alive && this.now - p.formAt >= shift * 1000;
+  }
+
+  /** Any form but the one it has: a vätte forced to change gets something new. */
+  private randomForm(p: Pawn) {
+    let f = Math.floor(p.rand() * FORMS.length);
+    if (f === p.form) f = (f + 1) % FORMS.length;
+    return f;
+  }
+
   /** A vätte's own moves: become a thing, lock or unlock, taunt. */
   private hide(p: Pawn, i: number, it: Intent) {
     if (it.become !== NO_FORM && it.become !== p.form && this.fits(p, it.become)) {
       this.cues.push({ k: 'poff', pid: p.pid, from: p.form, to: it.become });
       p.form = it.become;
+      p.formAt = this.now;
       p.locked = false;
     }
     if (it.lock && (p.locked || p.body.ground)) {
@@ -390,7 +420,7 @@ export class Core implements World {
       p.life = e.l;
       if (p.own) {
         Object.assign(p.body, newFpsBody(s.x, s.y, s.z, s.yaw));
-        Object.assign(p, { alive: true, cool: 0, form: VATTE, locked: false });
+        Object.assign(p, { alive: true, cool: 0, form: VATTE, locked: false, formAt: this.now });
       }
       this.cues.push({ k: 'spawn', pid: e.pid });
     }
