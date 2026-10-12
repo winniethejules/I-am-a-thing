@@ -8,10 +8,12 @@ export const GROUND = -0.5;
 export const FENCE = { x0: -13.5, x1: 17, z0: -10.25, z1: 19.25 };
 /** The birches: [x, z, height]. */
 export const BIRCHES: [number, number, number][] = [
-  [-1.5, -6, 6], [8.5, -8, 7], [11, -5, 5.5], [-6, -7.5, 6.5],
+  [-1.5, -6, 6], [8.5, -8, 7], [14.2, -8.4, 5.5], [-6, -7.5, 6.5],   // (none on the kubb pitch)
   [-10, 15, 6], [13, 16, 7], [-12, 4, 6.5], [14, 8, 5.5], [-9.5, 10, 7],
 ];
 export const LINE_POSTS: number[] = [0.75, 5.25];
+/** The stone step outside the front door. */
+export const FRONT_STEP: [number, number, number, number, number, number] = [2, GROUND, 10.25, 4, GROUND + 0.25, 10.75];
 
 export const GARDEN_SOLIDS: [number, number, number, number, number, number][] = [
   // The fences all round (the gates at the paths are shut).

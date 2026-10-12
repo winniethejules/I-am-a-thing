@@ -4,7 +4,7 @@
  * CPUs' paths come from it. `gridText(arena)` prints it back as text, for tests and stuck bots.
  */
 import { NavGrid, VoxelGrid } from '@voxelparty/sdk/core';
-import { CELLAR_BOXES } from './cellar';
+import { CELLAR_BOXES, MOUND } from './cellar';
 import { GARDEN_SOLIDS, GROUND } from './garden';
 import { HOUSE } from './house';
 import { ALL_PROPS, SPAWNS } from './props';
@@ -43,7 +43,8 @@ export class Arena extends VoxelGrid {
     // The ground everywhere, under the garden and the house; then the garden's fences and trunks.
     this.fill(GX0, GY0, GZ0, GX0 + NX * CELL, GROUND, GZ0 + NZ * CELL, M.WALL);
     for (const b of GARDEN_SOLIDS) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);
-    // The root cellar, dug into the ground: its vault and trench carved, its walls and steps solid.
+    // The root cellar's grassy mound (climbable, a quarter metre a step), then the cellar dug into the ground: its vault and trench carved, its walls and steps solid.
+    for (const b of MOUND) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);
     for (const { b, m, solid } of CELLAR_BOXES) {
       if (m === 'AIR') this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.AIR);
       else if (solid !== false) this.fill(b[0], b[1], b[2], b[3], b[4], b[5], M.WALL);

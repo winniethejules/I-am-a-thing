@@ -6,7 +6,7 @@
  * (sin yaw, cos yaw): 0 south, π north, π/2 east, −π/2 west. A wall piece's yaw points it into the room.
  */
 import { CELLAR } from './cellar';
-import { GROUND } from './garden';
+import { FRONT_STEP, GROUND } from './garden';
 import { SILL } from './house';
 import { KITCHEN_PROPS, type Placed } from './kitchen';
 
@@ -18,7 +18,9 @@ const t = (key: Placed['key'], x: number, y: number, z: number, yaw: number, mor
 const f = (key: Placed['key'], x: number, y: number, z: number, yaw: number) => p(key, x, y, z, yaw, { solid: true });
 
 /** Heights of the things other things stand on. */
-const COFFEE_TABLE = 0.5, SIDE_TABLE = 0.6875, TV_TOP = 0.8125, NIGHTSTAND = 0.625, ARMCHAIR_SEAT = 0.44, WORK_TABLE = 0.8125, CHEST = 0.6875;
+// Measured from the models (bun qa/placering.ts --col x z lists every surface in a column).
+const COFFEE_TABLE = 0.5, SIDE_TABLE = 0.6875, TV_TOP = 0.8203125, NIGHTSTAND = 0.625, ARMCHAIR_SEAT = 0.44, WORK_TABLE = 0.75, CHEST = 0.625;
+const DRESSER = 0.90625, WARDROBE = 0.21875 + 2, IRONING = 0.90625, BASIN = 0.75, PHONE_TABLE = 0.75, PHONE_SEAT = 0.5, BENCH = 0.53125, STOOL = 0.4375, TOWEL = 0.15, BOLT = 0.3125;
 
 /** Vardagsrummet: the kakelugn in the corner, the best sofa, armchairs round the coffee table, the TV under the cuckoo clock. */
 export const LIVING_PROPS: Placed[] = [
@@ -52,13 +54,12 @@ export const LIVING_PROPS: Placed[] = [
   t('biscuits', -5.35, COFFEE_TABLE, 2.65, 0.3),
   t('bookStack', -4.95, 0, 4.55, 0.2),
   t('bookStack', -1.3, 0, 3.05, 1.1),
-  t('bookStack', -6.4, 0, 4.6, 2.6),
+  t('bookStack', -6.3, 0, 4.4, 1.6),
   t('dalahorse', -5.45, SILL, 0.07, 0.2),
-  t('dalahorse', -1.35, 0, 1.45, 1.9),
   t('dalahorse', -5.6, 2.0, 4.85, N),
   t('dalahorse', -5.55, COFFEE_TABLE, 2.35, E + 0.3),
   t('dalahorseBlue', -2.55, SILL, 0.07, -0.3),
-  t('dalahorseBlue', -3.0, 0, 4.4, 2.4),
+  t('dalahorseBlue', -6.2, 2.0, 4.85, N - 0.3),   // the pair on top of the bookcase
   t('geranium', -5.8, SILL, 0.07, 0.4),
   t('geranium', -5.1, SILL, 0.08, 1.7),
   t('geranium', -2.9, SILL, 0.07, 2.6),
@@ -77,13 +78,12 @@ export const HALL_PROPS: Placed[] = [
   p('laceCurtains', 10, SILL, 6.3125, W),
   t('hat', 0.1, 1.875, 5.45, 0.3),
   t('hat', 0.9, 1.875, 5.45, 2.0),
-  t('phone', 0.9, 0.75, 7.25, N),
-  t('stool', -6.5, 0, 5.7, 0.4),
-  t('hat', -6.5, 0.4375, 5.7, 1.1),
+  t('phone', 1.55, PHONE_TABLE, 7.3, N),
+  t('bookStack', 0.95, PHONE_SEAT, 7.25, 0.15),   // the phone books, on the telephone bench's seat
+  t('stool', -5.95, 0, 5.62, 0.4),
+  t('handbag', -5.95, STOOL, 5.62, 1.1),
   t('boots', 8.9, 0, 5.62, 0.2),
   t('umbrella', 9.75, 0, 7.25, 0),
-  t('handbag', -6.75, 0, 7.2, 0.5),
-  t('bookStack', 9.6, 0, 5.6, 0.8),
   t('moraClock', -2.0, 0, 7.3, N, { solid: true }),
   f('hallBench', 6.5, 0, 5.47, 0),
   t('plantStand', 4.2, 0, 5.5, 0.3),
@@ -91,17 +91,15 @@ export const HALL_PROPS: Placed[] = [
   t('shoes', 5.6, 0, 7.2, 0.3),
   t('handbag', 6.9, 0.53, 5.5, 0.2),
   t('umbrella', 9.2, 0, 6.8, 0.1),
-  t('shoes', 7.6, 0, 7.05, 0.3),
+  t('shoes', 4.95, 0, 7.2, 0.3),
   t('plantStand', 8.4, 0, 6.9, 0.6, { solid: true }),
-  t('hat', -3.6, 0, 6.9, 1.0),
+  t('hat', 6.05, BENCH, 5.48, 1.0),
 ];
 
 /** Farstun: the front door (closed: the kusiner start here), the mat, shoes, boots, umbrellas, coats on hooks. */
 export const ENTRY_PROPS: Placed[] = [
   p('frontDoor', 3.0, 0, 10, N),
   p('frontDoor', 3.0, 0, 10.25, 0),   // the same door seen from the front path
-  p('lantern', 3.85, 1.55, 10.4, 0),   // the porch lantern, lit for the guests
-  p('lanternGlow', 3.85, 1.55, 10.4, 0),
   p('doormat', 3.0, 0, 9.55, 0),
   f('shoeRack', 1.92, 0, 8.9, E),
   p('hatRack', 4.25, 0.75, 8.9, W),
@@ -110,11 +108,11 @@ export const ENTRY_PROPS: Placed[] = [
   p('globeGlow', 3.0, 2.5, 8.9, 0),
   t('umbrella', 3.95, 0.05, 9.7, 0.4),
   t('boots', 2.05, 0, 9.72, 0.1),
-  t('boots', 3.75, 0, 8.1, 1.4),
-  t('stool', 2.35, 0, 8.05, 0.9),
-  t('hat', 2.35, 0.4375, 8.05, 0.2),
+  t('boots', 3.7, 0, 9.3, 1.4),
+  t('stool', 3.95, 0, 8.55, 0.9),
+  t('hat', 3.95, STOOL, 8.55, 0.2),
   t('handbag', 2.0, 0.375, 8.45, E),
-  t('shoes', 2.1, 0, 7.95, 0.2),
+  t('shoes', 1.92, 0.375, 9.05, E),   // on the shoe rack
   t('shoes', 3.3, 0, 9.6, 2.9),
   t('plantStand', 1.95, 0, 9.45, 0.4, { solid: true }),
   t('boots', 3.95, 0, 9.0, 2.2),
@@ -130,19 +128,16 @@ export const BATH_PROPS: Placed[] = [
   p('bathMat', -0.5, 0, 9.4, E),
   p('globeLamp', 0, 2.5, 9.1, 0),
   p('globeGlow', 0, 2.5, 9.1, 0),
-  t('foldedTowel', -0.7, 0, 10.25, 0.1),
-  t('foldedTowel', 0.35, 0, 7.97, 0),
   t('stool', 0.3, 0, 10.2, 0.6),
-  t('foldedTowel', 0.3, 0.4375, 10.2, 0.6),
-  t('soapDish', 1.22, 0.84, 8.2, W),
+  ...[0, 1, 2].map((n) => t('foldedTowel', 0.3, STOOL + n * TOWEL, 10.2, 0.6 + n * 0.15)),
+  t('soapDish', 1.3, BASIN + 0.1, 8.17, W),   // on the basin's rim
   t('duck', -1.35, 0.44, 9.0, 0.7),
   t('duck', 0, 1.25, 10.42, N + 0.4),
   t('laundryBasket', -1.45, 0, 8.05, 0),
   t('rollDoll', 1.3, 0, 10.25, W),
   t('chamberPot', -0.05, 0, 10.25, 0.5),
   t('scale', 0.75, 0, 9.95, W + 0.3),
-  t('duck', -0.6, 0.44, 9.2, 2.0),
-  t('foldedTowel', -0.3, 0.44, 8.2, 0.8),
+  t('duck', -1.45, 0.47, 9.85, 2.0),
 ];
 
 /** Sovrummet: the bed against the east wall between two nightstands, the dresser, the wardrobe with hat boxes on top. */
@@ -164,15 +159,16 @@ export const BEDROOM_PROPS: Placed[] = [
   t('dresser', -6.75, 0, 11.6, E, { solid: true }),
   t('alarmClock', -2.25, NIGHTSTAND, 8.95, W + 0.3),
   t('teeth', -2.3, NIGHTSTAND, 10.9, 0),
-  t('pillow', -2.5, 0.47, 9.68, W),
-  t('pillow', -2.5, 0.47, 10.32, W),
-  t('pillow', -6.55, 0, 9.4, 0.4),
-  t('pillow', -4.3, 0, 12.15, 2.9),
-  t('hatbox', -6.3, 2.25, 8.07, 0.3),
-  t('hatbox', -5.7, 2.25, 8.07, 1.2),
+  t('pillow', -2.5, 0.48, 9.68, W),
+  t('pillow', -2.5, 0.48, 10.32, W),
+  t('pillow', -6.55, STOOL, 10.4, 0.4),
+  t('hatbox', -6.3, WARDROBE, 8.07, 0.3),
+  t('hatbox', -5.7, WARDROBE, 8.07, 1.2),
   t('hatbox', -4.95, 0, 8.0, 0.5),
-  t('slippers', -4.25, 0, 9.2, W),
-  t('slippers', -4.3, 0, 10.85, W + 0.4),
+  t('slippers', -2.9, 0, 9.1, N + 0.2),   // either side of the bed, ready to step into
+  t('slippers', -2.9, 0, 10.9, 0.1),
+  t('doily', -6.75, DRESSER, 11.6, E),
+  t('dalahorse', -6.7, DRESSER, 11.35, E + 0.4),
   t('stool', -6.55, 0, 10.4, 0.8),
   t('geranium', -5.4, SILL, 12.43, 0.6),
   t('geranium', -3.0, SILL, 12.43, 2.2),
@@ -193,38 +189,40 @@ export const SEWING_PROPS: Placed[] = [
   t('chest', 4.8, 0, 9.0, E, { solid: true }),
   t('chest', 9.45, 0, 12.2, N, { solid: true }),
   t('dressForm', 5.2, 0, 11.0, E + 0.4),
-  t('iron', 9.5, 0.94, 8.3, E),
-  t('iron', 8.6, 0, 12.15, 2.4),
-  t('fabricBolt', 6.0, 0, 8.2, 0),
-  t('fabricBolt', 6.0, 0.3125, 8.22, 0.1),
-  t('fabricBolt', 8.6, 0, 11.2, 0.5),
-  t('fabricBolt', 7.0, WORK_TABLE, 10.25, 0.2),
-  t('yarnRed', 7.3, 0, 11.55, 0.3),
+  t('stool', 5.9, 0, 11.6, 0.3),   // at the sewing machine
+  t('iron', 9.5, IRONING, 8.3, E),
+  t('iron', 4.8, CHEST, 9.0, E + 0.2),   // on the chest, between the yarn
+  t('fabricBolt', 5.15, 0, 8.2, 0),
+  t('fabricBolt', 5.15, BOLT, 8.22, 0.1),
+  t('fabricBolt', 7.0, WORK_TABLE, 10.2, 0.05),
+  t('fabricBolt', 7.0, WORK_TABLE + BOLT, 10.22, -0.08),
+  t('yarnRed', 7.4, 0, 11.7, 0.3),
   t('yarnRed', 7.75, WORK_TABLE, 9.75, 2.0),
-  t('yarnRed', 9.6, 0, 10.9, 1.2),
-  t('yarnBlue', 8.0, 0, 9.05, 0.8),
-  t('yarnBlue', 6.4, WORK_TABLE, 9.7, 0.1),
-  t('yarnBlue', 5.6, 0, 12.15, 2.6),
-  t('yarnYellow', 5.3, 0, 9.95, 1.7),
-  t('yarnYellow', 4.85, CHEST, 9.25, 0.4),
-  t('yarnYellow', 8.15, 0, 12.2, 0.9),
-  t('sewingTin', 9.4, CHEST, 12.2, 0.3),
-  t('sewingTin', 5.6, 0, 8.05, 1.0),
+  t('yarnBlue', 4.75, CHEST - 0.045, 8.75, 0.8),
+  t('yarnBlue', 6.8, WORK_TABLE + 1 / 32, 9.8, 0.1),   // on the cutting mat
+  t('yarnBlue', 6.95, 0.3, 12.1, 2.6),   // on top of the full basket
+  t('yarnYellow', 6.55, 0, 11.7, 1.7),
+  t('yarnYellow', 4.85, CHEST - 0.045, 9.25, 0.4),
+  t('yarnYellow', 7.4, 0, 12.15, 0.9),
+  t('sewingTin', 9.25, CHEST, 12.2, 0.3),
+  t('sewingTin', 7.45, WORK_TABLE, 9.85, 1.0),
   t('geranium', 9.88, SILL, 9.9, 0.5),
 ];
 
 const G = GROUND;
 /** Trädgården: the patio north of the living room, gnomes, pots along the walls, the woodpile, kubb on the lawn, the currant bushes. */
 export const GARDEN_PROPS: Placed[] = [
+  p('lantern', 3.75, FRONT_STEP[4], 10.5, 0),   // the porch lantern on the front step, lit for the guests
+  p('lanternGlow', 3.75, FRONT_STEP[4], 10.5, 0),
   f('gardenTable', -4.0, G, -2.5, 0),
   f('woodpile', -7.55, G, 2.5, W),
   f('birdBath', 2.0, G, -6.0, 0),
-  ...[[-11, -4], [-9.5, -5.6], [14, -2], [14.6, 0.6], [-11.5, 13], [15, 12]].map(([x, z]) => f('currantBush', x, G, z, x)),
+  ...[[-11, -4], [-12.4, -6.6], [14, -2], [14.6, 0.6], [-11.5, 13], [15, 12]].map(([x, z]) => f('currantBush', x, G, z, x)),
   p('rake', -7.45, G, 4.2, W),
   t('gardenChair', -4.9, G, -2.3, E, { solid: true }),
   t('gardenChair', -3.1, G, -2.7, W, { solid: true }),
   t('gardenChair', -4.0, G, -1.55, N, { solid: true }),
-  t('wheelbarrow', 9.5, G, -3.0, 0.6, { solid: true }),
+  t('wheelbarrow', -9.6, G, 3.6, 0.3, { solid: true }),
   t('rainBarrel', 8.65, G, 3.0, 0.2, { solid: true }),
   ...[[-1.0, -1.0, 2.6], [1.8, -2.2, 0.4], [6.8, -1.5, -0.5], [-8.6, -3.0, 1.2], [12, -6, 2.0], [4.6, 14.5, 3.6], [-6.0, 13.6, 2.8]].map(([x, z, yaw]) => t('gnome', x, G, z, yaw)),
   t('wateringCan', 0.3, G, -0.85, 0.3),
@@ -237,7 +235,11 @@ export const GARDEN_PROPS: Placed[] = [
   t('flowerPotYellow', 2.1, G, 11.0, 0.4),
   t('flowerPotRed', 3.9, G, 11.0, 1.5),
   t('flowerPotRed', -7.7, G, 7.4, 0.9),
-  ...[[-8.4, 1.2], [-8.6, 3.9], [-9.0, 2.6], [-8.2, 0.4], [-8.8, 4.6], [-9.3, 1.8], [-8.0, 3.3], [-9.6, 3.2]].map(([x, z], i) => t('log', x, G, z, i * 0.9)),
+  // Split logs: a neat row by the woodpile's north end, three more by its south end waiting to be stacked.
+  ...[-8.2, -8.52, -8.84, -9.16, -9.48].map((x, i) => t('log', x, G, 1.2, i * 0.04)),
+  t('log', -8.3, G, 4.05, 1.45),
+  t('log', -8.7, G, 3.75, 1.25),
+  t('log', -8.5, G + 0.2, 3.9, 1.35),
   ...[9.5, 10.25, 11, 11.75, 12.5].flatMap((x) => [t('kubb', x, G, -7.5, 0), t('kubb', x, G, -3.2, 0.1)]),
   t('kubbKing', 11, G, -5.35, 0.3),
 ];
@@ -246,14 +248,15 @@ const C = CELLAR.y0;
 /** Jordkällaren: a low shelf of jam and saft, apple crates, potato sacks, a lantern on a crate. */
 export const CELLAR_PROPS: Placed[] = [
   f('cellarShelf', -9.75, C, -8.55, 0),
-  ...[-10.15, -9.9, -9.65].map((x, i): Placed => t('jarLingon', x, C + 0.5625, -8.55, i)),
-  ...[-9.4, -9.15].map((x, i): Placed => t('jarBlueberry', x, C + 0.5625, -8.55, i + 1)),
+  ...[-10.08, -9.84].map((x, i): Placed => t('jarLingon', x, C + 0.5625, -8.55, i)),
+  ...[-9.6, -9.36].map((x, i): Placed => t('jarBlueberry', x, C + 0.5625, -8.55, i + 1)),
+  t('jarLingon', -9.9, C + 0.125, -8.55, 2),   // the bottom shelf
   ...[-10.15, -9.95, -9.75, -9.55].map((x, i): Placed => t('juiceBottle', x, C + 1.0, -8.55, i * 0.7)),
   t('appleCrate', -10.6, C, -6.3, 0.2),
-  t('appleCrate', -10.6, C + 0.375, -6.3, -0.1),
+  t('appleCrate', -10.6, C + 0.34, -6.3, -0.1),
   t('appleCrate', -8.9, C, -7.6, W),
-  t('lantern', -8.9, C + 0.375, -7.6, 0.4),
-  p('lanternGlow', -8.9, C + 0.375, -7.6, 0.4),
+  t('lantern', -9.05, C, -6.95, 0.4),   // set down on the floor inside the door
+  p('lanternGlow', -9.05, C, -6.95, 0.4),
   t('potatoSack', -10.55, C, -7.6, 0.6),
   t('potatoSack', -8.85, C, -6.55, 2.0),
   t('milkCan', -10.7, C, -8.3, 0.3),

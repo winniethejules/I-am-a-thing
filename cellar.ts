@@ -47,3 +47,20 @@ function shell(): HouseBox[] {
 }
 
 export const CELLAR_BOXES: readonly HouseBox[] = shell();
+
+/**
+ * The grassy mound over the vault, in quarter-metre columns that rise in quarter-metre steps (so you
+ * can climb it): drawn as lawn (scene.ts) and bumped into (map.ts). Open over the trench.
+ */
+function mound(): [number, number, number, number, number, number][] {
+  const c = CELLAR, t = TRENCH, out: [number, number, number, number, number, number][] = [];
+  for (let x = c.x0 - 0.5; x < c.x1 + 0.5; x += 0.25) for (let z = c.z0 - 0.5; z < c.z1; z += 0.25) {
+    const dx = (x + 0.125 - (c.x0 + c.x1) / 2) / 1.9, dz = (z + 0.125 - (c.z0 + c.z1) / 2) / 2.1, d = dx * dx + dz * dz;
+    const h = Math.round((1 - d) * 5) * 0.25;
+    if (d >= 1 || h <= 0) continue;
+    if (x >= t.x0 - 0.25 && x < t.x1 + 0.25 && z >= c.z1 - 0.25) continue;   // the trench's mouth
+    out.push([x, GROUND, z, x + 0.25, GROUND + h, z + 0.25]);
+  }
+  return out;
+}
+export const MOUND = mound();

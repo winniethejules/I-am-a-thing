@@ -9,8 +9,8 @@ import {
   type ArenaStage, type BlockLight, type GameContext,
 } from '@voxelparty/sdk';
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
-import { CELLAR, CELLAR_AT, CELLAR_BOXES, CELLAR_SIZE, CV, TRENCH } from './cellar';
-import { BIRCHES, FENCE, LINE_POSTS } from './garden';
+import { CELLAR, CELLAR_AT, CELLAR_BOXES, CELLAR_SIZE, CV, MOUND, TRENCH } from './cellar';
+import { BIRCHES, FENCE, FRONT_STEP, LINE_POSTS } from './garden';
 import { Misse, Mormor } from './walkers';
 import { HOUSE_AT, HOUSE_SIZE, HV, ROOMS, WINDOW_LIST, stampHouse, type Mat } from './house';
 import { STAGED, type Placed } from './kitchen';
@@ -122,8 +122,8 @@ export class KitchenScene {
     L.add({ ...L.cell(-4.5, 1.8, 10.1), color: '#ffcf8a', reach: 36, strength: 0.6, group: 1 });        // the bedroom's lamp
     L.add({ ...L.cell(-2.25, 0.85, 11.17), color: '#ffcf8a', reach: 16, strength: 0.6, group: 1 });     // the bedside lamp
     L.add({ ...L.cell(7.2, 1.8, 10.1), color: '#ffe2b0', reach: 38, strength: 0.7, group: 1 });         // the sewing room's lamp
-    L.add({ ...L.cell(-8.9, -1.55, -7.6), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });      // the root cellar's lantern
-    L.add({ ...L.cell(3.85, 1.75, 10.6), color: '#ffc070', reach: 30, strength: 0.9, group: 1 });       // the porch lantern by the front door
+    L.add({ ...L.cell(-9.05, -1.95, -6.95), color: '#ffc070', reach: 30, strength: 0.95, group: 1 });      // the root cellar's lantern
+    L.add({ ...L.cell(3.75, 0.05, 10.5), color: '#ffc070', reach: 30, strength: 0.9, group: 1 });       // the porch lantern by the front door
     for (const [i, w] of WINDOW_LIST.entries()) {
       const mid = (w.a0 + w.a1) / 2, inside = w.out < 0 ? w.at + 0.6 : w.at - 0.35;
       const [x, z] = w.along === 'x' ? [mid, inside] : [inside, mid];
@@ -203,10 +203,7 @@ export class KitchenScene {
     fill(2.5, -0.25, FENCE.z1, 3.5, 0.25, FENCE.z1 + 0.25, k.WHITE);
     this.buildRoof(fill);
     // Jordkällarens kulle: a grassy mound over the vault, the trench of steps cut open in front.
-    for (let x = CELLAR.x0 - 0.5; x < CELLAR.x1 + 0.5; x += 0.25) for (let z = CELLAR.z0 - 0.5; z < CELLAR.z1; z += 0.25) {
-      const dx = (x + 0.125 - (CELLAR.x0 + CELLAR.x1) / 2) / 1.9, dz = (z + 0.125 - (CELLAR.z0 + CELLAR.z1) / 2) / 2.1, d = dx * dx + dz * dz;
-      if (d < 1) fill(x, -0.5, z, x + 0.25, -0.5 + Math.round((1 - d) * 5) * 0.25, z + 0.25, k.LAWN);
-    }
+    for (const b of MOUND) fill(...b, k.LAWN);
     fill(TRENCH.x0 - 0.25, -1, CELLAR.z1 - 0.25, TRENCH.x1 + 0.25, 3, TRENCH.z1, 0);
     fill(CELLAR.x0 - 0.25, -1, CELLAR.z0 - 0.25, CELLAR.x1 + 0.25, -0.5, CELLAR.z1 + 0.25, 0);   // no lawn inside the vault's roof
     // The washing line's posts.
@@ -227,7 +224,7 @@ export class KitchenScene {
     // the picket fence with a gate, the mailbox and the bus stop where the kusiner got off.
     fill(2.5, -0.75, 10.25, 3.5, -0.5, 19, B.PATH);
     fill(-20, -0.75, 20, 26, -0.5, 22.5, B.PATH);
-    fill(2, -0.5, 10.25, 4, -0.25, 10.75, k.GREY);   // the front step
+    fill(...FRONT_STEP, k.GREY);   // the front step
     for (let x = -20; x < 26; x += 0.25) {
       if (x > -7.5 && x < 10.5 && rand() < 0.4) fill(x, -0.5, 12.75, x + 0.25, -0.25, 13, [B.FLOWER_RED, B.FLOWER_YELLOW, B.FLOWER_WHITE, B.TALL_GRASS][Math.floor(rand() * 4)]);
       if (x % 0.5 === 0 && x >= FENCE.x0 && x < FENCE.x1) fill(x, -0.5, FENCE.z1 - 0.25, x + 0.25, 0.5, FENCE.z1, k.FENCE);

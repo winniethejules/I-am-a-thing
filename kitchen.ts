@@ -33,7 +33,7 @@ export interface Placed {
 
 const N = Math.PI, E = Math.PI / 2, W = -Math.PI / 2;
 /** The table top, and the cloth on it. */
-export const TABLE_Y = 0.75, CLOTH_Y = TABLE_Y + 1 / 16;
+export const TABLE_Y = 0.75, CLOTH_Y = TABLE_Y + 1 / 32;
 
 export const KITCHEN_PROPS: Placed[] = [
   // Furniture.
@@ -58,20 +58,20 @@ export const KITCHEN_PROPS: Placed[] = [
   { key: 'ragRug', x: 4.75, y: 0, z: 1.65, yaw: 0 },
   // The story: what you can read and what's been left lying.
   { key: 'sampler', x: 6, y: 1.66, z: 3.2, yaw: W },
-  { key: 'note', x: 5.18, y: 1.06, z: 3.4, yaw: W },
+  { key: 'note', x: 5.115, y: 1.06, z: 3.4, yaw: W },   // on the fridge door (its front is at x 5.125)
   { key: 'clock', x: 4.85, y: 1.6, z: 5, yaw: N },
   { key: 'crossword', x: 2.75, y: CLOTH_Y, z: 1.62, yaw: 0.35 },
   // Things a vätte can become.
-  { key: 'cup', x: 2.48, y: CLOTH_Y, z: 1.32, yaw: 0.4, thing: true },
+  { key: 'cup', x: 2.53, y: CLOTH_Y, z: 1.36, yaw: 0.4, thing: true },
   { key: 'cup', x: 3.52, y: CLOTH_Y, z: 1.3, yaw: -0.3, thing: true },
   { key: 'cup', x: 3.5, y: CLOTH_Y, z: 1.8, yaw: 2.6, thing: true },
   { key: 'cup', x: 2.45, y: CLOTH_Y, z: 1.82, yaw: 3.4, thing: true },
   { key: 'biscuits', x: 3.15, y: CLOTH_Y, z: 1.55, yaw: 0.2, thing: true },
-  { key: 'coffeePot', x: 0.46, y: 0.875, z: 2.25, yaw: E, thing: true },
-  { key: 'breadBasket', x: 5.45, y: 0.875, z: 1.0, yaw: W + 0.2, thing: true },
+  { key: 'coffeePot', x: 0.46, y: 0.8125, z: 2.25, yaw: E, thing: true },   // on the stove top
+  { key: 'breadBasket', x: 5.2, y: 0.875, z: 1.0, yaw: W + 0.2, thing: true },   // on the worktop, clear of the splashback
   { key: 'coffeeGrinder', x: 5.55, y: 0.875, z: 1.47, yaw: W, thing: true },
   { key: 'milkCan', x: 4.95, y: 0, z: 4.35, yaw: 0.4, thing: true },
-  { key: 'logBasket', x: 0.4, y: 0, z: 2.85, yaw: E, thing: true },
+  { key: 'logBasket', x: 0.4, y: 0, z: 2.75, yaw: E, thing: true },
   { key: 'potholder', x: 0.9, y: 0.72, z: 1.72, yaw: E, thing: true },
   { key: 'potholder', x: 0.9, y: 0.72, z: 2.1, yaw: E, thing: true },
   { key: 'geranium', x: 1.55, y: SILL, z: 0.06, yaw: 0, thing: true },
@@ -91,21 +91,22 @@ export const PANTRY_PROPS: Placed[] = [
   ...[3.78, 4.05, 4.32, 4.6].map((z, i): Placed => ({ key: 'jarLingon', x: 7.8, y: SHELF_Y[1], z, yaw: i * 0.7, thing: true })),
   ...[3.85, 4.2, 4.55].map((z, i): Placed => ({ key: 'jarBlueberry', x: 7.8, y: SHELF_Y[2], z, yaw: i * 1.1, thing: true })),
   { key: 'jarLingon', x: 7.8, y: SHELF_Y[3], z: 4.0, yaw: 0.3, thing: true },
-  { key: 'jarLingon', x: 7.35, y: 0, z: 4.72, yaw: 0.9, thing: true },
-  { key: 'jarBlueberry', x: 7.18, y: 0, z: 4.55, yaw: 2.2, thing: true },
+  { key: 'jarLingon', x: 7.05, y: SHELF_Y[1], z: 3.66, yaw: 0.9, thing: true },
+  { key: 'jarBlueberry', x: 7.3, y: SHELF_Y[1], z: 3.66, yaw: 2.2, thing: true },
   { key: 'sack', x: 6.62, y: SHELF_Y[0], z: 3.68, yaw: 0, thing: true },
   { key: 'sack', x: 7.05, y: SHELF_Y[0], z: 3.68, yaw: 0, thing: true },
-  { key: 'sack', x: 6.62, y: 0, z: 4.68, yaw: 0.5, thing: true },
+  { key: 'sack', x: 6.62, y: SHELF_Y[1], z: 3.68, yaw: 0.2, thing: true },
   { key: 'tin', x: 6.65, y: SHELF_Y[2], z: 3.66, yaw: 0, thing: true },
   { key: 'tin', x: 7.25, y: SHELF_Y[2], z: 3.66, yaw: 0.6, thing: true },
   ...[3.72, 3.84, 3.96, 4.5, 4.62].map((z, i): Placed => ({ key: 'juiceBottle', x: 7.82, y: SHELF_Y[0], z, yaw: i, thing: true })),
-  { key: 'juiceBottle', x: 7.75, y: 0, z: 4.88, yaw: 0.5, thing: true },
-  { key: 'potatoSack', x: 7.6, y: 0, z: 3.85, yaw: 0.3, thing: true },
-  { key: 'potatoSack', x: 6.95, y: 0, z: 4.75, yaw: 1.9, thing: true },
-  { key: 'milkCan', x: 6.55, y: 0, z: 4.25, yaw: 1.0, thing: true },
+  { key: 'juiceBottle', x: 7.82, y: SHELF_Y[3], z: 4.4, yaw: 0.5, thing: true },
+  // On the floor along the south wall, out of the doorway: the sacks, the churn, the broom in the corner.
+  { key: 'potatoSack', x: 7.0, y: 0, z: 4.75, yaw: 1.9, thing: true },
+  { key: 'potatoSack', x: 7.2, y: 0, z: 4.38, yaw: 0.3, thing: true },
+  { key: 'milkCan', x: 7.4, y: 0, z: 4.78, yaw: 1.0, thing: true },
   { key: 'bulb', x: 7.0, y: 2.5, z: 4.35, yaw: 0 },
   { key: 'bulbGlow', x: 7.0, y: 2.5, z: 4.35, yaw: 0 },
-  { key: 'broom', x: 6.42, y: 0, z: 4.86, yaw: 0.4 },
+  { key: 'broom', x: 7.55, y: 0, z: 4.1, yaw: E },   // in the corner between the shelves
 ];
 KITCHEN_PROPS.push(...PANTRY_PROPS);
 
