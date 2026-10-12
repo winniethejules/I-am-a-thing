@@ -459,10 +459,32 @@ function laceCurtains(k: Ids) {
   return wall(v, H);
 }
 
+/** Mormor: a grey bun, round glasses, a red cardigan over a blue dress, a gingham apron, black shoes. Stands on her feet at the origin, facing +z. */
+function mormor(k: Ids) {
+  const v = new Volume(16, 36, 14), c = 8;
+  box(v, 4, 0, 5, 7, 2, 9, k.SOOT);                                     // shoes
+  box(v, 9, 0, 5, 12, 2, 9, k.SOOT);
+  lathe(v, c, 7, 2, 18, (y) => 4.1 + (y - 2) * 0.05, (x, y, z) => {
+    if (y > 5 && y < 14 && z > 9 && Math.abs(x + 0.5 - c) < 3) return k.GINGHAM;   // the apron
+    return k.ALLMOGE;
+  });
+  lathe(v, c, 7, 18, 25, (y) => 3.3 + (y - 18) * 0.06, k.KNIT_RED);      // the cardigan
+  for (const y of [20, 23]) dot(v, c, y, 9, k.WHITE);                      // two buttons down the front
+  box(v, 2, 18, 4, 4, 24, 10, k.KNIT_RED);                             // her arms, at the sides
+  box(v, 12, 18, 4, 14, 24, 10, k.KNIT_RED);
+  blob(v, c, 29, 7, 3, 3.4, 3, k.SKIN);                                  // the head
+  blob(v, c, 33, 6, 3.4, 2.4, 3.2, k.GREY);                              // the grey bun and hair
+  box(v, 4, 28, 3, 12, 31, 4, k.GREY);
+  for (const x of [5, 10]) dot(v, x, 29, 3, k.INK);                     // round glasses
+  dot(v, 7, 27, 3, k.ROSEPINK); dot(v, 8, 27, 3, k.ROSEPINK);                    // rosy cheeks
+  return prop(v, 1 / 20);
+}
+
+/** Misse: an orange tabby with a cream belly, ears up, a long tail that curls round her feet. */
 export const LIVING_MODELS = {
   kakelugn, cuckooClock, rockingChair, armchair, plasticSofa, coffeeTable, bookcase,
   dalahorse: (k: Ids) => dalahorse(k, k.ALLMOGE_RED), dalahorseBlue: (k: Ids) => dalahorse(k, k.ALLMOGE),
   tv, radio, sideTable, footstool, floorLamp, floorLampGlow, portrait, cat, palm, rya, doily, album, bookStack,
-  chandelier, chandelierGlow, laceCurtains,
+  chandelier, chandelierGlow, laceCurtains, mormor,
 };
 export { checks };

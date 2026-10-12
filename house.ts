@@ -95,16 +95,17 @@ export interface Opening {
   h: number;
 }
 export const DOORS: readonly Opening[] = [
-  { along: 'x', at: 5, a0: 2.5, a1: 3.5, h: DOOR.h },          // köket ↔ hallen
-  { along: 'z', at: 6, a0: 3.85, a1: 4.85, h: DOOR.h },        // köket ↔ skafferiet
-  { along: 'z', at: -0.25, a0: 3.25, a1: 4.25, h: DOOR.h },    // köket ↔ vardagsrummet
+  // Every door is 1.4 m wide: a body is 0.6 m across, and a 1 m door let the kusin through only 0.45 m.
+  { along: 'x', at: 5, a0: 2.1, a1: 3.9, h: DOOR.h },          // köket ↔ hallen
+  { along: 'z', at: 6, a0: 3.75, a1: 5, h: DOOR.h },           // köket ↔ skafferiet, down to the pantry's south wall (z 5)
+  { along: 'z', at: -0.25, a0: 3.05, a1: 4.45, h: DOOR.h },    // köket ↔ vardagsrummet
   { along: 'x', at: 5, a0: -4.5, a1: -2.5, h: DOOR.h },        // vardagsrummet ↔ hallen: a double door
   { along: 'x', at: 7.5, a0: 2, a1: 4, h: DOOR.h },            // hallen ↔ farstun, wide open
-  { along: 'x', at: 7.5, a0: -0.5, a1: 0.5, h: DOOR.h },       // hallen ↔ badrummet
-  { along: 'x', at: 7.5, a0: -4, a1: -3, h: DOOR.h },          // hallen ↔ sovrummet
-  { along: 'x', at: 7.5, a0: 6.5, a1: 7.5, h: DOOR.h },        // hallen ↔ syrummet
-  { along: 'z', at: -7.25, a0: 5.75, a1: 6.75, h: DOOR.h },    // hallen → trädgården, west
-  { along: 'z', at: 10, a0: 5.75, a1: 6.75, h: DOOR.h },       // hallen → trädgården, east
+  { along: 'x', at: 7.5, a0: -0.7, a1: 0.7, h: DOOR.h },       // hallen ↔ badrummet
+  { along: 'x', at: 7.5, a0: -4.2, a1: -2.8, h: DOOR.h },      // hallen ↔ sovrummet
+  { along: 'x', at: 7.5, a0: 6.1, a1: 7.9, h: DOOR.h },        // hallen ↔ syrummet
+  { along: 'z', at: -7.25, a0: 5.55, a1: 6.95, h: DOOR.h },    // hallen → trädgården, west
+  { along: 'z', at: 10, a0: 5.55, a1: 6.95, h: DOOR.h },       // hallen → trädgården, east
 ];
 
 /** A window: in a wall like a door, its sill and top heights; `out` is the side the garden is on (−1 or +1). */

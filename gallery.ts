@@ -16,7 +16,7 @@ const THINGS: ModelKey[] = ['coffeeGrinder', 'milkCan', 'juiceBottle', 'potatoSa
 const WALL: ModelKey[] = ['upper', 'curtains', 'lamp', 'bulb', 'potholder', 'clock', 'sampler', 'note', 'bloomers', 'towel'];
 /** The rest of the house, room by room: furniture first, then what a vätte can be. */
 const ROOMS_GALLERY: [string, ModelKey[]][] = [
-  ['Vardagsrummet', ['kakelugn', 'plasticSofa', 'coffeeTable', 'bookcase', 'sideTable', 'rya', 'armchair', 'rockingChair', 'tv', 'floorLamp', 'palm', 'footstool', 'radio', 'cat', 'bookStack', 'album', 'doily', 'dalahorse', 'dalahorseBlue']],
+  ['Vardagsrummet', ['kakelugn', 'plasticSofa', 'coffeeTable', 'bookcase', 'sideTable', 'rya', 'armchair', 'rockingChair', 'tv', 'floorLamp', 'palm', 'footstool', 'radio', 'bookStack', 'album', 'doily', 'dalahorse', 'dalahorseBlue']],
   ['Hallen och farstun', ['moraClock', 'hallBench', 'plantStand', 'shoes', 'phoneTable', 'shoeRack', 'umbrellaStand', 'runner', 'doormat', 'stool', 'boots', 'umbrella', 'phone', 'hat', 'handbag']],
   ['Sovrummet', ['bed', 'wardrobe', 'nightstand', 'dresser', 'pillow', 'hatbox', 'slippers', 'alarmClock', 'teeth', 'tableLamp']],
   ['Badrummet', ['scale', 'bathtub', 'washbasin', 'toilet', 'bathMat', 'laundryBasket', 'foldedTowel', 'soapDish', 'duck', 'rollDoll', 'chamberPot']],
@@ -59,6 +59,10 @@ export default (g: Gallery) => {
   g.group('På väggar och i taket', { ground: false });
   const signs: Partial<Record<ModelKey, number>> = { sampler: 3000, note: 2600 };   // letters cost voxels
   for (const key of [...WALL, ...WALL_ROOMS]) g.add(key, mesh(key), { ...withGlow(key), ...(signs[key] ? { budget: signs[key] } : {}) });
+
+  g.group('Mormor och Misse', { scale: 'shared', ghost: false });
+  g.add('Mormor', mesh('mormor'));
+  g.add('Misse', mesh('cat'));
 
   g.group('Kusiner och vättar', { scale: 'shared', ghost: false });
   // Four kusiner that differ in shape as well as colour: bobble hat or cap, pigtails or not.

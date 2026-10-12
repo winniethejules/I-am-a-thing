@@ -21,8 +21,11 @@ import { Core, type Cue, type Pawn } from './core';
 import { PHOTOS, type LookName, type PhotoPoint } from './look';
 import { buildModels, type ModelKey } from './models';
 import { MAX_HP, SEEK_MS, WRONG, type Phase } from './rules';
+
+/** The radio in the living room: on from 2:10 of the seeking, for 20 seconds (PLAN.md's clock). */
+const RADIO_AT_MS = 130_000, RADIO_MS = 20_000;
 import { KitchenScene } from './scene';
-import { SOUNDS } from './sounds';
+import { MUSIC, RADIO, SOUNDS } from './sounds';
 import { BLOCKS, TEXTURES, type Ids } from './textures';
 import { FORMS, INVENTORY, KUSIN_MOVE, REAL_THINGS, VATTE, blendIn, formBox } from './things';
 import { EFFECTS } from './vfx';
@@ -93,6 +96,8 @@ export class Shooter implements GameStage {
   private photoAt: PhotoPoint | null = null;
   private readonly shownFrags = new Map<string, string>();
   private lastTick = -1;
+  /** The radio is playing (the flow's theme is the dance band). */
+  private radioOn = false;
   /** The last whole minute of the seeking the cuckoo clock struck. */
   private cuckooMinute = 0;
   /** The role the touch buttons are set for. */
@@ -105,6 +110,8 @@ export class Shooter implements GameStage {
   private stepT = 0;
   /** The third-person camera's look, while a vätte is locked (the body keeps still). */
   private orbitYaw = 0;
+  /** The player an out player spectates. */
+  private spectating: Pawn | null = null;
   private orbitPitch = -0.2;
   private readonly deathAt = new Vector3();
   private killer = '';
@@ -288,7 +295,8 @@ export class Shooter implements GameStage {
           if (!p) break;
           const key = p.form >= 0 ? FORMS[p.form].key : null;
           const sound = key === 'cup' || key === 'biscuits' || key === 'coffeePot' ? SOUNDS.tauntTink : key === 'chair' || key === 'logBasket' ? SOUNDS.tauntCreak : SOUNDS.tauntGiggle;
-          this.sfx.at3d(sound, p.body.x, p.body.y + 0.4, p.body.z, { vol: mine ? 1 : 0.9 });
+          // Taunts are the one sound in the round that everyone should hear: louder than the rest.
+          this.sfx.at3d(sound, p.body.x, p.body.y + 0.4, p.body.z, { vol: mine ? 1.6 : 1.3, near: 14, reach: 30 });
           this.vfx.play(EFFECTS.taunt, { at: _v.set(p.body.x, p.body.y + formBox(p.form).h * 0.8, p.body.z) });
           const rig = this.rigs.get(c.pid);
           if (rig) rig.hopT = 0.45;
@@ -480,6 +488,17 @@ export class Shooter implements GameStage {
     const st = me ? core.match.stats.get(me.pid) : undefined, playing = !!me && flow.live && core.alive(me);
     const left = Math.max(0, (core.match.until - link.now()) / 1000);
     // The last ten seconds of hiding (or seeking) tick.
+    // The radio: a dance band for 20 seconds in the seeking. The flow's theme steps aside for it and comes back.
+    const seekAt = core.phase === 'seek' ? SEEK_MS - left * 1000 : -1;
+    const radioOn = flow.live && seekAt >= RADIO_AT_MS && seekAt < RADIO_AT_MS + RADIO_MS;
+    if (radioOn !== this.radioOn) {
+      this.radioOn = radioOn;
+      flow.music(radioOn ? RADIO : MUSIC);
+    }
+    // Misse hears any vätte that moves near her chair (on every client alike: the same pawns, the same spot).
+    for (const p of core.pawns.values()) {
+      if (core.role(p) === 'v' && core.alive(p) && Math.hypot(p.body.vx, p.body.vz) > 0.4) this.kitchen.misse.hear(p.body.x, p.body.z, core.now);
+    }
     // Gökuren slår every whole minute of the seeking: ko-ko, and every small real thing in the house
     // rattles. (A vätte that stands quite still through it is the one thing that doesn't.)
     const minute = flow.live && core.phase === 'seek' ? Math.floor((SEEK_MS - left * 1000) / 60_000) : 0;
@@ -503,6 +522,7 @@ export class Shooter implements GameStage {
       locked: !!me?.locked,
       aimed: me && myRole === 'v' && playing ? core.aimedForm(me) : NO_FORM,
       out: !!me && flow.live && !core.alive(me) && core.phase !== 'end',
+      watching: me && flow.live && !core.alive(me) && this.spectating ? this.name(this.spectating.pid) : undefined,
       phase: flow.live ? core.phase : 'wait',
       left,
       blind: playing && myRole === 'k' && core.phase === 'hide',
@@ -517,7 +537,7 @@ export class Shooter implements GameStage {
     this.camera(dt, t, me);
     this.kitchen.staged = !!photo || !flow.live;
     this.kitchen.kusin.root.visible &&= !photo?.noKusin;
-    this.kitchen.update(dt, t);
+    this.kitchen.update(dt, t, core.now);
     this.vfx.update(dt);
     this.popups.update(dt);
     this.view.update(dt, t);
@@ -650,8 +670,24 @@ export class Shooter implements GameStage {
       return;
     }
     const outFor = me ? this.ctx.link.now() - (core.match.stats.get(me.pid)?.deadAt ?? 0) : 0;
+    if (me && live && !core.alive(me) && outFor > 1200) {
+      // Out (caught, or a kusin out of patience): spectate someone still playing, from behind, as a vätte sees itself.
+      const target = this.spectateTarget(me);
+      if (target) {
+        const b = target.body, { h } = core.role(target) === 'k' ? { h: KUSIN_MOVE.height } : formBox(target.form);
+        const yaw = b.yaw, pitch = -0.1;
+        _u.set(b.x, b.y + Math.max(0.6, h * 0.8) + TP_RISE * 0.5, b.z);
+        const dx = -Math.sin(yaw) * Math.cos(pitch), dy = -Math.sin(pitch), dz = -Math.cos(yaw) * Math.cos(pitch);
+        const room = core.arena.ray(_u.x, _u.y, _u.z, dx, dy, dz, TP_DIST);
+        const dist = Math.max(0.5, Math.min(TP_DIST, room - 0.15));
+        _v.set(_u.x + dx * dist, _u.y + dy * dist + TP_RISE * 0.3, _u.z + dz * dist);
+        cam.position.lerp(_v, Math.min(1, dt * 8));
+        cam.lookAt(_u.x - dx, _u.y - dy * 0.6, _u.z - dz);
+        return;
+      }
+    }
     if (me && live && !core.alive(me) && core.role(me) === 'v' && outFor > 2500) {
-      // Caught: watch the rest of the round, from up by the ceiling, slowly round the kitchen.
+      // Nobody left to watch: from up by the ceiling, slowly round the kitchen.
       const a = t * 0.12;
       _v.set(3.5 + Math.sin(a) * 2.2, 2.2, 2.6 + Math.cos(a) * 1.8);
       cam.position.lerp(_v, Math.min(1, dt * 1.5));
@@ -659,7 +695,7 @@ export class Shooter implements GameStage {
       return;
     }
     if (me && live && !core.alive(me)) {
-      // Out: rise over where it happened and look at who did it.
+      // Just out: rise over where it happened and look at who did it.
       const k = this.rigs.get(this.killer);
       _v.set(this.deathAt.x, Math.max(this.deathAt.y, 0) + 1.9, this.deathAt.z + 0.8);
       cam.position.lerp(_v, Math.min(1, dt * 4));
@@ -671,6 +707,15 @@ export class Shooter implements GameStage {
     _v.set(3 + Math.sin(t * 0.21) * 0.9, 1.55 + Math.sin(t * 0.13) * 0.1, 4.4);
     cam.position.lerp(_v, Math.min(1, dt * 2));
     cam.lookAt(3, 1.0, 1.2);
+  }
+
+  /** The player out spectating looks at: the living, in turn (F, or the NÄSTA button, moves on). */
+  private spectateTarget(me: Pawn): Pawn | null {
+    const { core, ctx } = this, alive = [...core.pawns.values()].filter((p) => p !== me && core.alive(p));
+    if (!alive.length) return null;
+    if (!alive.includes(this.spectating!)) this.spectating = alive[0];
+    if (ctx.input.pressed('watch')) this.spectating = alive[(alive.indexOf(this.spectating!) + 1) % alive.length];
+    return this.spectating!;
   }
 
   private name(pid: string) {
@@ -762,6 +807,8 @@ export interface HudState {
   /** A vätte's: the thing in reach under the crosshair, or NO_FORM. */
   aimed: number;
   out: boolean;
+  /** Out and spectating: the name of who we're watching. */
+  watching?: string;
 }
 
 /** Your card (role, patience or form, the keys), the crosshair, hit marks, a feed and a line in the middle. Plain DOM. */
@@ -837,7 +884,10 @@ class Hud {
     }
     this.el.hit.classList.toggle('on', (this.hitT -= dt) > 0);
     this.el.hurt.classList.toggle('on', (this.hurtT -= dt) > 0);
-    if (s.out) this.el.mid.innerHTML = s.kusin ? 'Slut på tålamod… tillbaka strax' : 'Tagen! Tillbaka strax…';
+    if (s.out) {
+      const who = s.watching ? `<small>Du tittar på ${esc(s.watching)} · <span class="key">F</span> nästa</small>` : '';
+      this.el.mid.innerHTML = `${s.kusin ? 'Slut på tålamod… tillbaka strax' : 'Tagen! Tillbaka strax…'}${who ? `<br>${who}` : ''}`;
+    }
     else if ((this.midT -= dt) <= 0) this.el.mid.textContent = '';
   }
 

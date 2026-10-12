@@ -10,7 +10,7 @@ import { GROUND } from './garden';
 /** The vault's inside. */
 export const CELLAR = { x0: -11, x1: -8.5, z0: -8.75, z1: -5.75, y0: -2.25, h: 1.75 };
 /** The trench with the steps: from the lawn at its south end down to the doorway. */
-export const TRENCH = { x0: -10, x1: -9, z0: -5.5, z1: -3.5 };
+export const TRENCH = { x0: -10.25, x1: -8.75, z0: -5.5, z1: -3.5 };   // on the grid's quarter-metre lines
 /** The volume the cellar is drawn in: its low corner and size in 1/8 m voxels. */
 export const CELLAR_AT: [number, number, number] = [-11.5, -2.5, -9.25];
 export const CELLAR_SIZE: [number, number, number] = [28, 30, 50];
@@ -32,10 +32,12 @@ function shell(): HouseBox[] {
   add([t.x1, c.y0 - W, t.z0, t.x1 + W, GROUND + 0.25, t.z1], 'STONE');
   add([t.x0, c.y0 - W, t.z0, t.x1, GROUND, t.z1], 'STONE');
   add([t.x0, c.y0, t.z0, t.x1, GROUND, t.z1], 'AIR');
-  const steps = Math.round((GROUND - c.y0) / 0.25);   // seven steps of a quarter metre
-  for (let i = 1; i < steps; i++) {
-    const z0 = t.z0 + (i / steps) * (t.z1 - t.z0);
-    add([t.x0, c.y0, z0, t.x1, c.y0 + i * 0.25, t.z1], 'STONE');
+  // Three steps down, half a metre deep each, a half metre drop per step: the kusin's body is 0.6 m
+  // long, so a shallower stair keeps catching its back edge. The last drop is a quarter metre to the floor.
+  const tops = [-1.0, -1.5, -2.0];
+  for (let k = 0; k < 3; k++) {
+    const zs = t.z1 - (k + 1) * 0.5, ze = t.z1 - k * 0.5;
+    add([t.x0, c.y0, zs, t.x1, tops[k], ze], 'STONE');
   }
   add([t.x0, c.y0, c.z1, t.x1, top, t.z0], 'AIR');   // the doorway, the vault's full height
   // The front above the lawn: a stone face round the doorway's top, a beam over it, the mound behind.

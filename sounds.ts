@@ -115,19 +115,33 @@ export const SOUNDS = {
     ],
   },
   /** Taunts: the thing tells on itself. A cup's tinkle, a chair's creak, a vätte's giggle. */
+  /** A taunt from china (cups, biscuits, the pot): bright clinks, a ring after the last one. */
   tauntTink: {
-    vol: 0.3,
-    reverb: 0.2,
-    layers: [{ wave: 'triangle', freq: 2093, steps: [0, 4, 0, 7], stepTime: 0.09, env: { a: 0.002, d: 0.4, s: 0 }, dur: 0.36 }],
+    vol: 0.7,
+    reverb: 0.3,
+    layers: [
+      { wave: 'triangle', freq: 2637, steps: [0, 4, 0, 7, 12], stepTime: 0.1, env: { a: 0.001, d: 0.22, s: 0 }, dur: 0.3, vol: 0.9 },
+      { wave: 'sine', freq: 3520, steps: [0, 7, 0, 12, 7], stepTime: 0.1, env: { a: 0.001, d: 0.3, s: 0 }, dur: 0.36, vol: 0.5 },
+      { wave: 'noise', env: { a: 0.001, d: 0.02, s: 0 }, dur: 0.05, vol: 0.5, filter: { type: 'bandpass', freq: 4000, q: 2 } },
+    ],
   },
+  /** A taunt from wood (a chair, a log basket): a long creak that rises, then a knock. */
   tauntCreak: {
-    vol: 0.3,
-    layers: [{ wave: 'sawtooth', freq: 140, to: 210, sweep: 0.5, env: { a: 0.05, d: 0.5, s: 0 }, vol: 0.5, filter: { type: 'bandpass', freq: 900, q: 6 } }],
+    vol: 0.75,
+    reverb: 0.1,
+    layers: [
+      { wave: 'sawtooth', freq: 120, to: 240, sweep: 0.6, env: { a: 0.04, d: 0.6, s: 0 }, vol: 0.8, filter: { type: 'bandpass', freq: 900, q: 5 } },
+      { wave: 'triangle', freq: 180, steps: [0, 0, 0, 0, 0, 0], stepTime: 0.4, env: { a: 0.001, d: 0.12, s: 0 }, dur: 0.15, vol: 0.6 },
+    ],
   },
+  /** Any other taunt: a bouncy, giggling little tune, up and back, like a kid. */
   tauntGiggle: {
-    vol: 0.3,
+    vol: 0.75,
     reverb: 0.15,
-    layers: [{ wave: 'sine', freq: 990, steps: [0, 5, 0, 5, 0, 7], stepTime: 0.06, env: { a: 0.002, d: 0.4, s: 0 }, dur: 0.36 }],
+    layers: [
+      { wave: 'sine', freq: 1047, steps: [0, 5, 9, 5, 12, 9, 7], stepTime: 0.055, env: { a: 0.002, d: 0.2, s: 0.2, r: 0.06 }, dur: 0.12, vol: 0.9 },
+      { wave: 'triangle', freq: 523, steps: [0, 0, 5, 0, 0, 7], stepTime: 0.09, env: { a: 0.002, d: 0.3, s: 0 }, dur: 0.2, vol: 0.4 },
+    ],
   },
   /** A springy hop. */
   jump: {
@@ -226,3 +240,25 @@ export const MUSIC: Song = {
 };
 /** A waltz: three beats a bar (for checkSong). */
 export const MUSIC_BEATS = 3;
+
+/**
+ * The radio in the living room, at 2:10 of the seeking: a dance-band polka, two beats a bar. The
+ * brass plays the tune, the oom-pah bass and the keys' offbeat chords carry it, a rim and a kick keep time.
+ */
+export const RADIO: Song = {
+  bpm: 124,
+  swing: 0.06,
+  tracks: [
+    { patch: INSTRUMENTS.brass, vol: 0.55, gate: 0.8, pattern:
+      'E5 . G5 . A5 . G5 . | C5 . E5 . D5 . C5 . | A4 . C5 . B4 . A4 . | G4 . B4 . C5 . . . ' },
+    { patch: INSTRUMENTS.softBass, gate: 0.6, vol: 0.85, pattern:
+      'A2 . . . E2 . . . | D2 . . . A2 . . . | A2 . . . E2 . . . | E2 . . . B2 . . . ' },
+    { patch: INSTRUMENTS.keys, gate: 0.4, vol: 0.4, pattern:
+      '. A3+C4+E4 . A3+C4+E4 . A3+C4+E4 . A3+C4+E4 | . D4+F4+A4 . D4+F4+A4 . D4+F4+A4 . D4+F4+A4 | ' +
+      '. A3+C4+E4 . A3+C4+E4 . A3+C4+E4 . A3+C4+E4 | . E3+G#3+B3 . E3+G#3+B3 . E3+G#3+B3 . E3+G#3+B3 ' },
+    { patch: INSTRUMENTS.kick, vol: 0.6, pattern: 'x . . . x . . . | x . . . x . . . | x . . . x . . . | x . . . x . . . ' },
+    { patch: INSTRUMENTS.rim, vol: 0.3, pattern: '. . x . . . x . | . . x . . . x . | . . x . . . x . | . . x . . . x . ' },
+  ],
+};
+/** The radio's bars: two beats each (for checkSong). */
+export const RADIO_BEATS = 2;

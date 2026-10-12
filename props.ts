@@ -41,7 +41,6 @@ export const LIVING_PROPS: Placed[] = [
   t('rockingChair', -1.7, 0, 2.2, W - 0.7, { solid: true }),
   t('tv', -4.0, 0, 0.4, 0, { solid: true }),
   t('footstool', -3.35, 0, 2.5, W),
-  t('cat', -4.15, ARMCHAIR_SEAT, 1.55, W + 1.2),
   t('palm', -6.55, 0, 0.5, 0.3),
   t('radio', -0.85, SIDE_TABLE, 4.6, N + 0.6),
   t('doily', -5.3, COFFEE_TABLE, 2.75, 0),
@@ -91,6 +90,10 @@ export const HALL_PROPS: Placed[] = [
   t('plantStand', -6.65, 0, 7.15, 1.2),
   t('shoes', 5.6, 0, 7.2, 0.3),
   t('handbag', 6.9, 0.53, 5.5, 0.2),
+  t('umbrella', 9.2, 0, 6.8, 0.1),
+  t('shoes', 7.6, 0, 7.05, 0.3),
+  t('plantStand', 8.4, 0, 6.9, 0.6, { solid: true }),
+  t('hat', -3.6, 0, 6.9, 1.0),
 ];
 
 /** Farstun: the front door (closed: the kusiner start here), the mat, shoes, boots, umbrellas, coats on hooks. */
@@ -113,6 +116,8 @@ export const ENTRY_PROPS: Placed[] = [
   t('handbag', 2.0, 0.375, 8.45, E),
   t('shoes', 2.1, 0, 7.95, 0.2),
   t('shoes', 3.3, 0, 9.6, 2.9),
+  t('plantStand', 1.95, 0, 9.45, 0.4, { solid: true }),
+  t('boots', 3.95, 0, 9.0, 2.2),
 ];
 
 /** Badrummet: the clawfoot tub, the basin under its mirror cabinet, the toilet, towels, a duck in the bath. */
@@ -136,6 +141,8 @@ export const BATH_PROPS: Placed[] = [
   t('rollDoll', 1.3, 0, 10.25, W),
   t('chamberPot', -0.05, 0, 10.25, 0.5),
   t('scale', 0.75, 0, 9.95, W + 0.3),
+  t('duck', -0.6, 0.44, 9.2, 2.0),
+  t('foldedTowel', -0.3, 0.44, 8.2, 0.8),
 ];
 
 /** Sovrummet: the bed against the east wall between two nightstands, the dresser, the wardrobe with hat boxes on top. */

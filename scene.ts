@@ -11,6 +11,7 @@ import {
 import { kusin, kusinLook, suctionGun, vatte, vatteLook, GUN_VOXEL, KUSIN_VOXEL, VATTE_VOXEL } from './characters';
 import { CELLAR, CELLAR_AT, CELLAR_BOXES, CELLAR_SIZE, CV, TRENCH } from './cellar';
 import { BIRCHES, FENCE, LINE_POSTS } from './garden';
+import { Misse, Mormor } from './walkers';
 import { HOUSE_AT, HOUSE_SIZE, HV, ROOMS, WINDOW_LIST, stampHouse, type Mat } from './house';
 import { STAGED, type Placed } from './kitchen';
 import { ALL_PROPS } from './props';
@@ -22,6 +23,10 @@ const _m = new Matrix4(), _q = new Quaternion(), _tilt = new Quaternion(), _p = 
 const _up = new Vector3(0, 1, 0), _x = new Vector3(1, 0, 0);
 /** The lamps' lit parts: shown while the lamps are on. */
 const GLOWS = ['lampGlow', 'bulbGlow', 'chandelierGlow', 'floorLampGlow', 'globeGlow', 'tableLampGlow', 'lanternGlow'];
+/** Mormor's round: the hall (her shoes never touch a shelf), a look into the kitchen, and back. */
+const MORMOR_ROUTE = [{ x: -5.5, z: 6.0 }, { x: 8.5, z: 6.0 }, { x: 3.0, z: 6.0 }, { x: 3.0, z: 4.2 }, { x: 1.7, z: 3.7 }, { x: 3.0, z: 6.0 }];
+/** Misse's chair, and the seat's height on it. */
+const ARMCHAIR = { x: -4.15, z: 1.55, seat: 0.44 };
 /** How long a hit thing wobbles. */
 const WOBBLE_S = 0.5;
 
@@ -41,6 +46,11 @@ export class KitchenScene {
   /** Things wobbling from a dart: how long they have left. */
   private readonly wobbles = new Map<Placed, number>();
   look: LookName = CHOSEN;
+  /** Mormor walks the hall and the kitchen; Misse sleeps in the armchair and goes to sit by a vätte that moves near. */
+  readonly mormor: Mormor;
+  readonly misse: Misse;
+  private readonly mormorMesh: Mesh;
+  private readonly catMesh: Mesh;
 
   constructor(private readonly ctx: GameContext, private readonly view: ArenaStage, private readonly ids: Ids) {
     const { engine } = ctx;
@@ -65,6 +75,14 @@ export class KitchenScene {
 
     this.buildGarden();
     this.buildProps();
+
+    // Mormor and Misse: visual residents, drawn from the same models as everything else.
+    const models = buildModels(ids);
+    this.mormorMesh = new Mesh(geometry(models.mormor), engine.mats.solid);
+    this.catMesh = new Mesh(geometry(models.cat), engine.mats.solid);
+    for (const m of [this.mormorMesh, this.catMesh]) { m.castShadow = true; this.geos.push(m.geometry); this.root.add(m); }
+    this.mormor = new Mormor(MORMOR_ROUTE, 0.7, mulberry32(0x40a));
+    this.misse = new Misse({ x: ARMCHAIR.x, z: ARMCHAIR.z }, ARMCHAIR.seat);
 
     // The staged actors: our own characters, the kusin holding the suction gun.
     this.kusin = new Avatar(engine.mats.actor, kusin(ids, kusinLook(0)), { voxel: KUSIN_VOXEL });
@@ -359,8 +377,14 @@ export class KitchenScene {
     if (this.slots.has(p)) this.wobbles.set(p, WOBBLE_S);
   }
 
-  /** Every frame: the actors stand and breathe, the stove flickers, hit things wobble. */
-  update(dt: number, t: number) {
+  /** Every frame: the actors stand and breathe, the stove flickers, hit things wobble, the house's residents walk. */
+  update(dt: number, t: number, now: number) {
+    const m = this.mormor.step(dt);
+    this.mormorMesh.position.set(m.x, 0 + (m.moving ? Math.abs(Math.sin(t * 7)) * 0.012 : 0), m.z);
+    this.mormorMesh.rotation.y = m.yaw;
+    const c = this.misse.step(dt, now);
+    this.catMesh.position.set(c.x, this.misse.y, c.z);
+    this.catMesh.rotation.y = c.yaw;
     for (const [p, left] of this.wobbles) {
       const slot = this.slots.get(p)!, k = Math.max(0, left - dt);
       const tilt = k > 0 ? Math.sin((WOBBLE_S - k) * 34) * 0.16 * (k / WOBBLE_S) : 0;

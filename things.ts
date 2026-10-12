@@ -50,7 +50,6 @@ export const FORMS: readonly FormDef[] = [
   { key: 'tv', name: 'tjock-tv', some: 'tjock-tv-apparater', the: 'tjock-tv-apparaterna', hp: 3, speed: 0.4 },
   { key: 'radio', name: 'radio', some: 'radioapparater', the: 'radioapparaterna', hp: 2, speed: 0.75 },
   { key: 'floorLamp', name: 'golvlampa', some: 'golvlampor', the: 'golvlamporna', hp: 2, speed: 0.6 },
-  { key: 'cat', name: 'katt', some: 'katter', the: 'katterna', hp: 1, speed: 1.1 },
   { key: 'palm', name: 'palm', some: 'palmer', the: 'palmerna', hp: 2, speed: 0.6 },
   { key: 'bookStack', name: 'bokhög', some: 'bokhögar', the: 'bokhögarna', hp: 1, speed: 0.8 },
   { key: 'doily', name: 'virkad duk', some: 'virkade dukar', the: 'de virkade dukarna', hp: 1, speed: 1 },

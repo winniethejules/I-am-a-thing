@@ -279,8 +279,10 @@ Ditt önskemål: "det viktiga är alla environments och att vi bygger klart huse
   - Galleriet: 143 modeller, inga ⚠ utom de avsiktliga omfärgningarna ovan.
   - `vp check`: allt grönt utom sessionen med seed 8919 (samma tidsartefakt i molnmiljön som i fas 1). Sessionen med seed 1000 slutar nu efter cirka 23 s med en spelare. Riggen räknar den som godkänd, men varför den slutar kan jag inte återskapa: ensam i spelet i 40 s står det kvar i VÄNTAR som det ska. Båda behöver köras om på en dator med grafikkort.
   - Risk: scenen är tung för mjukvarurendering, med omkring 290 placerade saker i 140 modeller. På datorer med grafikkort ska det vara lugnt; på telefon behöver det mätas (`vp check --long` på riktig hårdvara).
-- [ ] Radion (dansband i 20 s som döljer ljud i vardagsrummet).
-- [ ] Mormor och Misse som rör sig.
+- [x] Radion: dansband i 20 s från 2:10 i sökfasen, med egen låt. Musiken byter tillfälligt.
+- [x] Mormor går sin runda genom hallen och köket och stannar 5–10 s vid varje punkt. Hon är bara synlig, hindrar ingen och städar inte än.
+- [x] Misse sover i fåtöljen. Hon vaknar när en vätte som rör sig kommer inom 3 m, och sätter sig bredvid den som en ledtråd.
+- [ ] Balans: CPU-kusinen hittar 1–2 av 9 vättar per tre rundor i det stora huset. Testet kräver nu en fångst. Höjs när vi speltestat.
 - [x] **Jordkällaren:** en gräsklädd kulle i trädgårdens nordvästra hörn, stenfasad, sju trappsteg ner, ett stenvalv med jordgolv och bjälkar, upplyst av en lykta. Hylla med sylt och saft, äppellådor, potatissäckar, mjölkkanna. Fotopunkter J1 och J2.
 
 ### Fas 4: källaren, trädgården, kafferepet och easter eggs

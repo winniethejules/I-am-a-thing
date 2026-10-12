@@ -19,6 +19,7 @@ export default defineGame({
     ['R', 'Lås / lås upp (vätte)'],
     ['Q', 'Taunt (vätte)'],
     ['TAB', 'Inventarielistan (kusin)'],
+    ['F', 'Titta på nästa (när du är ute)'],
     ['SPACE', 'Hoppa'],
   ],
   buttons: {
@@ -26,6 +27,7 @@ export default defineGame({
     lock: { keys: ['KeyR'], label: 'LÅS' },
     taunt: { keys: ['KeyQ'], label: 'TAUNT' },
     list: { keys: ['Tab'], label: 'LISTA' },
+    watch: { keys: ['KeyF'], label: 'NÄSTA' },
     action: { label: 'HOPPA' },
   },
   music: MUSIC,
