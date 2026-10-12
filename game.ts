@@ -175,7 +175,11 @@ export class Shooter implements GameStage {
       row.update({ value: this.setup.options.shift, readOnly: !this.setup.canEdit && !this.ctx.link.isHost });
       who.update({ text: this.setup.canEdit || this.ctx.link.isHost ? 'Du bestämmer. Det gäller alla direkt.' : `${name} bestämmer.` });
     };
-    menu.onOpen(sync);
+    menu.onOpen(() => {
+      sync();
+      this.hud.hide(true);
+    });
+    menu.onClose(() => this.hud.hide(false));
     this.setup.onChange(() => {
       sync();
       const v = this.setup.options.shift, c = spec.choices.find((x) => x.value === v);
@@ -802,7 +806,9 @@ html.vp-touching .ia .blind small { max-width: 320px; }
 .ia .mid { position: absolute; left: 0; right: 0; top: 62%; text-align: center; font-size: 22px; }
 .ia .mid small { font-size: 15px; opacity: .85; }
 .ia .aim { position: absolute; left: 0; right: 0; top: calc(50% + 22px); text-align: center; font-size: 15px; }
-.ia .off { display: none !important; }   /* over any panel's own display (the blind screen is flex) */
+.ia .off { display: none !important; }
+.ia.menu > *, .ia.menu > .blind > * { visibility: hidden; }
+.ia.menu > .blind { visibility: visible; }   /* over any panel's own display (the blind screen is flex) */
 .ia .timer { position: absolute; left: 18px; top: 16px; padding: 6px 12px; border: 3px solid #1d2340; border-radius: 12px; background: rgba(255,252,245,.88);
   color: #1d2340; text-shadow: none; box-shadow: 0 4px 0 #1d2340; font: 12px 'Press Start 2P', monospace; }
 .ia .timer b { display: block; margin-top: 4px; font-size: 18px; }
@@ -945,6 +951,11 @@ class Hud {
 
   hurt() {
     this.hurtT = 0.12;
+  }
+
+  /** Out of the way while a menu is up (its text would show through the panel); a kusin's blindfold stays dark. */
+  hide(on: boolean) {
+    this.root.classList.toggle('menu', on);
   }
 
   center(html: string) {

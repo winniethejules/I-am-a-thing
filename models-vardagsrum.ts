@@ -472,15 +472,15 @@ function mormor(k: Ids) {
   for (const y of [20, 23]) dot(v, c, y, 9, k.WHITE);                      // two buttons down the front
   box(v, 2, 18, 4, 4, 24, 10, k.KNIT_RED);                             // her arms, at the sides
   box(v, 12, 18, 4, 14, 24, 10, k.KNIT_RED);
+  box(v, c - 1, 24, 6, c + 1, 27, 8, k.SKIN);                           // the neck, so the head sits on her
   blob(v, c, 29, 7, 3, 3.4, 3, k.SKIN);                                  // the head
   blob(v, c, 33, 6, 3.4, 2.4, 3.2, k.GREY);                              // the grey bun and hair
   box(v, 4, 28, 3, 12, 31, 4, k.GREY);
-  for (const x of [5, 10]) dot(v, x, 29, 3, k.INK);                     // round glasses
-  dot(v, 7, 27, 3, k.ROSEPINK); dot(v, 8, 27, 3, k.ROSEPINK);                    // rosy cheeks
+  for (const x of [6, 9]) dot(v, x, 29, 9, k.INK);                      // round glasses, on the front of her face (+z)
+  dot(v, 6, 27, 9, k.ROSEPINK); dot(v, 9, 27, 9, k.ROSEPINK);           // rosy cheeks
   return prop(v, 1 / 20);
 }
 
-/** Misse: an orange tabby with a cream belly, ears up, a long tail that curls round her feet. */
 export const LIVING_MODELS = {
   kakelugn, cuckooClock, rockingChair, armchair, plasticSofa, coffeeTable, bookcase,
   dalahorse: (k: Ids) => dalahorse(k, k.ALLMOGE_RED), dalahorseBlue: (k: Ids) => dalahorse(k, k.ALLMOGE),
